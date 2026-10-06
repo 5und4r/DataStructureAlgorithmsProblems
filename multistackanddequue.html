@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stacks &amp; Queues Lab: Multi-Stack, Priority Queue, Deque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#EEF1FB;
+  --ink:#1E1B4B;
+  --ink-soft:#4B4880;
+  --line:#D9DDF3;
+  --card:#FFFFFF;
+  --s1:#FF5D8F;  /* stack 1 pink  */
+  --s2:#16B3CC;  /* stack 2 cyan  */
+  --s3:#FFA412;  /* stack 3 amber */
+  --violet:#7C3AED;
+  --teal:#0E9F9E;
+  --indigo:#5B5BF0;
+  --green:#12B981;
+  --red:#EF4444;
+  --code-bg:#1B1842;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  --accent:var(--s1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--body);color:var(--ink);font-size:16px;line-height:1.6;
+  background:var(--bg);
+  background-image:radial-gradient(#D3D8F2 1.2px, transparent 1.2px);
+  background-size:22px 22px;
+}
+button,input,select{font:inherit}
+:focus-visible{outline:3px solid var(--indigo);outline-offset:2px;border-radius:8px}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+}
+.topbar-inner{
+  max-width:1400px;margin:0 auto;padding:10px 20px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{display:flex;gap:3px;align-items:flex-end;height:34px}
+.brand-mark span{width:9px;border-radius:3px}
+.brand-mark span:nth-child(1){height:34px;background:var(--s1)}
+.brand-mark span:nth-child(2){height:24px;background:var(--s2)}
+.brand-mark span:nth-child(3){height:14px;background:var(--s3)}
+.brand h1{font-family:var(--display);font-size:1.6rem;line-height:1;margin:0;font-weight:800;letter-spacing:-.01em}
+.brand p{margin:2px 0 0;font-size:.85rem;color:var(--ink-soft)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tab{
+  border:2px solid transparent;background:#F2F3FC;color:var(--ink);
+  padding:8px 16px;border-radius:999px;cursor:pointer;font-weight:800;
+  display:flex;align-items:center;gap:8px;transition:background .2s,border-color .2s;
+}
+.tab .dot{width:12px;height:12px;border-radius:50%}
+.tab[data-tab="ms"] .dot{background:linear-gradient(90deg,var(--s1) 33%,var(--s2) 33% 66%,var(--s3) 66%)}
+.tab[data-tab="pq"] .dot{background:var(--violet)}
+.tab[data-tab="dq"] .dot{background:var(--teal)}
+.tab:hover{background:#E6E8FA}
+.tab[aria-selected="true"]{background:#fff;border-color:var(--tab-c,var(--ink))}
+.tab[data-tab="ms"][aria-selected="true"]{--tab-c:var(--s1)}
+.tab[data-tab="pq"][aria-selected="true"]{--tab-c:var(--violet)}
+.tab[data-tab="dq"][aria-selected="true"]{--tab-c:var(--teal)}
+
+/* ---------- Panels ---------- */
+.panel{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
+.panel[hidden]{display:none}
+#tab-ms{--accent:var(--s1)}
+#tab-pq{--accent:var(--violet)}
+#tab-dq{--accent:var(--teal)}
+
+.stage{
+  display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;
+  min-height:calc(100vh - 110px);
+}
+.controls,.viz{background:var(--card);border-radius:20px;border:1px solid var(--line)}
+.controls{padding:16px 18px;display:flex;flex-direction:column;gap:11px;border-top:6px solid var(--accent)}
+.controls h2{font-family:var(--display);font-size:1.35rem;margin:0;line-height:1.2}
+.controls .hint{font-size:.88rem;color:var(--ink-soft);margin:0}
+.field label{display:block;font-weight:800;font-size:.85rem;margin-bottom:5px}
+.field input[type=number]{
+  width:100%;padding:10px 12px;border:2px solid var(--line);border-radius:12px;
+  font-size:1.05rem;font-weight:700;color:var(--ink);background:#FAFBFF;
+}
+.field input[type=number]:focus{border-color:var(--accent);outline:none}
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{
+  border:none;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer;
+  color:#fff;background:var(--accent);transition:transform .12s,filter .12s;
+}
+.btn:hover{filter:brightness(1.07)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:#F1F2FB;color:var(--ink)}
+.btn.warn{background:#FF6B6B}
+.btn.dark{background:var(--ink)}
+.btn.wide{grid-column:1/-1}
+.stack-pick{display:flex;gap:6px}
+.stack-pick button{
+  flex:1;border:2px solid transparent;border-radius:12px;padding:8px 4px;cursor:pointer;
+  font-weight:800;color:#fff;opacity:.55;
+}
+.stack-pick button[aria-pressed="true"]{opacity:1;border-color:var(--ink)}
+.stack-pick .p0{background:var(--s1)} .stack-pick .p1{background:var(--s2)} .stack-pick .p2{background:var(--s3)}
+.seg{display:flex;background:#F1F2FB;border-radius:12px;padding:4px}
+.seg button{flex:1;border:none;background:transparent;padding:8px;border-radius:9px;font-weight:800;cursor:pointer;color:var(--ink-soft)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--violet);box-shadow:0 1px 4px rgba(30,27,75,.15)}
+.speed{display:flex;align-items:center;gap:10px;font-size:.85rem;font-weight:700}
+.speed input{flex:1;accent-color:var(--violet)}
+
+.log{
+  flex:1;min-height:80px;max-height:220px;overflow:auto;background:#F7F8FE;
+  border-radius:14px;padding:10px;font-size:.85rem;border:1px solid var(--line)
+}
+.log-title{font-weight:800;font-size:.85rem;margin:0 0 6px;display:flex;justify-content:space-between}
+.log div{padding:6px 8px;border-radius:8px;margin-bottom:5px;background:#fff;border-left:4px solid var(--accent)}
+.log div.err{border-left-color:var(--red);background:#FFF1F1}
+.log div.ok{border-left-color:var(--green)}
+.log div.info{border-left-color:var(--indigo)}
+.log b{font-weight:800}
+
+.viz{padding:18px 20px;display:flex;flex-direction:column;gap:14px;overflow:hidden}
+.viz-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.viz-head h3{font-family:var(--display);font-size:1.5rem;margin:0;line-height:1.15}
+.viz-head p{margin:2px 0 0;color:var(--ink-soft);font-size:.92rem}
+.status{
+  font-weight:700;font-size:.92rem;padding:8px 14px;border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 12%,white);color:var(--ink);min-height:40px;
+  display:flex;align-items:center
+}
+.subhead{font-weight:800;font-size:.9rem;color:var(--ink-soft);margin:0 0 6px}
+
+/* ---------- Multi-stack visuals ---------- */
+.ms-array{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;padding-top:26px}
+.cell{
+  position:relative;border-radius:12px;background:#F3F4FB;border:2px dashed #CBD0EC;
+  min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:background .3s,border-color .3s;
+}
+.cell .idx{position:absolute;top:4px;left:7px;font-size:.72rem;font-weight:800;color:#8A8DB8}
+.cell .val{font-family:var(--display);font-size:1.45rem;font-weight:800;line-height:1}
+.cell .nx{font-size:.7rem;font-weight:700;color:#8A8DB8;margin-top:4px}
+.cell.s0,.cell.s1,.cell.s2{border-style:solid;color:#fff}
+.cell.s0{background:var(--s1);border-color:var(--s1)}
+.cell.s1{background:var(--s2);border-color:var(--s2)}
+.cell.s2{background:var(--s3);border-color:var(--s3)}
+.cell.s0 .idx,.cell.s1 .idx,.cell.s2 .idx,.cell.s0 .nx,.cell.s1 .nx,.cell.s2 .nx{color:rgba(255,255,255,.85)}
+.ptr{
+  position:absolute;top:-25px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:999px;color:#fff;
+}
+.ptr.free{background:var(--ink)}
+.ptr.p0{background:var(--s1)} .ptr.p1{background:var(--s2)} .ptr.p2{background:var(--s3)}
+.ms-meta{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:5px 12px;border-radius:999px;background:#F1F2FB;font-weight:700;font-size:.85rem}
+.chip.c0{background:#FFE4EC} .chip.c1{background:#DDF6FA} .chip.c2{background:#FFF0D6}
+.towers{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:300px}
+.tower{
+  display:flex;flex-direction:column;border-radius:16px;background:#FAFBFF;border:2px solid var(--line);
+  padding:10px;cursor:pointer;transition:border-color .2s;
+}
+.tower.sel{border-color:var(--tc)}
+.tower h4{margin:0 0 8px;font-family:var(--display);font-size:1.15rem;display:flex;justify-content:space-between;align-items:center}
+.tower h4 small{font-family:var(--body);font-size:.8rem;color:var(--ink-soft);font-weight:700}
+.tower .well{
+  flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;
+  border:3px solid var(--tc);border-top:none;border-radius:0 0 14px 14px;padding:6px;min-height:200px
+}
+.plate{
+  background:var(--tc);color:#fff;border-radius:9px;padding:5px 10px;display:flex;
+  justify-content:space-between;align-items:center;font-weight:800;
+}
+.plate .v{font-family:var(--display);font-size:1.15rem}
+.plate .at{font-size:.72rem;opacity:.9}
+.plate.is-top{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--tc)}
+.empty-note{text-align:center;color:#9A9DC4;font-weight:700;font-size:.9rem;padding:12px 0}
+
+/* ---------- Priority queue visuals ---------- */
+.pq-tree{flex:1;min-height:280px;display:flex}
+.pq-tree svg{width:100%;height:100%;min-height:280px}
+.pq-tree line{stroke:#C7C3F2;stroke-width:3}
+.pq-tree .node circle{stroke:#fff;stroke-width:3;transition:fill .25s}
+.pq-tree .node text.v{font-family:var(--display);font-weight:800;font-size:20px;fill:#fff;text-anchor:middle;dominant-baseline:central}
+.pq-tree .node text.i{font-family:var(--body);font-weight:800;font-size:12px;fill:#8A86C4;text-anchor:middle}
+.row-cells{display:flex;gap:6px;flex-wrap:wrap}
+.acell{
+  width:56px;border-radius:10px;background:#F1EEFE;border:2px solid #DDD6FE;text-align:center;padding:4px 0;
+  transition:background .25s,border-color .25s
+}
+.acell .v{font-family:var(--display);font-weight:800;font-size:1.2rem;display:block;line-height:1.2}
+.acell .i{font-size:.7rem;color:#8A86C4;font-weight:800}
+.acell.cmp{background:#FFF1D6;border-color:var(--s3)}
+.acell.neu{background:#FFE4EC;border-color:var(--s1)}
+.acell.done{background:#DDFBEF;border-color:var(--green)}
+.acell.out{background:#FFE2E2;border-color:var(--red)}
+.formula{font-size:.85rem;color:var(--ink-soft);font-weight:700}
+
+/* ---------- Deque visuals ---------- */
+.dq-body{flex:1;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr);gap:16px;align-items:stretch}
+.dq-box{background:#F6FBFB;border:2px solid #CFEDEC;border-radius:16px;padding:14px;display:flex;flex-direction:column}
+.train{flex:1;display:flex;align-items:center;gap:10px;min-height:170px}
+.end{
+  writing-mode:vertical-rl;transform:rotate(180deg);font-weight:800;color:#fff;border-radius:12px;
+  padding:12px 6px;font-size:.9rem;text-align:center
+}
+.end.front{background:var(--s1)}
+.end.rear{background:var(--indigo)}
+.cars{flex:1;display:flex;gap:8px;overflow-x:auto;padding:8px 2px;min-height:110px;align-items:center}
+.car{
+  flex:0 0 auto;width:72px;height:88px;border-radius:14px;background:var(--teal);color:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;position:relative
+}
+.car .v{font-family:var(--display);font-size:1.6rem;line-height:1}
+.car .at{font-size:.7rem;opacity:.9}
+.car.is-front{background:var(--s1)}
+.car.is-rear{background:var(--indigo)}
+.car.is-front.is-rear{background:linear-gradient(135deg,var(--s1) 50%,var(--indigo) 50%)}
+.ring svg{width:100%;height:auto;max-height:330px}
+.ring .slot circle{transition:fill .25s}
+.ring text{font-family:var(--display);font-weight:800;text-anchor:middle;dominant-baseline:central}
+
+
+/* ---------- Step-by-step controls ---------- */
+.stepper{border:2px dashed color-mix(in srgb,var(--accent) 45%,white);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--accent) 5%,white)}
+.switch{display:flex;align-items:center;gap:10px;font-weight:800;font-size:.9rem;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .track{width:42px;height:24px;border-radius:999px;background:#CBD0EC;position:relative;flex:0 0 auto;transition:background .2s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{transform:translateX(18px)}
+.switch input:focus-visible + .track{outline:3px solid var(--indigo);outline-offset:2px}
+.btn.next{background:var(--green);font-size:1.1rem;padding:11px}
+.btn.next:disabled{background:#B8C2D6;opacity:1}
+.btn.next.waiting{animation:nudge 1.3s ease-in-out infinite}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(18,185,129,.55)}50%{box-shadow:0 0 0 8px rgba(18,185,129,0)}}
+.step-hint{margin:0;font-size:.84rem;color:var(--ink-soft)}
+.status{gap:12px;flex-wrap:wrap;min-height:48px;font-size:.98rem}
+.stepno{background:var(--accent);color:#fff;border-radius:999px;padding:3px 12px;font-weight:800;white-space:nowrap;flex:0 0 auto}
+.stxt{flex:1;min-width:0}
+.scode{font-family:var(--mono);font-size:.85em;background:var(--code-bg);color:#9BE7A8;padding:2px 8px;border-radius:6px;white-space:nowrap;display:inline-block;margin-top:2px}
+.cell.target,.plate.target{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--s3)}
+.cell.picked,.plate.picked{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--red)}
+.car.picked{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--red)}
+.car.just{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--s3)}
+
+/* ---------- Motion ---------- */
+.just{animation:popIn .45s cubic-bezier(.3,1.6,.5,1)}
+.leaving{animation:leave .45s ease forwards}
+.freed{animation:flash 0.9s ease}
+@keyframes popIn{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes leave{to{transform:translateY(-18px) scale(.8);opacity:0}}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}100%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* ---------- Learn section (bottom) ---------- */
+.learn{max-width:1100px;margin:40px auto 0}
+.learn-intro{text-align:center;margin-bottom:26px}
+.learn-intro h2{font-family:var(--display);font-size:2.3rem;margin:0;line-height:1.1}
+.learn-intro p{margin:8px auto 0;max-width:62ch;color:var(--ink-soft);font-size:1.05rem}
+.block{background:#fff;border-radius:22px;border:1px solid var(--line);padding:26px 30px;margin-bottom:18px}
+.block h3{font-family:var(--display);font-size:1.55rem;margin:0 0 10px;line-height:1.2}
+.block p{max-width:75ch;margin:0 0 12px}
+.analogy{
+  display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;
+  background:color-mix(in srgb,var(--accent) 10%,white);border-radius:18px;padding:18px 22px;margin:14px 0 4px
+}
+.analogy .emoji{font-size:3rem;line-height:1}
+.analogy p{margin:0}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.steps{list-style:none;padding:0;margin:14px 0 0;counter-reset:st}
+.steps li{
+  counter-increment:st;position:relative;padding:4px 0 16px 58px;max-width:78ch
+}
+.steps li::before{
+  content:counter(st);position:absolute;left:0;top:0;width:40px;height:40px;border-radius:50%;
+  background:var(--accent);color:#fff;font-family:var(--display);font-weight:800;font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center
+}
+.steps li::after{content:"";position:absolute;left:19px;top:44px;bottom:2px;width:2px;background:var(--line)}
+.steps li:last-child::after{display:none}
+.steps b{display:block;font-size:1.05rem}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:10px}
+.app{border-radius:16px;padding:14px 16px;background:#F7F8FE;border-left:6px solid var(--c,var(--accent))}
+.app .ic{font-size:1.6rem}
+.app b{display:block;margin:4px 0 2px}
+.app span{font-size:.92rem;color:var(--ink-soft)}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+.tbl-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--line)}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:color-mix(in srgb,var(--accent) 12%,white);font-weight:800}
+tr:last-child td{border-bottom:none}
+td code,p code,li code{font-family:var(--mono);font-size:.88em;background:#F1F2FB;padding:1px 6px;border-radius:6px}
+.big-o{font-family:var(--mono);font-weight:600;color:var(--green)}
+.code-wrap{position:relative;border-radius:18px;overflow:hidden;background:var(--code-bg);margin-top:10px}
+.code-bar{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 16px;
+  background:#262257;color:#C9C6F5;font-weight:700;font-size:.88rem
+}
+.code-bar .dots{display:flex;gap:6px}
+.code-bar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+.code-bar .dots i:nth-child(1){background:#FF5F57}.code-bar .dots i:nth-child(2){background:#FEBC2E}.code-bar .dots i:nth-child(3){background:#28C840}
+.copy{border:none;background:#3A3580;color:#fff;border-radius:8px;padding:5px 12px;font-weight:800;cursor:pointer}
+pre{margin:0;padding:18px 20px;overflow-x:auto;font-family:var(--mono);font-size:.88rem;line-height:1.65;color:#E7E5FF;max-height:620px}
+.tk-c{color:#7F8BB8;font-style:italic}
+.tk-s{color:#9BE7A8}
+.tk-p{color:#FF9EC0}
+.tk-n{color:#FFC96B}
+.tk-k{color:#8FB7FF;font-weight:600}
+.tk-t{color:#6FE3EE}
+.output{
+  margin-top:12px;background:#0F0D2B;color:#9BE7A8;font-family:var(--mono);font-size:.88rem;
+  border-radius:14px;padding:14px 18px;white-space:pre-wrap
+}
+.output::before{content:"Program output";display:block;color:#8A86C4;font-family:var(--body);font-weight:800;font-size:.8rem;margin-bottom:6px}
+.note{border-radius:14px;padding:12px 16px;background:#FFF7E3;border-left:6px solid var(--s3);margin-top:12px;max-width:none}
+footer{text-align:center;color:var(--ink-soft);font-size:.88rem;padding:10px 0 30px}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1000px){
+  .stage{grid-template-columns:1fr;min-height:0}
+  .dq-body{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .ms-array{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:32px}
+  .towers{grid-template-columns:1fr;}
+  .tower .well{min-height:120px}
+  .block{padding:20px 18px}
+  .learn-intro h2{font-size:1.8rem}
+  .analogy{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div>
+        <h1>Stacks &amp; Queues Lab</h1>
+        <p>Play with the structure first, then read how it works below.</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Data structures">
+      <button class="tab" role="tab" data-tab="ms" aria-selected="true"><span class="dot"></span>Multi-Stack</button>
+      <button class="tab" role="tab" data-tab="pq" aria-selected="false"><span class="dot"></span>Priority Queue</button>
+      <button class="tab" role="tab" data-tab="dq" aria-selected="false"><span class="dot"></span>Deque</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ======================================================= -->
+<!-- MULTI-STACK                                              -->
+<!-- ======================================================= -->
+<section class="panel" id="tab-ms" role="tabpanel">
+  <div class="stage">
+    <aside class="controls">
+      <h2>Control panel</h2>
+      <p class="hint">Pick a stack, type a number, and push it. All three stacks share the same 10 boxes.</p>
+      <div class="field">
+        <label>Choose a stack</label>
+        <div class="stack-pick" id="ms-pick">
+          <button class="p0" data-s="0" aria-pressed="true">Stack 1</button>
+          <button class="p1" data-s="1" aria-pressed="false">Stack 2</button>
+          <button class="p2" data-s="2" aria-pressed="false">Stack 3</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ms-val">Value</label>
+        <input type="number" id="ms-val" value="25" min="0" max="999">
+      </div>
+      <div class="btn-grid">
+        <button class="btn" id="ms-push">Push</button>
+        <button class="btn warn" id="ms-pop">Pop</button>
+        <button class="btn ghost" id="ms-peek">Peek</button>
+        <button class="btn ghost" id="ms-rand">Push random</button>
+        <button class="btn dark" id="ms-demo">Play demo</button>
+        <button class="btn ghost" id="ms-reset">Clear all</button>
+      </div>
+      <div class="stepper">
+        <div class="stepper-top">
+          <label class="switch"><input type="checkbox" id="ms-stepmode" checked><span class="track"></span><span>Step-by-step mode</span></label>
+        </div>
+        <button class="btn next" id="ms-next" disabled>Next step ▶</button>
+        <p class="step-hint" id="ms-hint"></p>
+      </div>
+      <div>
+        <p class="log-title">Step log <span id="ms-count"></span></p>
+        <div class="log" id="ms-log" aria-live="polite"></div>
+      </div>
+    </aside>
+
+    <div class="viz">
+      <div class="viz-head">
+        <div>
+          <h3>Three stacks living in one array</h3>
+          <p>Each colour is a different stack. The <b>next</b> number in each box links to the box below it.</p>
+        </div>
+      </div>
+      <div class="status" id="ms-status">Ready. Press Push to add a value to the selected stack.</div>
+      <div>
+        <p class="subhead">Shared memory: arr[0..9]</p>
+        <div class="ms-array" id="ms-array"></div>
+      </div>
+      <div class="ms-meta" id="ms-meta"></div>
+      <div class="towers" id="ms-towers"></div>
+    </div>
+  </div>
+
+  <article class="learn">
+    <div class="learn-intro">
+      <h2>Understanding the Multi-Stack</h2>
+      <p>How to run several stacks inside one block of memory without wasting space.</p>
+    </div>
+
+    <div class="block">
+      <h3>First, what is a stack?</h3>
+      <p>A <b>stack</b> is a list where you can only add or remove items at one end, called the <b>top</b>. The last item you put in is the first one to come out. This rule is called <b>LIFO</b> (Last In, First Out).</p>
+      <div class="analogy">
+        <div class="emoji" aria-hidden="true">🍽️</div>
+        <p>Think of a pile of plates in a canteen. You put a clean plate on the top, and the next person takes the plate from the top. Nobody pulls a plate from the middle.</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>So what is a multi-stack?</h3>
+      <p>A <b>multi-stack</b> keeps <b>two or more stacks inside a single array</b>. Instead of giving each stack its own fixed array (and wasting space when one stack is small and another is big), all stacks borrow boxes from one common pool.</p>
+      <div class="analogy">
+        <div class="emoji" aria-hidden="true">🗄️</div>
+        <p>Picture one cupboard with 10 shelves shared by three roommates. Any roommate can use any empty shelf. Each roommate just remembers which shelf holds their newest item, and each shelf has a sticky note saying where that person's previous item is.</p>
+      </div>
+      <div class="two-col">
+        <div>
+          <p><b>Simple way (fixed split):</b> divide the array into equal parts, e.g. 10 boxes for 3 stacks becomes roughly 3 + 3 + 4. Easy, but Stack 1 may overflow while Stack 3 is empty.</p>
+          <p><b>Two stacks special case:</b> start one stack at the left end and the other at the right end. They grow towards each other and only overflow when the whole array is full.</p>
+        </div>
+        <div>
+          <p><b>Smart way (used in this demo):</b> any stack can use any free box. We keep three helper arrays:</p>
+          <p><code>arr[]</code> stores the values.<br>
+          <code>top[k]</code> holds the box index of each stack's top.<br>
+          <code>next[]</code> links each box to the box below it, or to the next free box.<br>
+          <code>freeTop</code> points to the first empty box.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>How Push and Pop work, step by step</h3>
+      <div class="two-col">
+        <div>
+          <p><b>Push(value) onto stack s</b></p>
+          <ol class="steps">
+            <li><b>Check for overflow</b>If <code>freeTop == -1</code>, there is no empty box left.</li>
+            <li><b>Grab a free box</b><code>i = freeTop</code></li>
+            <li><b>Move the free pointer</b><code>freeTop = next[i]</code></li>
+            <li><b>Link to the old top</b><code>next[i] = top[s]</code> so we can find the item below later.</li>
+            <li><b>Make it the new top and store</b><code>top[s] = i; arr[i] = value;</code></li>
+          </ol>
+        </div>
+        <div>
+          <p><b>Pop() from stack s</b></p>
+          <ol class="steps">
+            <li><b>Check for underflow</b>If <code>top[s] == -1</code>, the stack is empty.</li>
+            <li><b>Find the top box</b><code>i = top[s]</code></li>
+            <li><b>Move the top down</b><code>top[s] = next[i]</code></li>
+            <li><b>Return the box to the free list</b><code>next[i] = freeTop; freeTop = i;</code></li>
+            <li><b>Give back the value</b><code>return arr[i];</code></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Worked example (10 boxes, 3 stacks)</h3>
+      <p>This is exactly what <b>Play demo</b> does above. Stacks are numbered 1 to 3 here; in the C++ code they are 0 to 2.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>Box used</th><th>top[S1, S2, S3]</th><th>freeTop</th></tr></thead>
+          <tbody>
+            <tr><td>Start</td><td>none</td><td>-1, -1, -1</td><td>0</td></tr>
+            <tr><td>Push 15 to S1</td><td>0</td><td>0, -1, -1</td><td>1</td></tr>
+            <tr><td>Push 45 to S1</td><td>1</td><td>1, -1, -1</td><td>2</td></tr>
+            <tr><td>Push 17 to S2</td><td>2</td><td>1, 2, -1</td><td>3</td></tr>
+            <tr><td>Push 49 to S2</td><td>3</td><td>1, 3, -1</td><td>4</td></tr>
+            <tr><td>Push 39 to S2</td><td>4</td><td>1, 4, -1</td><td>5</td></tr>
+            <tr><td>Push 11 to S3</td><td>5</td><td>1, 4, 5</td><td>6</td></tr>
+            <tr><td>Push 9 to S3</td><td>6</td><td>1, 4, 6</td><td>7</td></tr>
+            <tr><td>Pop S3 (returns 9)</td><td>6 freed</td><td>1, 4, 5</td><td>6</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Where multi-stacks are used</h3>
+      <div class="apps">
+        <div class="app" style="--c:var(--s1)"><div class="ic">🧵</div><b>Operating systems</b><span>Several thread call stacks carved out of one memory region.</span></div>
+        <div class="app" style="--c:var(--s2)"><div class="ic">⚙️</div><b>Compilers</b><span>Separate operator and operand stacks while evaluating expressions.</span></div>
+        <div class="app" style="--c:var(--s3)"><div class="ic">↩️</div><b>Undo and redo</b><span>Two stacks in one buffer: one for undo, one for redo.</span></div>
+        <div class="app" style="--c:var(--violet)"><div class="ic">📟</div><b>Embedded devices</b><span>Small memory chips where every byte must be shared well.</span></div>
+        <div class="app" style="--c:var(--teal)"><div class="ic">🌐</div><b>Browsers</b><span>Back and forward history kept as a pair of stacks.</span></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Time and space cost</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>Time</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>push(s, x)</td><td class="big-o">O(1)</td><td>Only a few pointer updates.</td></tr>
+            <tr><td>pop(s)</td><td class="big-o">O(1)</td><td>Only a few pointer updates.</td></tr>
+            <tr><td>peek(s)</td><td class="big-o">O(1)</td><td>Read <code>arr[top[s]]</code> directly.</td></tr>
+            <tr><td>Extra space</td><td class="big-o">O(n + k)</td><td>The <code>next[]</code> array and the <code>top[]</code> array.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>C++ program: k stacks in one array</h3>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span><span>multistack.cpp</span><button class="copy" data-code="code-ms">Copy</button></div>
+        <pre><code id="pre-ms"></code></pre>
+      </div>
+      <div class="output">Popped from stack 3: 9
+Popped from stack 2: 39
+Popped from stack 1: 45
+Top of stack 2 now: 49</div>
+    </div>
+  </article>
+</section>
+
+<!-- ======================================================= -->
+<!-- PRIORITY QUEUE                                           -->
+<!-- ======================================================= -->
+<section class="panel" id="tab-pq" role="tabpanel" hidden>
+  <div class="stage">
+    <aside class="controls">
+      <h2>Control panel</h2>
+      <p class="hint">Insert numbers and watch them bubble into place. Bigger numbers mean higher priority in a max-heap.</p>
+      <div class="field">
+        <label>Heap type</label>
+        <div class="seg" id="pq-mode">
+          <button data-m="max" aria-pressed="true">Max-heap</button>
+          <button data-m="min" aria-pressed="false">Min-heap</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="pq-val">Value (priority)</label>
+        <input type="number" id="pq-val" value="42" min="0" max="999">
+      </div>
+      <div class="btn-grid">
+        <button class="btn" id="pq-push">Insert</button>
+        <button class="btn warn" id="pq-pop">Extract top</button>
+        <button class="btn ghost" id="pq-peek">Peek</button>
+        <button class="btn ghost" id="pq-rand">Insert random</button>
+        <button class="btn dark" id="pq-demo">Play demo</button>
+        <button class="btn ghost" id="pq-reset">Clear all</button>
+      </div>
+      <div class="stepper">
+        <div class="stepper-top">
+          <label class="switch"><input type="checkbox" id="pq-stepmode" checked><span class="track"></span><span>Step-by-step mode</span></label>
+        </div>
+        <button class="btn next" id="pq-next" disabled>Next step ▶</button>
+        <p class="step-hint" id="pq-hint"></p>
+      </div>
+      <div class="speed"><span>Speed</span><input type="range" id="pq-speed" min="150" max="1400" value="650" step="50" aria-label="Animation delay"><span>Slow</span></div>
+      <div>
+        <p class="log-title">Step log</p>
+        <div class="log" id="pq-log" aria-live="polite"></div>
+      </div>
+    </aside>
+
+    <div class="viz">
+      <div class="viz-head">
+        <div>
+          <h3>Binary heap: a tree stored in an array</h3>
+          <p>Yellow means “comparing”, pink means “moving”, green means “settled”.</p>
+        </div>
+      </div>
+      <div class="status" id="pq-status">Ready. Insert a value to see it find its place.</div>
+      <div class="pq-tree" id="pq-tree"></div>
+      <div>
+        <p class="subhead">The same heap as an array</p>
+        <div class="row-cells" id="pq-array"></div>
+        <p class="formula">For box i: parent = (i − 1) / 2, left child = 2i + 1, right child = 2i + 2</p>
+      </div>
+    </div>
+  </div>
+
+  <article class="learn">
+    <div class="learn-intro">
+      <h2>Understanding the Priority Queue</h2>
+      <p>A queue where the most important item always goes first, no matter when it arrived.</p>
+    </div>
+
+    <div class="block">
+      <h3>What is a priority queue?</h3>
+      <p>In a normal queue, the first person in line is served first. In a <b>priority queue</b>, every item carries a <b>priority</b>, and the item with the <b>highest priority</b> is served first. Items with the same priority can be served in any order.</p>
+      <div class="analogy">
+        <div class="emoji" aria-hidden="true">🏥</div>
+        <p>A hospital emergency room. A patient with a broken leg who arrived an hour ago will wait if someone with a heart attack arrives now. Seriousness decides the order, not arrival time.</p>
+      </div>
+      <div class="two-col">
+        <div><p><b>Max priority queue:</b> the largest value comes out first. Example: 60, 50, 40, 30.</p></div>
+        <div><p><b>Min priority queue:</b> the smallest value comes out first. Example: 10, 20, 30, 40.</p></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Why use a heap?</h3>
+      <p>We could keep a plain list and search for the biggest item each time, but that takes O(n). A <b>binary heap</b> is a complete binary tree where every parent is bigger (max-heap) or smaller (min-heap) than its children. The best item is always at the root, and both insert and remove take only <b>O(log n)</b>.</p>
+      <p>The tree is stored in a plain array with no pointers. Box 0 is the root, and the children of box <code>i</code> are at <code>2i + 1</code> and <code>2i + 2</code>.</p>
+    </div>
+
+    <div class="block">
+      <h3>How insert and extract work, step by step</h3>
+      <div class="two-col">
+        <div>
+          <p><b>Insert(x): “bubble up”</b></p>
+          <ol class="steps">
+            <li><b>Add at the end</b>Place x in the next empty box so the tree stays complete.</li>
+            <li><b>Compare with the parent</b>Parent is at <code>(i − 1) / 2</code>.</li>
+            <li><b>Swap if x is better</b>In a max-heap, swap when x is bigger than its parent.</li>
+            <li><b>Repeat</b>Keep going up until the parent is better or x reaches the root.</li>
+          </ol>
+        </div>
+        <div>
+          <p><b>Extract(): “sink down”</b></p>
+          <ol class="steps">
+            <li><b>Save the root</b>This is the answer to return.</li>
+            <li><b>Move the last item to the root</b>Then delete the last box.</li>
+            <li><b>Compare with both children</b>Pick the better child.</li>
+            <li><b>Swap and repeat</b>Swap down while a child is better, then stop.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Worked example (max-heap)</h3>
+      <p>Insert 30, 10, 50, 20, 60, 40, then extract once. This is what <b>Play demo</b> shows.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>What happens</th><th>Heap array afterwards</th></tr></thead>
+          <tbody>
+            <tr><td>Insert 30</td><td>Becomes the root</td><td>[30]</td></tr>
+            <tr><td>Insert 10</td><td>10 &lt; 30, stays</td><td>[30, 10]</td></tr>
+            <tr><td>Insert 50</td><td>50 &gt; 30, swap to root</td><td>[50, 10, 30]</td></tr>
+            <tr><td>Insert 20</td><td>20 &gt; 10, swap once</td><td>[50, 20, 30, 10]</td></tr>
+            <tr><td>Insert 60</td><td>Swaps with 20, then with 50</td><td>[60, 50, 30, 10, 20]</td></tr>
+            <tr><td>Insert 40</td><td>40 &gt; 30, swap once</td><td>[60, 50, 40, 10, 20, 30]</td></tr>
+            <tr><td>Extract</td><td>Returns 60; 30 goes to root, sinks below 50</td><td>[50, 30, 40, 10, 20]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Where priority queues are used</h3>
+      <div class="apps">
+        <div class="app" style="--c:var(--violet)"><div class="ic">🗺️</div><b>Shortest paths</b><span>Dijkstra's algorithm in Google Maps style route finding.</span></div>
+        <div class="app" style="--c:var(--s1)"><div class="ic">💻</div><b>CPU scheduling</b><span>The OS runs the most urgent process first.</span></div>
+        <div class="app" style="--c:var(--s2)"><div class="ic">🚑</div><b>Emergency triage</b><span>Patients are treated by seriousness.</span></div>
+        <div class="app" style="--c:var(--s3)"><div class="ic">📦</div><b>Data compression</b><span>Huffman coding repeatedly joins the two smallest items.</span></div>
+        <div class="app" style="--c:var(--teal)"><div class="ic">📊</div><b>Top-K problems</b><span>Find the 10 best-selling products from millions.</span></div>
+        <div class="app" style="--c:var(--indigo)"><div class="ic">🎮</div><b>Game AI</b><span>A* pathfinding picks the most promising square next.</span></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Time cost compared</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Implementation</th><th>Insert</th><th>Peek top</th><th>Extract top</th></tr></thead>
+          <tbody>
+            <tr><td>Unsorted array</td><td class="big-o">O(1)</td><td>O(n)</td><td>O(n)</td></tr>
+            <tr><td>Sorted array</td><td>O(n)</td><td class="big-o">O(1)</td><td class="big-o">O(1)</td></tr>
+            <tr><td><b>Binary heap</b></td><td class="big-o">O(log n)</td><td class="big-o">O(1)</td><td class="big-o">O(log n)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>C++ program: max-heap priority queue (plus the STL shortcut)</h3>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span><span>priority_queue.cpp</span><button class="copy" data-code="code-pq">Copy</button></div>
+        <pre><code id="pre-pq"></code></pre>
+      </div>
+      <div class="output">Highest priority: 60
+Serving in priority order: 60 50 40 30 20 10
+Min-heap order (STL): 10 20 30 40 50 60</div>
+      <p class="note">In real projects, use <code>std::priority_queue</code> from <code>&lt;queue&gt;</code>. It is a max-heap by default; pass <code>greater&lt;int&gt;</code> to turn it into a min-heap.</p>
+    </div>
+  </article>
+</section>
+
+<!-- ======================================================= -->
+<!-- DEQUE                                                    -->
+<!-- ======================================================= -->
+<section class="panel" id="tab-dq" role="tabpanel" hidden>
+  <div class="stage">
+    <aside class="controls">
+      <h2>Control panel</h2>
+      <p class="hint">Add or remove from either end. The ring on the right shows where items really sit in memory.</p>
+      <div class="field">
+        <label for="dq-val">Value</label>
+        <input type="number" id="dq-val" value="7" min="0" max="999">
+      </div>
+      <div class="btn-grid">
+        <button class="btn" style="background:var(--s1)" id="dq-pf">Push front</button>
+        <button class="btn" style="background:var(--indigo)" id="dq-pb">Push back</button>
+        <button class="btn warn" id="dq-of">Pop front</button>
+        <button class="btn warn" id="dq-ob">Pop back</button>
+        <button class="btn ghost" id="dq-peek">Peek both ends</button>
+        <button class="btn ghost" id="dq-rand">Random push</button>
+        <button class="btn dark" id="dq-demo">Play demo</button>
+        <button class="btn ghost" id="dq-reset">Clear all</button>
+      </div>
+      <div class="stepper">
+        <div class="stepper-top">
+          <label class="switch"><input type="checkbox" id="dq-stepmode" checked><span class="track"></span><span>Step-by-step mode</span></label>
+        </div>
+        <button class="btn next" id="dq-next" disabled>Next step ▶</button>
+        <p class="step-hint" id="dq-hint"></p>
+      </div>
+      <div>
+        <p class="log-title">Step log</p>
+        <div class="log" id="dq-log" aria-live="polite"></div>
+      </div>
+    </aside>
+
+    <div class="viz">
+      <div class="viz-head">
+        <div>
+          <h3>Double-ended queue on a circular array</h3>
+          <p>Pink marks the front, blue marks the rear. Capacity is 8 boxes.</p>
+        </div>
+      </div>
+      <div class="status" id="dq-status">Ready. Push from either side.</div>
+      <div class="dq-body">
+        <div class="dq-box">
+          <p class="subhead">What you see (front to rear)</p>
+          <div class="train">
+            <div class="end front">Front</div>
+            <div class="cars" id="dq-cars"></div>
+            <div class="end rear">Rear</div>
+          </div>
+          <div class="ms-meta" id="dq-meta"></div>
+        </div>
+        <div class="dq-box ring">
+          <p class="subhead">How it is stored (circular array)</p>
+          <div id="dq-ring"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <article class="learn">
+    <div class="learn-intro">
+      <h2>Understanding the Deque</h2>
+      <p>Deque (said “deck”) is short for double-ended queue: a line you can join or leave from both ends.</p>
+    </div>
+
+    <div class="block">
+      <h3>What is a deque?</h3>
+      <p>A <b>deque</b> lets you <b>insert and delete at both the front and the rear</b>. It combines the powers of a stack (one end) and a queue (two ends, one direction) into one structure.</p>
+      <div class="analogy">
+        <div class="emoji" aria-hidden="true">🚆</div>
+        <p>A train where coaches can be attached or detached at the engine end and at the tail end. You never touch a coach in the middle.</p>
+      </div>
+      <div class="two-col">
+        <div><p><b>Input-restricted deque:</b> insert only at the rear, but delete from both ends.</p></div>
+        <div><p><b>Output-restricted deque:</b> delete only from the front, but insert at both ends.</p></div>
+      </div>
+      <p>Use only one end and you get a stack. Insert at the rear and delete at the front and you get a normal queue.</p>
+    </div>
+
+    <div class="block">
+      <h3>Why a circular array?</h3>
+      <p>If we used a plain array, pushing at the front would mean shifting every item right, which costs O(n). A <b>circular array</b> treats the last box as sitting right next to the first box. Moving <code>front</code> one step left from box 0 simply wraps around to box 7. The modulo operator <code>%</code> does the wrapping, so every operation stays <b>O(1)</b>.</p>
+    </div>
+
+    <div class="block">
+      <h3>The four operations, step by step</h3>
+      <ol class="steps">
+        <li><b>Push front(x)</b>If full, report overflow. Otherwise move front one step left: <code>front = (front − 1 + cap) % cap</code>, store <code>arr[front] = x</code>, and increase <code>size</code>.</li>
+        <li><b>Push back(x)</b>If full, report overflow. Otherwise the rear slot is <code>(front + size) % cap</code>. Store x there and increase <code>size</code>.</li>
+        <li><b>Pop front()</b>If empty, report underflow. Otherwise read <code>arr[front]</code>, move <code>front = (front + 1) % cap</code>, and decrease <code>size</code>.</li>
+        <li><b>Pop back()</b>If empty, report underflow. Otherwise the last item is at <code>(front + size − 1) % cap</code>. Read it and decrease <code>size</code>.</li>
+      </ol>
+    </div>
+
+    <div class="block">
+      <h3>Worked example (capacity 5)</h3>
+      <p>Watch how <code>front</code> wraps from 0 to 4 when we push at the front.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>front</th><th>size</th><th>Deque (front to rear)</th></tr></thead>
+          <tbody>
+            <tr><td>Start</td><td>0</td><td>0</td><td>empty</td></tr>
+            <tr><td>Push back 10</td><td>0</td><td>1</td><td>10</td></tr>
+            <tr><td>Push back 20</td><td>0</td><td>2</td><td>10, 20</td></tr>
+            <tr><td>Push front 5</td><td>4 (wrapped)</td><td>3</td><td>5, 10, 20</td></tr>
+            <tr><td>Push front 1</td><td>3</td><td>4</td><td>1, 5, 10, 20</td></tr>
+            <tr><td>Pop front (returns 1)</td><td>4</td><td>3</td><td>5, 10, 20</td></tr>
+            <tr><td>Pop back (returns 20)</td><td>4</td><td>2</td><td>5, 10</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Where deques are used</h3>
+      <div class="apps">
+        <div class="app" style="--c:var(--teal)"><div class="ic">🪟</div><b>Sliding window maximum</b><span>Find the max of every window of k numbers in O(n).</span></div>
+        <div class="app" style="--c:var(--s1)"><div class="ic">↔️</div><b>Palindrome check</b><span>Compare and remove letters from both ends.</span></div>
+        <div class="app" style="--c:var(--s2)"><div class="ic">📝</div><b>Undo with a limit</b><span>New actions go in one end; the oldest drop off the other.</span></div>
+        <div class="app" style="--c:var(--s3)"><div class="ic">🧑‍🤝‍🧑</div><b>Work stealing</b><span>Idle CPU cores steal tasks from the far end of a busy core's deque.</span></div>
+        <div class="app" style="--c:var(--indigo)"><div class="ic">🌍</div><b>0-1 BFS</b><span>Shortest paths when edge weights are only 0 or 1.</span></div>
+        <div class="app" style="--c:var(--violet)"><div class="ic">🎵</div><b>Playlists</b><span>Add a song to play next or to play last.</span></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Time cost</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Operation</th><th>Circular array</th><th>Doubly linked list</th></tr></thead>
+          <tbody>
+            <tr><td>pushFront / pushBack</td><td class="big-o">O(1)</td><td class="big-o">O(1)</td></tr>
+            <tr><td>popFront / popBack</td><td class="big-o">O(1)</td><td class="big-o">O(1)</td></tr>
+            <tr><td>getFront / getBack</td><td class="big-o">O(1)</td><td class="big-o">O(1)</td></tr>
+            <tr><td>Access the i-th item</td><td class="big-o">O(1)</td><td>O(n)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>C++ program: deque using a circular array</h3>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dots"><i></i><i></i><i></i></span><span>deque.cpp</span><button class="copy" data-code="code-dq">Copy</button></div>
+        <pre><code id="pre-dq"></code></pre>
+      </div>
+      <div class="output">Deque: 1 5 10 20
+Front: 1  Back: 20
+Popped front: 1
+Popped back: 20
+Deque: 5 10
+STL deque: 1 2 3</div>
+      <p class="note">C++ also gives you a ready-made <code>std::deque</code> in <code>&lt;deque&gt;</code> with <code>push_front</code>, <code>push_back</code>, <code>pop_front</code> and <code>pop_back</code>.</p>
+    </div>
+  </article>
+</section>
+
+<footer>Stacks &amp; Queues Lab. Every C++ program on this page compiles with <code>g++ -std=c++17</code>.</footer>
+
+<!-- ============== C++ sources (raw text) ============== -->
+<script type="text/plain" id="code-ms">#include <iostream>
+using namespace std;
+
+// k stacks sharing ONE array of size n
+class KStacks {
+    int *arr;      // stores the actual values
+    int *top;      // top[s]  = index of the top box of stack s
+    int *next;     // next[i] = box below i in the same stack, OR next free box
+    int n, k;
+    int freeTop;   // first free box
+
+public:
+    KStacks(int k, int n) : n(n), k(k) {
+        arr  = new int[n];
+        top  = new int[k];
+        next = new int[n];
+
+        for (int s = 0; s < k; s++) top[s] = -1;        // every stack starts empty
+        for (int i = 0; i < n - 1; i++) next[i] = i + 1; // chain all boxes as free
+        next[n - 1] = -1;
+        freeTop = 0;
+    }
+
+    ~KStacks() { delete[] arr; delete[] top; delete[] next; }
+
+    bool isFull()       { return freeTop == -1; }
+    bool isEmpty(int s) { return top[s] == -1; }
+
+    void push(int s, int value) {
+        if (isFull()) { cout << "Stack Overflow\n"; return; }
+        int i   = freeTop;   // 1. take a free box
+        freeTop = next[i];   // 2. move the free pointer forward
+        next[i] = top[s];    // 3. link new box to the old top
+        top[s]  = i;         // 4. new box becomes the top
+        arr[i]  = value;     // 5. store the value
+    }
+
+    int pop(int s) {
+        if (isEmpty(s)) { cout << "Stack Underflow\n"; return -1; }
+        int i   = top[s];    // 1. index of the top box
+        top[s]  = next[i];   // 2. top moves one down
+        next[i] = freeTop;   // 3. give the box back to the free list
+        freeTop = i;
+        return arr[i];       // 4. return the value
+    }
+
+    int peek(int s) { return isEmpty(s) ? -1 : arr[top[s]]; }
+};
+
+int main() {
+    KStacks ks(3, 10);       // 3 stacks, 10 shared boxes
+
+    ks.push(0, 15); ks.push(0, 45);                 // stack 1
+    ks.push(1, 17); ks.push(1, 49); ks.push(1, 39); // stack 2
+    ks.push(2, 11); ks.push(2, 9);                  // stack 3
+
+    cout << "Popped from stack 3: " << ks.pop(2) << "\n";
+    cout << "Popped from stack 2: " << ks.pop(1) << "\n";
+    cout << "Popped from stack 1: " << ks.pop(0) << "\n";
+    cout << "Top of stack 2 now: "  << ks.peek(1) << "\n";
+    return 0;
+}</script>
+
+<script type="text/plain" id="code-pq">#include <iostream>
+#include <vector>
+#include <queue>     // for the STL priority_queue
+using namespace std;
+
+class MaxHeap {
+    vector<int> h;
+
+    int parent(int i) { return (i - 1) / 2; }
+    int left(int i)   { return 2 * i + 1; }
+    int right(int i)  { return 2 * i + 2; }
+
+    // move item at i UP while it is bigger than its parent
+    void siftUp(int i) {
+        while (i > 0 && h[parent(i)] < h[i]) {
+            swap(h[i], h[parent(i)]);
+            i = parent(i);
+        }
+    }
+
+    // move item at i DOWN while a child is bigger
+    void siftDown(int i) {
+        int n = h.size();
+        while (true) {
+            int largest = i, l = left(i), r = right(i);
+            if (l < n && h[l] > h[largest]) largest = l;
+            if (r < n && h[r] > h[largest]) largest = r;
+            if (largest == i) break;      // heap property restored
+            swap(h[i], h[largest]);
+            i = largest;
+        }
+    }
+
+public:
+    bool empty() { return h.empty(); }
+    int  top()   { return h[0]; }         // highest priority
+
+    void push(int x) {
+        h.push_back(x);                   // 1. add at the end
+        siftUp(h.size() - 1);             // 2. bubble up
+    }
+
+    int pop() {
+        int root = h[0];                  // 1. save the answer
+        h[0] = h.back();                  // 2. last item goes to root
+        h.pop_back();
+        if (!h.empty()) siftDown(0);      // 3. sink it down
+        return root;
+    }
+};
+
+int main() {
+    MaxHeap pq;
+    int tasks[] = {30, 10, 50, 20, 60, 40};
+    for (int t : tasks) pq.push(t);
+
+    cout << "Highest priority: " << pq.top() << "\n";
+    cout << "Serving in priority order: ";
+    while (!pq.empty()) cout << pq.pop() << " ";
+    cout << "\n";
+
+    // Same idea with the Standard Library, as a MIN-heap
+    priority_queue<int, vector<int>, greater<int>> minPQ;
+    for (int t : tasks) minPQ.push(t);
+    cout << "Min-heap order (STL): ";
+    while (!minPQ.empty()) { cout << minPQ.top() << " "; minPQ.pop(); }
+    cout << "\n";
+    return 0;
+}</script>
+
+<script type="text/plain" id="code-dq">#include <iostream>
+#include <deque>     // for the STL deque
+using namespace std;
+
+class Deque {
+    int *arr;
+    int cap;      // total boxes
+    int front;    // index of the first item
+    int size;     // number of items stored
+
+public:
+    Deque(int c) : cap(c), front(0), size(0) { arr = new int[c]; }
+    ~Deque() { delete[] arr; }
+
+    bool isEmpty() { return size == 0; }
+    bool isFull()  { return size == cap; }
+
+    void pushFront(int x) {
+        if (isFull()) { cout << "Deque Overflow\n"; return; }
+        front = (front - 1 + cap) % cap;   // step left, wrap around
+        arr[front] = x;
+        size++;
+    }
+
+    void pushBack(int x) {
+        if (isFull()) { cout << "Deque Overflow\n"; return; }
+        int rear = (front + size) % cap;   // first empty box after the rear
+        arr[rear] = x;
+        size++;
+    }
+
+    int popFront() {
+        if (isEmpty()) { cout << "Deque Underflow\n"; return -1; }
+        int x = arr[front];
+        front = (front + 1) % cap;         // step right, wrap around
+        size--;
+        return x;
+    }
+
+    int popBack() {
+        if (isEmpty()) { cout << "Deque Underflow\n"; return -1; }
+        int rear = (front + size - 1) % cap;
+        size--;
+        return arr[rear];
+    }
+
+    int getFront() { return isEmpty() ? -1 : arr[front]; }
+    int getBack()  { return isEmpty() ? -1 : arr[(front + size - 1) % cap]; }
+
+    void print() {
+        cout << "Deque: ";
+        for (int i = 0; i < size; i++) cout << arr[(front + i) % cap] << " ";
+        cout << "\n";
+    }
+};
+
+int main() {
+    Deque dq(5);
+    dq.pushBack(10);
+    dq.pushBack(20);
+    dq.pushFront(5);
+    dq.pushFront(1);
+    dq.print();                                          // 1 5 10 20
+    cout << "Front: " << dq.getFront() << "  Back: " << dq.getBack() << "\n";
+
+    cout << "Popped front: " << dq.popFront() << "\n";
+    cout << "Popped back: "  << dq.popBack()  << "\n";
+    dq.print();                                          // 5 10
+
+    // The ready-made version from the Standard Library
+    deque<int> d;
+    d.push_back(2); d.push_back(3); d.push_front(1);
+    cout << "STL deque: ";
+    for (int x : d) cout << x << " ";
+    cout << "\n";
+    return 0;
+}</script>
+
+<script>
+/* ================= Helpers ================= */
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const rand = () => Math.floor(Math.random() * 99) + 1;
+function readVal(id){
+  const v = parseInt($(id).value, 10);
+  return Number.isFinite(v) ? v : rand();
+}
+function log(id, html, kind = ''){
+  const el = $(id);
+  const d = document.createElement('div');
+  if (kind) d.className = kind;
+  d.innerHTML = html;
+  el.prepend(d);
+  while (el.children.length > 40) el.lastChild.remove();
+}
+function status(id, html){ $(id).innerHTML = html; }
+
+/* ================= Tabs ================= */
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+    document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== 'tab-' + t.dataset.tab);
+    window.scrollTo({top:0});
+  });
+});
+
+/* ================= Code highlighting + copy ================= */
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function highlight(src){
+  const re = /(\/\/[^\n]*)|("(?:\\.|[^"\\])*")|('(?:\\.|[^'\\])*')|(#\s*\w+)|\b(\d+)\b|\b(int|void|bool|class|public|private|return|while|if|else|for|true|false|new|delete|using|namespace|const|auto|break|struct)\b|\b(vector|priority_queue|deque|greater|cout|swap|std|main)\b/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(src)) !== null){
+    out += esc(src.slice(last, m.index));
+    const t = esc(m[0]);
+    let cls = m[1] ? 'tk-c' : (m[2]||m[3]) ? 'tk-s' : m[4] ? 'tk-p' : m[5] ? 'tk-n' : m[6] ? 'tk-k' : 'tk-t';
+    out += `<span class="${cls}">${t}</span>`;
+    last = re.lastIndex;
+  }
+  return out + esc(src.slice(last));
+}
+[['code-ms','pre-ms'],['code-pq','pre-pq'],['code-dq','pre-dq']].forEach(([s,d]) => {
+  $('#'+d).innerHTML = highlight($('#'+s).textContent);
+});
+document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+  const text = $('#'+b.dataset.code).textContent;
+  try { await navigator.clipboard.writeText(text); }
+  catch(e){
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); }catch(_){} ta.remove();
+  }
+  b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1400);
+}));
+
+/* ======================================================
+   STEP-BY-STEP ENGINE (shared by all three tabs)
+   In step mode every operation stops after each step and
+   waits for the "Next step" button (or the N / → key).
+   ====================================================== */
+const panels = {};
+function makeStepper(p){
+  const st = { p, on:true, resolve:null, n:0, busy:false };
+  const next = $('#'+p+'-next'), mode = $('#'+p+'-stepmode');
+  mode.addEventListener('change', () => { st.on = mode.checked; if (!st.on) release(st); hint(st, !!st.resolve); });
+  next.addEventListener('click', () => release(st));
+  panels[p] = st; hint(st); return st;
+}
+function release(st){ if (st.resolve){ const r = st.resolve; st.resolve = null; r(); } }
+function hint(st, waiting){
+  $('#'+st.p+'-hint').innerHTML = !st.on
+    ? 'Step mode is off: operations play by themselves.'
+    : waiting
+      ? 'Read the step, then press <b>Next step</b> (or the N key) to continue.'
+      : 'Start any operation, then press <b>Next step</b> to walk through it.';
+}
+async function pause(st, ms){
+  if (!st.on){ await sleep(ms); return; }
+  const next = $('#'+st.p+'-next');
+  next.disabled = false; next.classList.add('waiting'); hint(st, true);
+  await new Promise(r => st.resolve = r);
+  next.disabled = true; next.classList.remove('waiting'); hint(st, false);
+}
+function step(st, html, code){
+  st.n++;
+  $('#'+st.p+'-status').innerHTML =
+    `<span class="stepno">Step ${st.n}</span><span class="stxt">${html}${code ? ` <code class="scode">${esc(code)}</code>` : ''}</span>`;
+}
+function say(st, html){ $('#'+st.p+'-status').innerHTML = `<span class="stxt">${html}</span>`; }
+function lock(st, on){
+  document.querySelectorAll(`#tab-${st.p} .controls button:not(.next)`).forEach(b => b.disabled = on);
+}
+async function guard(st, fn){
+  if (st.busy) return;
+  st.busy = true; lock(st, true);
+  try { await fn(); } finally { st.busy = false; lock(st, false); }
+}
+document.addEventListener('keydown', e => {
+  if (!(e.key === 'n' || e.key === 'N' || e.key === 'ArrowRight')) return;
+  if (e.target.matches && e.target.matches('input[type=number]')) return;
+  const active = document.querySelector('.panel:not([hidden])');
+  const st = active && panels[active.id.replace('tab-','')];
+  if (st && st.resolve){ e.preventDefault(); release(st); }
+});
+
+/* ======================================================
+   MULTI-STACK  (k = 3 stacks, n = 10 shared boxes)
+   ====================================================== */
+const MS = { n:10, k:3, arr:[], top:[], next:[], owner:[], free:0, sel:0 };
+const msSt = makeStepper('ms');
+function msClear(){
+  MS.arr = Array(MS.n).fill(null);
+  MS.owner = Array(MS.n).fill(-1);
+  MS.top = Array(MS.k).fill(-1);
+  MS.next = Array.from({length:MS.n}, (_, i) => i < MS.n - 1 ? i + 1 : -1);
+  MS.free = 0;
+}
+function msChain(s){ const out=[]; let i=MS.top[s]; while(i!==-1){ out.push(i); i=MS.next[i]; } return out; }
+function msFreeList(){ const out=[]; let i=MS.free; while(i!==-1){ out.push(i); i=MS.next[i]; } return out; }
+
+function msRender(hl = {}){
+  $('#ms-array').innerHTML = MS.arr.map((v, i) => {
+    const o = MS.owner[i];
+    const tops = MS.top.map((t, s) => t === i ? `<span class="ptr p${s}">top S${s+1}</span>` : '').join('');
+    const fr = MS.free === i ? '<span class="ptr free">freeTop</span>' : '';
+    const cls = hl.cell === i ? hl.cls : '';
+    return `<div class="cell ${o>=0 ? 's'+o : ''} ${cls}">
+      ${tops}${fr}<span class="idx">${i}</span>
+      <span class="val">${v === null ? '' : v}</span>
+      <span class="nx">next ${MS.next[i]}</span></div>`;
+  }).join('');
+
+  const fl = msFreeList();
+  $('#ms-meta').innerHTML =
+    MS.top.map((t, s) => `<span class="chip c${s}">top[S${s+1}] = ${t}</span>`).join('') +
+    `<span class="chip">freeTop = ${MS.free}</span>` +
+    `<span class="chip">Free boxes: ${fl.length ? fl.join(' → ') : 'none (full)'}</span>`;
+
+  const colors = ['var(--s1)','var(--s2)','var(--s3)'];
+  $('#ms-towers').innerHTML = [0,1,2].map(s => {
+    const chain = msChain(s);
+    const plates = chain.length
+      ? chain.map((idx, j) => `<div class="plate ${j===0?'is-top':''} ${hl.cell===idx?hl.cls:''}">
+          <span class="v">${MS.arr[idx]}</span><span class="at">${j===0?'TOP  ':''}box ${idx}</span></div>`).join('')
+      : '<div class="empty-note">Empty stack</div>';
+    return `<div class="tower ${MS.sel===s?'sel':''}" data-s="${s}" style="--tc:${colors[s]}">
+      <h4>Stack ${s+1} <small>${chain.length} item${chain.length===1?'':'s'}</small></h4>
+      <div class="well">${plates}</div></div>`;
+  }).join('');
+  document.querySelectorAll('.tower').forEach(t => t.addEventListener('click', () => { if (!msSt.busy) msSelect(+t.dataset.s); }));
+  $('#ms-count').textContent = `${MS.n - fl.length}/${MS.n} boxes used`;
+}
+function msSelect(s){
+  MS.sel = s;
+  document.querySelectorAll('#ms-pick button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.s === s));
+  msRender();
+}
+async function msPush(s, v){
+  const st = msSt; st.n = 0;
+  if (MS.free === -1){
+    msRender();
+    step(st, `Push ${v} onto Stack ${s+1}. Check overflow: freeTop is -1, so all ${MS.n} boxes are used. <b>Overflow</b>, the push stops here.`, 'if (freeTop == -1) overflow');
+    log('#ms-log', `<b>Overflow</b> on Stack ${s+1}. freeTop is -1.`, 'err'); return;
+  }
+  msRender({cell:MS.free, cls:'target'});
+  step(st, `Push <b>${v}</b> onto Stack ${s+1}. Check overflow: freeTop = ${MS.free}, not -1, so there is a free box.`, 'if (freeTop == -1) overflow');
+  await pause(st, 700);
+
+  const i = MS.free;
+  step(st, `Take the first free box: i = ${i}.`, 'i = freeTop');
+  await pause(st, 700);
+
+  MS.free = MS.next[i];
+  msRender({cell:i, cls:'target'});
+  step(st, `Move the free pointer on to the next free box: freeTop = next[${i}] = ${MS.free}.`, 'freeTop = next[i]');
+  await pause(st, 700);
+
+  MS.next[i] = MS.top[s];
+  msRender({cell:i, cls:'target'});
+  step(st, `Link box ${i} to the old top of Stack ${s+1}: next[${i}] = ${MS.next[i]}${MS.next[i] === -1 ? ' (the stack was empty, so nothing is below)' : ''}.`, 'next[i] = top[s]');
+  await pause(st, 700);
+
+  MS.top[s] = i; MS.arr[i] = v; MS.owner[i] = s;
+  msRender({cell:i, cls:'just'});
+  step(st, `Box ${i} becomes the new top of Stack ${s+1} and stores <b>${v}</b>. Push complete.`, 'top[s] = i; arr[i] = value;');
+  log('#ms-log', `<b>Push ${v}</b> → S${s+1}: box ${i}, top[S${s+1}] = ${i}, freeTop = ${MS.free}`, 'ok');
+}
+async function msPop(s){
+  const st = msSt; st.n = 0;
+  if (MS.top[s] === -1){
+    msRender();
+    step(st, `Pop from Stack ${s+1}. Check underflow: top[S${s+1}] is -1, so the stack is empty. <b>Underflow</b>, nothing to pop.`, 'if (top[s] == -1) underflow');
+    log('#ms-log', `<b>Underflow</b> on Stack ${s+1}. top is -1.`, 'err'); return;
+  }
+  msRender({cell:MS.top[s], cls:'target'});
+  step(st, `Pop from Stack ${s+1}. Check underflow: top[S${s+1}] = ${MS.top[s]}, not -1, so the stack has items.`, 'if (top[s] == -1) underflow');
+  await pause(st, 700);
+
+  const i = MS.top[s], v = MS.arr[i];
+  msRender({cell:i, cls:'picked'});
+  step(st, `The top item sits in box ${i} and holds <b>${v}</b>.`, 'i = top[s]');
+  await pause(st, 700);
+
+  MS.top[s] = MS.next[i];
+  msRender({cell:i, cls:'picked'});
+  step(st, `Move the top down one item: top[S${s+1}] = next[${i}] = ${MS.top[s]}.`, 'top[s] = next[i]');
+  await pause(st, 700);
+
+  msRender({cell:i, cls:'leaving'}); await sleep(380);
+  MS.next[i] = MS.free; MS.free = i; MS.arr[i] = null; MS.owner[i] = -1;
+  msRender({cell:i, cls:'freed'});
+  step(st, `Give box ${i} back to the free list (freeTop = ${i}) and return <b>${v}</b>. Pop complete.`, 'next[i] = freeTop; freeTop = i; return arr[i];');
+  log('#ms-log', `<b>Pop</b> S${s+1} → ${v}. Box ${i} freed, top[S${s+1}] = ${MS.top[s]}`, 'info');
+}
+function msPeek(s){
+  if (msSt.busy) return;
+  const t = MS.top[s];
+  msRender(t === -1 ? {} : {cell:t, cls:'target'});
+  say(msSt, t === -1 ? `Stack ${s+1} is empty.` : `Peek: the top of Stack ${s+1} is <b>${MS.arr[t]}</b> in box ${t}. Nothing is removed.`);
+  log('#ms-log', `<b>Peek</b> S${s+1}: ${t===-1?'empty':MS.arr[t]}`);
+}
+
+document.querySelectorAll('#ms-pick button').forEach(b => b.addEventListener('click', () => msSelect(+b.dataset.s)));
+$('#ms-push').onclick = () => guard(msSt, () => msPush(MS.sel, readVal('#ms-val')));
+$('#ms-val').addEventListener('keydown', e => { if (e.key === 'Enter') $('#ms-push').click(); });
+$('#ms-pop').onclick  = () => guard(msSt, () => msPop(MS.sel));
+$('#ms-peek').onclick = () => msPeek(MS.sel);
+$('#ms-rand').onclick = () => guard(msSt, () => msPush(MS.sel, rand()));
+$('#ms-reset').onclick = () => { if (msSt.busy) return; msClear(); msRender(); $('#ms-log').innerHTML='';
+  say(msSt, 'All stacks cleared. Every box is free again.'); };
+$('#ms-demo').onclick = () => guard(msSt, async () => {
+  msClear(); msRender(); $('#ms-log').innerHTML = '';
+  say(msSt, 'Demo: the worked example from the table below. Each operation is shown step by step.');
+  await pause(msSt, 700);
+  const seq = [[0,15],[0,45],[1,17],[1,49],[1,39],[2,11],[2,9]];
+  for (const [s,v] of seq){ msSelect(s); await msPush(s, v); await pause(msSt, 850); }
+  msSelect(2); await msPop(2);
+});
+msClear();
+[[0,15],[0,45],[1,17],[1,49],[1,39],[2,11]].forEach(([s,v]) => {
+  const i = MS.free; MS.free = MS.next[i]; MS.next[i] = MS.top[s]; MS.top[s] = i; MS.arr[i] = v; MS.owner[i] = s;
+});
+msRender();
+log('#ms-log', 'Loaded a sample: 6 values across 3 stacks.', 'info');
+
+/* ======================================================
+   PRIORITY QUEUE  (binary heap, up to 15 items)
+   ====================================================== */
+const PQ = { h:[], mode:'max', cap:15 };
+const pqSt = makeStepper('pq');
+const better = (a, b) => PQ.mode === 'max' ? a > b : a < b;
+const word = () => PQ.mode === 'max' ? 'bigger' : 'smaller';
+const pqDelay = () => +$('#pq-speed').value;
+const levelFill = ['#6D28D9','#7C3AED','#9061F9','#A78BFA'];
+
+function pqRender(hl = {}){
+  const W = 800, H = 330, top = 42, gap = 88, h = PQ.h;
+  const pos = i => { const d = Math.floor(Math.log2(i+1)); const k = i - (2**d - 1);
+    return { x: (k + .5) * W / 2**d, y: top + d * gap, d }; };
+  const stateOf = i => (hl.out === i ? 'out' : hl.cmp && hl.cmp.includes(i) ? 'cmp' : hl.neu === i ? 'neu' : hl.done === i ? 'done' : '');
+  const fillOf = (i, d) => ({out:'#EF4444', cmp:'#FFA412', neu:'#FF5D8F', done:'#12B981'})[stateOf(i)] || levelFill[d];
+  let edges = '', nodes = '';
+  for (let i = 1; i < h.length; i++){
+    const a = pos(i), b = pos((i-1)>>1);
+    edges += `<line x1="${b.x}" y1="${b.y}" x2="${a.x}" y2="${a.y}"/>`;
+  }
+  for (let i = 0; i < h.length; i++){
+    const p = pos(i);
+    nodes += `<g class="node"><circle cx="${p.x}" cy="${p.y}" r="25" fill="${fillOf(i,p.d)}"/>
+      <text class="v" x="${p.x}" y="${p.y}">${h[i]}</text>
+      <text class="i" x="${p.x}" y="${p.y + 42}">[${i}]</text></g>`;
+  }
+  const empty = h.length ? '' : `<text x="400" y="150" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="20" fill="#9A9DC4">The heap is empty. Insert a value to start.</text>`;
+  $('#pq-tree').innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Heap tree">${edges}${nodes}${empty}</svg>`;
+  $('#pq-array').innerHTML = h.length
+    ? h.map((v, i) => `<div class="acell ${stateOf(i)}"><span class="v">${v}</span><span class="i">[${i}]</span></div>`).join('')
+    : '<div class="empty-note">[ ] empty array</div>';
+}
+
+async function pqInsert(v){
+  const st = pqSt, h = PQ.h; st.n = 0;
+  if (h.length >= PQ.cap){
+    step(st, `This demo holds up to ${PQ.cap} items (4 tree levels). The heap is <b>full</b>.`);
+    log('#pq-log', '<b>Full</b>: cannot insert more.', 'err'); return;
+  }
+  h.push(v); let i = h.length - 1;
+  pqRender({neu:i});
+  step(st, `Insert <b>${v}</b>: place it at the end of the array, box ${i}, so the tree stays complete.`, 'h.push_back(x)');
+  log('#pq-log', `<b>Insert ${v}</b> at box ${i}`, 'ok');
+  await pause(st, pqDelay());
+  while (i > 0){
+    const p = (i - 1) >> 1;
+    pqRender({cmp:[i,p]});
+    step(st, `Compare ${h[i]} with its parent ${h[p]} in box ${p}.`, `parent = (${i} - 1) / 2 = ${p}`);
+    await pause(st, pqDelay());
+    if (better(h[i], h[p])){
+      const a = h[i], b = h[p];
+      [h[i], h[p]] = [h[p], h[i]];
+      log('#pq-log', `Swap ${a} ↑ with ${b}`);
+      i = p; pqRender({neu:i});
+      step(st, `${a} is ${word()} than ${b}, so they swap. ${a} moves up to box ${i}.`, 'swap(h[i], h[parent(i)])');
+      await pause(st, pqDelay());
+    } else {
+      pqRender({done:i});
+      step(st, `${h[i]} is not ${word()} than ${h[p]}, so it stops moving.`, 'while (... h[parent] < h[i]) ends');
+      await pause(st, pqDelay());
+      break;
+    }
+  }
+  pqRender({done:i});
+  step(st, `Done: <b>${h[i]}</b> settled in box ${i}${i === 0 ? ' (the root)' : ''}. Heap order is correct again.`);
+}
+async function pqExtract(){
+  const st = pqSt, h = PQ.h; st.n = 0;
+  if (!h.length){ step(st, 'The priority queue is empty. <b>Underflow</b>, nothing to extract.'); log('#pq-log','<b>Empty</b>: nothing to extract.','err'); return; }
+  const top = h[0];
+  pqRender({out:0});
+  step(st, `Extract: save the root <b>${top}</b>, the highest priority item. This is the answer.`, 'int root = h[0]');
+  await pause(st, pqDelay());
+  const last = h.pop();
+  if (!h.length){
+    pqRender();
+    step(st, `${top} was the only item, so the heap is now empty. Returned <b>${top}</b>.`, 'h.pop_back()');
+    log('#pq-log', `<b>Extract</b> → ${top}`, 'info'); return;
+  }
+  h[0] = last; let i = 0;
+  pqRender({neu:0});
+  step(st, `Move the last item ${last} into the root and delete the last box.`, 'h[0] = h.back(); h.pop_back();');
+  await pause(st, pqDelay());
+  while (true){
+    const l = 2*i + 1, r = 2*i + 2; let b = i;
+    if (l < h.length && better(h[l], h[b])) b = l;
+    if (r < h.length && better(h[r], h[b])) b = r;
+    const kids = [l, r].filter(x => x < h.length);
+    if (!kids.length){ break; }
+    pqRender({cmp:[i, ...kids]});
+    step(st, `Compare ${h[i]} with its ${kids.length === 2 ? 'children' : 'child'} ${kids.map(x => h[x]).join(' and ')}.`, `left = 2*${i}+1 = ${l}, right = 2*${i}+2 = ${r}`);
+    await pause(st, pqDelay());
+    if (b === i){
+      pqRender({done:i});
+      step(st, `No child is ${word()} than ${h[i]}, so it stops sinking.`, 'if (largest == i) break;');
+      await pause(st, pqDelay());
+      break;
+    }
+    const a = h[i], c = h[b];
+    [h[i], h[b]] = [h[b], h[i]];
+    log('#pq-log', `Swap ${a} ↓ with ${c}`);
+    i = b; pqRender({neu:i});
+    step(st, `${c} is the ${PQ.mode === 'max' ? 'biggest' : 'smallest'}, so swap. ${a} sinks down to box ${i}.`, 'swap(h[i], h[largest])');
+    await pause(st, pqDelay());
+  }
+  pqRender({done:i});
+  step(st, `Done: returned <b>${top}</b>. ${h[i]} settled in box ${i}.`);
+  log('#pq-log', `<b>Extract</b> → ${top}`, 'info');
+}
+function pqHeapify(){
+  const h = PQ.h, n = h.length;
+  for (let s = (n >> 1) - 1; s >= 0; s--){
+    let i = s;
+    while (true){ const l=2*i+1, r=2*i+2; let b=i;
+      if (l<n && better(h[l],h[b])) b=l; if (r<n && better(h[r],h[b])) b=r;
+      if (b===i) break; [h[i],h[b]]=[h[b],h[i]]; i=b; }
+  }
+}
+$('#pq-push').onclick = () => guard(pqSt, () => pqInsert(readVal('#pq-val')));
+$('#pq-val').addEventListener('keydown', e => { if (e.key === 'Enter') $('#pq-push').click(); });
+$('#pq-rand').onclick = () => guard(pqSt, () => pqInsert(rand()));
+$('#pq-pop').onclick  = () => guard(pqSt, pqExtract);
+$('#pq-peek').onclick = () => { if (pqSt.busy) return;
+  if (!PQ.h.length){ say(pqSt, 'The queue is empty.'); return; }
+  pqRender({done:0}); say(pqSt, `Peek: the ${PQ.mode==='max'?'largest':'smallest'} item is <b>${PQ.h[0]}</b>, always at the root. Nothing is removed.`);
+  log('#pq-log', `<b>Peek</b> → ${PQ.h[0]}`); };
+$('#pq-reset').onclick = () => { if (pqSt.busy) return; PQ.h = []; pqRender(); $('#pq-log').innerHTML='';
+  say(pqSt, 'Cleared. Insert a value to start again.'); };
+document.querySelectorAll('#pq-mode button').forEach(b => b.addEventListener('click', () => {
+  if (pqSt.busy || PQ.mode === b.dataset.m) return;
+  PQ.mode = b.dataset.m;
+  document.querySelectorAll('#pq-mode button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  pqHeapify(); pqRender({done:0});
+  say(pqSt, `Switched to a ${PQ.mode}-heap and rebuilt it. The root is now the ${PQ.mode==='max'?'largest':'smallest'} value.`);
+  log('#pq-log', `<b>Mode</b>: ${PQ.mode}-heap (rebuilt)`, 'info');
+}));
+$('#pq-demo').onclick = () => guard(pqSt, async () => {
+  if (PQ.mode !== 'max'){ PQ.mode = 'max'; document.querySelectorAll('#pq-mode button').forEach(x => x.setAttribute('aria-pressed', x.dataset.m === 'max')); }
+  PQ.h = []; pqRender(); $('#pq-log').innerHTML = '';
+  say(pqSt, 'Demo: insert 30, 10, 50, 20, 60, 40, then extract once. Each operation is shown step by step.');
+  await pause(pqSt, pqDelay());
+  for (const v of [30,10,50,20,60,40]){ await pqInsert(v); await pause(pqSt, pqDelay()); }
+  await pqExtract();
+});
+PQ.h = [60,50,40,10,20,30]; pqRender();
+log('#pq-log', 'Loaded a sample max-heap: 60, 50, 40, 10, 20, 30.', 'info');
+
+/* ======================================================
+   DEQUE  (circular array, capacity 8)
+   ====================================================== */
+const DQ = { cap:8, arr:Array(8).fill(null), front:0, size:0 };
+const dqSt = makeStepper('dq');
+const dqRear = () => (DQ.front + DQ.size - 1 + DQ.cap) % DQ.cap;
+
+function dqRender(hl = {}){
+  const {cap, arr, front, size} = DQ;
+  const rear = dqRear();
+  const cars = [];
+  for (let k = 0; k < size; k++){
+    const i = (front + k) % cap;
+    const cls = [k===0?'is-front':'', k===size-1?'is-rear':'', hl.phys===i?hl.cls:''].join(' ');
+    cars.push(`<div class="car ${cls}"><span class="v">${arr[i]}</span><span class="at">box ${i}</span></div>`);
+  }
+  $('#dq-cars').innerHTML = cars.length ? cars.join('') : '<div class="empty-note" style="flex:1">The deque is empty</div>';
+  $('#dq-meta').innerHTML =
+    `<span class="chip c0">front = ${front}</span>` +
+    `<span class="chip" style="background:#E3E3FD">rear = ${size ? rear : 'none'}</span>` +
+    `<span class="chip">size = ${size} / ${cap}</span>`;
+
+  const cx = 170, cy = 170, R = 112;
+  let svg = `<svg viewBox="0 0 340 340" role="img" aria-label="Circular array"><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#CFEDEC" stroke-width="16"/>`;
+  for (let i = 0; i < cap; i++){
+    const a = -Math.PI/2 + i * 2*Math.PI/cap;
+    const x = cx + R*Math.cos(a), y = cy + R*Math.sin(a);
+    const lx = cx + (R+46)*Math.cos(a), ly = cy + (R+46)*Math.sin(a);
+    const ix = cx + (R-46)*Math.cos(a), iy = cy + (R-46)*Math.sin(a);
+    const used = arr[i] !== null;
+    const isF = size && i === front, isR = size && i === rear;
+    let fill = used ? '#0E9F9E' : '#FFFFFF';
+    const hit = hl.phys === i;
+    if (hit && (hl.cls === 'leaving' || hl.cls === 'picked')) fill = '#EF4444';
+    else if (hit && hl.cls === 'just') fill = '#FFA412';
+    else if (hit && hl.cls === 'target') fill = '#FFE3A8';
+    const stroke = hit && hl.cls === 'target' ? '#FFA412' : isF ? '#FF5D8F' : isR ? '#5B5BF0' : used ? '#0E9F9E' : '#B9C9D6';
+    const thick = (isF || isR || (hit && hl.cls === 'target')) ? 5 : 2;
+    svg += `<g class="slot"><circle cx="${x}" cy="${y}" r="24" fill="${fill}" stroke="${stroke}" stroke-width="${thick}" ${used || hit ? '' : 'stroke-dasharray="4 4"'}/>
+      <text x="${x}" y="${y}" font-size="18" fill="${used?'#fff':'#9AA9B8'}">${used?arr[i]:''}</text>
+      <text x="${ix}" y="${iy}" font-size="12" fill="#6B8A99">${i}</text></g>`;
+    if (hit && hl.cls === 'target' && !used) svg += `<text x="${lx}" y="${ly}" font-size="13" fill="#C27A00">here</text>`;
+    else if (isF && isR) svg += `<text x="${lx}" y="${ly}" font-size="13" fill="#1E1B4B">F / R</text>`;
+    else if (isF) svg += `<text x="${lx}" y="${ly}" font-size="14" fill="#FF5D8F">Front</text>`;
+    else if (isR) svg += `<text x="${lx}" y="${ly}" font-size="14" fill="#5B5BF0">Rear</text>`;
+  }
+  svg += `<text x="${cx}" y="${cy-8}" font-size="15" fill="#1E1B4B">cap = ${cap}</text>
+          <text x="${cx}" y="${cy+14}" font-size="12" fill="#6B8A99" font-family="Nunito">indices wrap with %</text></svg>`;
+  $('#dq-ring').innerHTML = svg;
+}
+async function dqPushFront(v){
+  const st = dqSt; st.n = 0;
+  if (DQ.size === DQ.cap){ dqRender();
+    step(st, `Push ${v} at the front. Check overflow: size = ${DQ.size} equals cap = ${DQ.cap}. <b>Overflow</b>, no free box.`, 'if (size == cap) overflow');
+    log('#dq-log','<b>Overflow</b> on push front.','err'); return; }
+  dqRender();
+  step(st, `Push <b>${v}</b> at the front. Check overflow: size = ${DQ.size} is less than ${DQ.cap}, so there is room.`, 'if (size == cap) overflow');
+  await pause(st, 700);
+  const old = DQ.front, nf = (old - 1 + DQ.cap) % DQ.cap;
+  dqRender({phys:nf, cls:'target'});
+  step(st, `Move front one step left: (${old} − 1 + ${DQ.cap}) % ${DQ.cap} = ${nf}.${old === 0 ? ' It wraps around from box 0 to the last box.' : ''}`, 'front = (front - 1 + cap) % cap');
+  await pause(st, 700);
+  DQ.front = nf; DQ.arr[nf] = v; DQ.size++;
+  dqRender({phys:nf, cls:'just'});
+  step(st, `Store <b>${v}</b> in box ${nf} and increase size to ${DQ.size}. Push front complete.`, 'arr[front] = x; size++;');
+  log('#dq-log', `<b>Push front ${v}</b> → box ${nf}`, 'ok');
+}
+async function dqPushBack(v){
+  const st = dqSt; st.n = 0;
+  if (DQ.size === DQ.cap){ dqRender();
+    step(st, `Push ${v} at the back. Check overflow: size = ${DQ.size} equals cap = ${DQ.cap}. <b>Overflow</b>, no free box.`, 'if (size == cap) overflow');
+    log('#dq-log','<b>Overflow</b> on push back.','err'); return; }
+  dqRender();
+  step(st, `Push <b>${v}</b> at the back. Check overflow: size = ${DQ.size} is less than ${DQ.cap}, so there is room.`, 'if (size == cap) overflow');
+  await pause(st, 700);
+  const r = (DQ.front + DQ.size) % DQ.cap;
+  dqRender({phys:r, cls:'target'});
+  step(st, `Find the box after the rear: (front + size) % ${DQ.cap} = (${DQ.front} + ${DQ.size}) % ${DQ.cap} = ${r}.`, 'rear = (front + size) % cap');
+  await pause(st, 700);
+  DQ.arr[r] = v; DQ.size++;
+  dqRender({phys:r, cls:'just'});
+  step(st, `Store <b>${v}</b> in box ${r} and increase size to ${DQ.size}. Push back complete.`, 'arr[rear] = x; size++;');
+  log('#dq-log', `<b>Push back ${v}</b> → box ${r}`, 'ok');
+}
+async function dqPopFront(){
+  const st = dqSt; st.n = 0;
+  if (!DQ.size){ dqRender(); step(st, 'Pop front. Check underflow: size = 0, the deque is empty. <b>Underflow</b>.', 'if (size == 0) underflow');
+    log('#dq-log','<b>Underflow</b> on pop front.','err'); return; }
+  dqRender();
+  step(st, `Pop from the front. Check underflow: size = ${DQ.size}, not 0, so there is an item.`, 'if (size == 0) underflow');
+  await pause(st, 700);
+  const i = DQ.front, v = DQ.arr[i];
+  dqRender({phys:i, cls:'picked'});
+  step(st, `Read the front item: box ${i} holds <b>${v}</b>.`, 'x = arr[front]');
+  await pause(st, 700);
+  dqRender({phys:i, cls:'leaving'}); await sleep(380);
+  DQ.arr[i] = null; DQ.front = (DQ.front + 1) % DQ.cap; DQ.size--;
+  dqRender();
+  step(st, `Move front one step right: (${i} + 1) % ${DQ.cap} = ${DQ.front}, and size becomes ${DQ.size}. Returned <b>${v}</b>.`, 'front = (front + 1) % cap; size--;');
+  log('#dq-log', `<b>Pop front</b> → ${v}`, 'info');
+}
+async function dqPopBack(){
+  const st = dqSt; st.n = 0;
+  if (!DQ.size){ dqRender(); step(st, 'Pop back. Check underflow: size = 0, the deque is empty. <b>Underflow</b>.', 'if (size == 0) underflow');
+    log('#dq-log','<b>Underflow</b> on pop back.','err'); return; }
+  dqRender();
+  step(st, `Pop from the back. Check underflow: size = ${DQ.size}, not 0, so there is an item.`, 'if (size == 0) underflow');
+  await pause(st, 700);
+  const i = dqRear(), v = DQ.arr[i];
+  dqRender({phys:i, cls:'picked'});
+  step(st, `Find the rear: (front + size − 1) % ${DQ.cap} = (${DQ.front} + ${DQ.size} − 1) % ${DQ.cap} = ${i}. It holds <b>${v}</b>.`, 'rear = (front + size - 1) % cap');
+  await pause(st, 700);
+  dqRender({phys:i, cls:'leaving'}); await sleep(380);
+  DQ.arr[i] = null; DQ.size--;
+  dqRender();
+  step(st, `Decrease size to ${DQ.size}. front does not move. Returned <b>${v}</b>.`, 'size--; return arr[rear];');
+  log('#dq-log', `<b>Pop back</b> → ${v}`, 'info');
+}
+$('#dq-pf').onclick = () => guard(dqSt, () => dqPushFront(readVal('#dq-val')));
+$('#dq-pb').onclick = () => guard(dqSt, () => dqPushBack(readVal('#dq-val')));
+$('#dq-val').addEventListener('keydown', e => { if (e.key === 'Enter') $('#dq-pb').click(); });
+$('#dq-of').onclick = () => guard(dqSt, dqPopFront);
+$('#dq-ob').onclick = () => guard(dqSt, dqPopBack);
+$('#dq-rand').onclick = () => guard(dqSt, () => Math.random() < .5 ? dqPushFront(rand()) : dqPushBack(rand()));
+$('#dq-peek').onclick = () => {
+  if (dqSt.busy) return;
+  if (!DQ.size){ say(dqSt, 'The deque is empty.'); return; }
+  say(dqSt, `Peek: the front item is <b>${DQ.arr[DQ.front]}</b> and the rear item is <b>${DQ.arr[dqRear()]}</b>. Nothing is removed.`);
+  log('#dq-log', `<b>Peek</b> front ${DQ.arr[DQ.front]}, rear ${DQ.arr[dqRear()]}`);
+};
+$('#dq-reset').onclick = () => { if (dqSt.busy) return; DQ.arr = Array(DQ.cap).fill(null); DQ.front = 0; DQ.size = 0;
+  dqRender(); $('#dq-log').innerHTML=''; say(dqSt, 'Cleared. front is back at box 0.'); };
+$('#dq-demo').onclick = () => guard(dqSt, async () => {
+  DQ.arr = Array(DQ.cap).fill(null); DQ.front = 0; DQ.size = 0; dqRender(); $('#dq-log').innerHTML = '';
+  say(dqSt, 'Demo: push back, push front (watch front wrap around), then pop from both ends.');
+  await pause(dqSt, 700);
+  await dqPushBack(10);  await pause(dqSt, 900);
+  await dqPushBack(20);  await pause(dqSt, 900);
+  await dqPushFront(5);  await pause(dqSt, 1100);
+  await dqPushFront(1);  await pause(dqSt, 900);
+  await dqPushBack(30);  await pause(dqSt, 900);
+  await dqPopFront();    await pause(dqSt, 900);
+  await dqPopBack();
+});
+[10,20].forEach(v => { DQ.arr[(DQ.front + DQ.size) % DQ.cap] = v; DQ.size++; });
+DQ.front = (DQ.front - 1 + DQ.cap) % DQ.cap; DQ.arr[DQ.front] = 5; DQ.size++;
+dqRender();
+log('#dq-log', 'Loaded a sample: 5, 10, 20 (5 was pushed at the front and wrapped to box 7).', 'info');
+</script>
+</body>
+</html>

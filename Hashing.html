@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hashing, Explained — An Interactive Field Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,560;0,9..144,680;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --navy:#0F1526;
+  --navy-deep:#0A0E1B;
+  --navy-line:#232B47;
+  --paper:#F2EEE2;
+  --paper-hi:#FAF8F1;
+  --paper-line:#DAD2B8;
+  --ink:#1C2138;
+  --ink-soft:#565f82;
+  --amber:#E3A73B;
+  --amber-deep:#B9811F;
+  --teal:#2F9E8F;
+  --teal-deep:#1F7A6E;
+  --coral:#E1573F;
+  --muted:#8b93b5;
+  --font-display:'Fraunces', Georgia, serif;
+  --font-body:'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:'IBM Plex Mono','Courier New', monospace;
+  --radius:3px;
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--navy);
+  color:var(--paper);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--amber);color:var(--navy-deep);}
+a{color:inherit;}
+button{font-family:inherit;}
+img,svg{display:block;max-width:100%;}
+
+h1,h2,h3{font-family:var(--font-display);font-weight:560;margin:0 0 .4em;letter-spacing:-.01em;}
+h2{font-size:1.9rem;}
+h3{font-size:1.25rem;}
+p{margin:0 0 1em;}
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:.72rem;
+  color:var(--amber);
+  letter-spacing:.02em;
+}
+
+code, .mono{font-family:var(--font-mono);}
+
+/* focus visibility */
+a:focus-visible, button:focus-visible, input:focus-visible{
+  outline:2px solid var(--amber);
+  outline-offset:2px;
+}
+
+/* ============ HEADER ============ */
+.site-header{
+  position:fixed; top:0; left:0; right:0; height:60px;
+  background:var(--navy-deep);
+  border-bottom:1px solid var(--navy-line);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+  z-index:100;
+}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-size:1.15rem;}
+.brand-mark{
+  width:28px;height:28px;border:1.5px solid var(--amber); border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono); font-size:.8rem; color:var(--amber);
+}
+.brand-sub{font-family:var(--font-mono); font-size:.68rem; color:var(--muted); margin-left:4px; display:none;}
+@media(min-width:640px){.brand-sub{display:inline;}}
+.header-dl{
+  font-family:var(--font-mono); font-size:.72rem; color:var(--muted);
+  border:1px solid var(--navy-line); padding:6px 12px; border-radius:20px;
+}
+
+/* ============ LAYOUT ============ */
+.layout{display:flex; padding-top:60px; min-height:100vh;}
+
+/* sidebar (desktop) */
+.side-nav{
+  width:232px; flex:none;
+  position:fixed; top:60px; bottom:0; left:0;
+  overflow-y:auto;
+  padding:28px 0 40px;
+  border-right:1px solid var(--navy-line);
+}
+.side-nav .grp-label{
+  font-family:var(--font-mono); font-size:.65rem; color:var(--muted);
+  padding:0 24px; margin:18px 0 8px; letter-spacing:.03em;
+}
+.side-nav .grp-label:first-child{margin-top:0;}
+.side-nav ul{list-style:none; margin:0; padding:0;}
+.side-nav a{
+  display:flex; align-items:baseline; gap:10px;
+  text-decoration:none; padding:8px 24px;
+  font-size:.88rem; color:var(--muted);
+  border-left:2px solid transparent;
+  transition:color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+}
+.side-nav a .n{font-family:var(--font-mono); font-size:.7rem; color:var(--navy-line);}
+.side-nav a:hover{color:var(--paper); background:rgba(227,167,59,.06);}
+.side-nav a.active{color:var(--amber); border-left-color:var(--amber); background:rgba(227,167,59,.08);}
+.side-nav a.active .n{color:var(--amber);}
+
+.content{margin-left:232px; flex:1; min-width:0;}
+@media(max-width:900px){
+  .side-nav{
+    position:sticky; top:60px; bottom:auto; left:auto;
+    width:auto; height:auto; padding:10px 0;
+    display:flex; overflow-x:auto; overflow-y:hidden;
+    background:var(--navy-deep); border-right:none; border-bottom:1px solid var(--navy-line);
+    z-index:50;
+  }
+  .side-nav .grp-label{display:none;}
+  .side-nav ul{display:flex; gap:2px; padding:0 14px;}
+  .side-nav a{padding:8px 14px; border-left:none; border-bottom:2px solid transparent; white-space:nowrap;}
+  .side-nav a.active{border-left-color:transparent; border-bottom-color:var(--amber);}
+  .content{margin-left:0;}
+}
+
+/* ============ HERO ============ */
+.hero{
+  padding:64px 40px 56px; max-width:1180px;
+  display:grid; grid-template-columns:1.1fr 1fr; gap:48px; align-items:center;
+}
+@media(max-width:900px){.hero{grid-template-columns:1fr; padding:40px 20px;}}
+.hero h1{font-size:clamp(2.6rem,6vw,4.1rem); line-height:1; color:var(--paper-hi);}
+.hero h1 em{font-style:italic; color:var(--amber); font-weight:500;}
+.hero p.lead{color:var(--muted); font-size:1.08rem; max-width:46ch;}
+.hero-cta{
+  display:inline-flex; align-items:center; gap:8px; margin-top:6px;
+  font-family:var(--font-mono); font-size:.82rem; color:var(--amber);
+  text-decoration:none; border-bottom:1px solid var(--amber-deep); padding-bottom:2px;
+}
+
+/* hero diagram */
+.hero-diagram{
+  background:var(--navy-deep); border:1px solid var(--navy-line); border-radius:var(--radius);
+  padding:28px 22px; font-family:var(--font-mono);
+}
+.hd-row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.hd-key,.hd-fn{
+  border:1px solid var(--navy-line); border-radius:var(--radius);
+  padding:10px 14px; text-align:center; font-size:1rem; color:var(--paper-hi);
+  min-width:56px; transition:all .5s var(--ease);
+}
+.hd-fn{color:var(--teal); border-color:var(--teal-deep); font-size:.72rem; padding:10px 10px; letter-spacing:.02em;}
+.hd-arrow{flex:1; height:1px; background:var(--navy-line); position:relative; min-width:16px;}
+.hd-arrow::after{content:'';position:absolute; right:0; top:-3px; border:3px solid transparent; border-left-color:var(--navy-line);}
+.hd-table{display:flex; gap:4px; margin-top:20px; justify-content:center; flex-wrap:wrap;}
+.hd-slot{
+  width:26px;height:26px; border:1px solid var(--navy-line); border-radius:2px;
+  display:flex; align-items:center; justify-content:center; font-size:.62rem; color:var(--muted);
+  transition:all .45s var(--ease);
+}
+.hd-slot.lit{background:var(--amber); border-color:var(--amber); color:var(--navy-deep); font-weight:600; transform:translateY(-2px);}
+.hd-cap{text-align:center; color:var(--muted); font-size:.68rem; margin-top:14px;}
+.hd-cap b{color:var(--amber);}
+
+/* ============ CARDS / SECTIONS ============ */
+main section{scroll-margin-top:76px;}
+.intro-wrap, .method{padding:8px 40px 8px;}
+@media(max-width:900px){.intro-wrap,.method{padding:8px 18px;}}
+.card{
+  background:var(--paper); color:var(--ink);
+  border-radius:6px; max-width:900px; margin:20px auto 56px;
+  padding:38px 42px 42px;
+  box-shadow:0 1px 0 var(--paper-line);
+}
+@media(max-width:640px){.card{padding:26px 20px 30px;}}
+.card h2{color:var(--ink);}
+.card .plain{font-size:1.02rem; color:var(--ink-soft); max-width:62ch;}
+.card .tag-num{
+  font-family:var(--font-mono); font-size:.72rem; color:var(--amber-deep);
+  border:1px solid var(--paper-line); border-radius:20px; padding:3px 10px; margin-bottom:12px; display:inline-block;
+}
+
+.formula-box{
+  font-family:var(--font-mono); background:var(--navy-deep); color:var(--teal);
+  border-radius:4px; padding:14px 18px; display:inline-block; font-size:1.02rem;
+  margin:8px 0 18px; border:1px solid var(--navy-line);
+}
+.formula-box .k{color:var(--amber);}
+
+.note-row{display:flex; gap:22px; flex-wrap:wrap; margin:18px 0 6px;}
+.note{flex:1; min-width:220px; border-left:2px solid var(--paper-line); padding-left:14px;}
+.note h4{margin:0 0 4px; font-size:.78rem; text-transform:none; font-family:var(--font-mono); color:var(--amber-deep);}
+.note p{margin:0; font-size:.92rem; color:var(--ink-soft);}
+
+/* ============ DEMO WIDGET ============ */
+.demo{
+  margin-top:26px; border:1px solid var(--paper-line); border-radius:6px; overflow:hidden; background:var(--paper-hi);
+}
+.demo-visual{
+  min-height:168px; padding:30px 24px 20px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  border-bottom:1px solid var(--paper-line);
+}
+.demo-explain{
+  padding:16px 24px; min-height:56px;
+}
+.step-tag{font-family:var(--font-mono); font-size:.7rem; color:var(--teal-deep); display:block; margin-bottom:4px;}
+.demo-explain p{margin:0; color:var(--ink); font-size:.97rem;}
+.demo-controls{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 20px; background:var(--paper); border-top:1px solid var(--paper-line);
+}
+.demo-controls .btns{display:flex; gap:8px;}
+.dbtn{
+  border:1px solid var(--paper-line); background:var(--paper-hi); color:var(--ink);
+  padding:7px 14px; border-radius:20px; font-size:.82rem; cursor:pointer;
+  transition:background .2s, color .2s, border-color .2s;
+}
+.dbtn:hover:not(:disabled){border-color:var(--amber-deep); color:var(--amber-deep);}
+.dbtn:disabled{opacity:.35; cursor:default;}
+.dbtn.primary{background:var(--ink); color:var(--paper-hi); border-color:var(--ink);}
+.dbtn.primary:hover{background:var(--amber-deep); border-color:var(--amber-deep); color:var(--navy-deep);}
+.step-dots{display:flex; gap:6px;}
+.step-dots .dot{
+  width:7px;height:7px;border-radius:50%;background:var(--paper-line); cursor:pointer; transition:background .2s, transform .2s;
+}
+.step-dots .dot.active{background:var(--amber-deep); transform:scale(1.3);}
+
+/* digit / operation visuals */
+.digit-row{display:flex; gap:5px;}
+.digit{
+  font-family:var(--font-mono); font-size:1.3rem; font-weight:600;
+  width:34px; height:42px; display:flex; align-items:center; justify-content:center;
+  background:var(--navy-deep); color:var(--paper-hi); border-radius:4px;
+  opacity:0; transform:translateY(6px) scale(.9);
+  transition:opacity .35s var(--ease), transform .35s var(--ease), background .3s, color .3s;
+}
+.digit.show{opacity:1; transform:translateY(0) scale(1);}
+.digit.hi{background:var(--amber); color:var(--navy-deep);}
+.digit.dim{opacity:.32;}
+.digit.dim.show{opacity:.32;}
+.digit.good{background:var(--teal); color:var(--navy-deep);}
+.digit.small{width:26px; height:34px; font-size:1.02rem;}
+
+.label-row{display:flex; gap:5px;}
+.pos-label{
+  width:34px; text-align:center; font-family:var(--font-mono); font-size:.66rem; color:var(--ink-soft);
+  opacity:0; transition:opacity .3s var(--ease);
+}
+.pos-label.show{opacity:1;}
+
+.op-arrow{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  opacity:0; transform:translateY(-4px); transition:all .35s var(--ease);
+}
+.op-arrow.show{opacity:1; transform:translateY(0);}
+.op-label{font-family:var(--font-mono); font-size:.76rem; color:var(--teal-deep); background:rgba(47,158,143,.12); padding:2px 10px; border-radius:10px;}
+.arrow-svg{width:44px; height:18px;}
+.arrow-svg line, .arrow-svg polygon{stroke:var(--paper-line); stroke-width:2; fill:var(--paper-line);}
+
+.result-box{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  opacity:0; transform:scale(.85); transition:all .4s var(--ease);
+}
+.result-box.show{opacity:1; transform:scale(1);}
+.rb-label{font-family:var(--font-mono); font-size:.66rem; color:var(--ink-soft); text-transform:none;}
+.rb-val{font-family:var(--font-mono); font-size:1.5rem; font-weight:600; color:var(--amber-deep);}
+
+.equation-line{
+  display:flex; align-items:center; gap:10px; font-family:var(--font-mono); font-size:1.05rem; color:var(--ink);
+  opacity:0; transform:translateY(6px); transition:all .4s var(--ease); flex-wrap:wrap; justify-content:center;
+}
+.equation-line.show{opacity:1; transform:translateY(0);}
+.equation-line .eq-amber{color:var(--amber-deep); font-weight:600;}
+.equation-line .eq-teal{color:var(--teal-deep); font-weight:600;}
+.equation-line .eq-muted{color:var(--ink-soft);}
+
+.chunk-wrap{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+.chunk{
+  display:flex; gap:2px; padding:4px; border:1.5px dashed var(--paper-line); border-radius:6px;
+  opacity:0; transform:translateY(6px); transition:all .4s var(--ease);
+}
+.chunk.show{opacity:1; transform:translateY(0);}
+.chunk .digit{width:26px; height:34px; font-size:1rem;}
+
+/* mini table (window) */
+.mini-table{display:flex; align-items:flex-end; gap:6px; justify-content:center;}
+.tbl-ellipsis{font-family:var(--font-mono); color:var(--ink-soft); align-self:center; opacity:0; transition:opacity .4s;}
+.tbl-ellipsis.show{opacity:1;}
+.tbl-slot{
+  width:52px; height:52px; border:1px solid var(--paper-line); border-radius:4px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  background:var(--paper-hi);
+  opacity:0; transform:translateY(8px); transition:all .4s var(--ease);
+}
+.tbl-slot.show{opacity:1; transform:translateY(0);}
+.tbl-idx{font-family:var(--font-mono); font-size:.62rem; color:var(--ink-soft);}
+.tbl-item{font-size:1.1rem; color:var(--navy-deep);}
+.tbl-slot.filled{background:var(--amber); border-color:var(--amber-deep);}
+.tbl-slot.filled .tbl-idx{color:var(--navy-deep); font-weight:700;}
+.tbl-caption{
+  text-align:center; font-size:.85rem; color:var(--ink-soft); margin:14px 0 0;
+  opacity:0; transition:opacity .5s var(--ease) .1s;
+}
+.tbl-caption.show{opacity:1;}
+.tbl-caption strong{color:var(--amber-deep); font-family:var(--font-mono);}
+
+/* collision mini illustration */
+.collide-wrap{display:flex; align-items:center; gap:26px; justify-content:center; flex-wrap:wrap;}
+.collide-keys{display:flex; flex-direction:column; gap:10px;}
+.collide-slot{
+  width:64px; height:64px; border:1px solid var(--paper-line); border-radius:6px; position:relative;
+  display:flex; align-items:center; justify-content:center; background:var(--paper-hi);
+}
+.collide-slot .tbl-idx{position:absolute; top:4px; left:6px;}
+.chip{
+  font-family:var(--font-mono); font-size:.8rem; padding:6px 12px; border-radius:16px; background:var(--navy-deep); color:var(--paper-hi);
+  transition:transform .5s var(--ease);
+}
+.chip.b{background:var(--teal-deep);}
+.collide-stack{display:flex; flex-direction:column; gap:3px; align-items:center;}
+
+/* try it */
+.try-it{
+  margin-top:24px; border-top:1px dashed var(--paper-line); padding-top:20px;
+}
+.try-it h4{font-family:var(--font-mono); font-size:.78rem; color:var(--amber-deep); margin:0 0 10px;}
+.try-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+.try-row input{
+  font-family:var(--font-mono); font-size:1rem; padding:9px 12px; border-radius:4px;
+  border:1px solid var(--paper-line); width:140px; background:var(--paper-hi); color:var(--ink);
+}
+.try-arrow{color:var(--ink-soft); font-family:var(--font-mono);}
+.try-out{
+  font-family:var(--font-mono); font-size:1rem; padding:9px 14px; border-radius:4px;
+  background:var(--navy-deep); color:var(--teal); min-width:70px; text-align:center;
+}
+.try-out.warn{color:var(--coral);}
+.try-note{font-size:.82rem; color:var(--ink-soft); margin-top:10px;}
+
+/* comparison table */
+.compare-table{width:100%; border-collapse:collapse; font-size:.9rem; margin-top:10px;}
+.compare-table th,.compare-table td{
+  text-align:left; padding:10px 12px; border-bottom:1px solid var(--paper-line); vertical-align:top;
+}
+.compare-table th{font-family:var(--font-mono); font-size:.7rem; color:var(--amber-deep); font-weight:600; letter-spacing:.02em;}
+.compare-table td.f{font-family:var(--font-mono); color:var(--teal-deep); white-space:nowrap;}
+.compare-table tr:hover td{background:rgba(227,167,59,.06);}
+
+footer{
+  text-align:center; padding:40px 20px 60px; color:var(--muted); font-size:.82rem; font-family:var(--font-mono);
+}
+footer a{color:var(--amber); text-decoration:none; border-bottom:1px solid var(--amber-deep);}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:.001ms !important; animation-duration:.001ms !important;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="brand"><span class="brand-mark">h()</span> Hashing <span class="brand-sub">— an interactive field guide</span></div>
+  <div class="header-dl">save this page ⌘/Ctrl + S to keep it offline</div>
+</header>
+
+<div class="layout">
+  <nav class="side-nav" id="sideNav">
+    <div class="grp-label">Foundations</div>
+    <ul>
+      <li><a href="#intro" data-n="00"><span class="n">00</span> What is hashing?</a></li>
+    </ul>
+    <div class="grp-label">Hashing methods</div>
+    <ul>
+      <li><a href="#direct" data-n="01"><span class="n">01</span> Direct</a></li>
+      <li><a href="#subtraction" data-n="02"><span class="n">02</span> Subtraction</a></li>
+      <li><a href="#division" data-n="03"><span class="n">03</span> Modulo-division</a></li>
+      <li><a href="#extraction" data-n="04"><span class="n">04</span> Digit extraction</a></li>
+      <li><a href="#midsquare" data-n="05"><span class="n">05</span> Mid-square</a></li>
+      <li><a href="#folding" data-n="06"><span class="n">06</span> Folding</a></li>
+      <li><a href="#rotation" data-n="07"><span class="n">07</span> Rotation</a></li>
+      <li><a href="#pseudorandom" data-n="08"><span class="n">08</span> Pseudorandom</a></li>
+    </ul>
+    <div class="grp-label">Reference</div>
+    <ul>
+      <li><a href="#compare" data-n="—"><span class="n">—</span> Compare all 8</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">DATA STRUCTURES &amp; ALGORITHMS</p>
+        <h1>Turn a key<br>into an <em>address.</em></h1>
+        <p class="lead">Hashing is the trick that lets a computer find data in one step instead of searching for it. Below: eight classic ways to compute that address, each with an animated, click-through example.</p>
+        <a class="hero-cta" href="#intro">↓ start with the basics</a>
+      </div>
+      <div class="hero-diagram">
+        <div class="hd-row">
+          <div class="hd-key" id="heroKey">23</div>
+          <div class="hd-arrow"></div>
+          <div class="hd-fn">HASH<br>FUNCTION</div>
+          <div class="hd-arrow"></div>
+          <div class="hd-key" id="heroIdx">3</div>
+        </div>
+        <div class="hd-table" id="heroTable"></div>
+        <p class="hd-cap">key <b id="heroKeyCap">23</b> is sent straight to <b id="heroCap">table[3]</b></p>
+      </div>
+    </section>
+
+    <!-- ============ INTRO ============ -->
+    <section id="intro" class="intro-wrap">
+      <div class="card">
+        <span class="tag-num">START HERE</span>
+        <h2>What is hashing, really?</h2>
+        <p class="plain">Imagine a wall of numbered lockers. If you want to find "locker for student #47" instantly — no walking down the row checking labels — you need a rule that turns "47" straight into a locker number. That rule is a <strong>hash function</strong>. The number it produces is the <strong>index</strong> (or address), and the wall of lockers is the <strong>hash table</strong>. Instead of searching, you calculate.</p>
+        <p class="plain">Every method on this page answers the same question in a different way: <em>given a key, what quick bit of arithmetic gets me to an index?</em> Some just reuse the key. Others chop it up, square it, or fold it in half.</p>
+
+        <div class="note-row">
+          <div class="note">
+            <h4>WHY BOTHER</h4>
+            <p>Looking something up by calculating its address is O(1) — constant time — versus scanning a list, which is O(n).</p>
+          </div>
+          <div class="note">
+            <h4>THE CATCH</h4>
+            <p>Two different keys can land on the same address. That's called a <strong>collision</strong> — every method below has to live with the possibility.</p>
+          </div>
+        </div>
+
+        <div class="demo" style="margin-top:22px;">
+          <div class="demo-visual">
+            <div class="collide-wrap" id="collideVisual"></div>
+          </div>
+          <div class="demo-explain">
+            <span class="step-tag">A COLLISION, IN MINIATURE</span>
+            <p>Keys <strong class="mono">12</strong> and <strong class="mono">22</strong> both hash to <strong class="mono">table[2]</strong> under "key mod 10." Real hash tables handle this with chaining or probing — a topic for another day. For now, just notice: it happens to <em>every</em> method below.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METHOD SECTIONS injected by JS ============ -->
+    <main id="methodsRoot"></main>
+
+    <!-- ============ COMPARE ============ -->
+    <section id="compare" class="method">
+      <div class="card">
+        <span class="tag-num">QUICK REFERENCE</span>
+        <h2>All eight, side by side</h2>
+        <p class="plain">Same information as above, condensed for revision before an exam.</p>
+        <table class="compare-table">
+          <thead><tr><th>Method</th><th>Formula</th><th>Good for</th><th>Watch out for</th></tr></thead>
+          <tbody>
+            <tr><td>Direct</td><td class="f">h(k) = k</td><td>Small, dense key ranges (e.g. IDs 0–99)</td><td>Wastes space if keys are sparse</td></tr>
+            <tr><td>Subtraction</td><td class="f">h(k) = k − base</td><td>Keys that start at a fixed offset</td><td>Only shifts the range, doesn't compress it</td></tr>
+            <tr><td>Modulo-division</td><td class="f">h(k) = k mod m</td><td>Almost any key set; the default choice</td><td>Pick a prime table size to spread keys evenly</td></tr>
+            <tr><td>Digit extraction</td><td class="f">pick digits of k</td><td>Keys with meaningful digit positions</td><td>Ignores the digits it doesn't pick — easy to lose spread</td></tr>
+            <tr><td>Mid-square</td><td class="f">middle digits of k²</td><td>Scrambling keys that look "too similar"</td><td>Squaring can overflow for very large keys</td></tr>
+            <tr><td>Folding</td><td class="f">sum of k's chunks</td><td>Long keys (phone numbers, card numbers)</td><td>Needs a final mod step to fit the table</td></tr>
+            <tr><td>Rotation</td><td class="f">rotate digits, then hash</td><td>Keys where trailing digits repeat a lot</td><td>Usually paired with division, not used alone</td></tr>
+            <tr><td>Pseudorandom</td><td class="f">(a·k + c) mod m</td><td>Fast, well-spread indices from any integer key</td><td>Constants a, c, m must be chosen carefully</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      built as a self-contained HTML file · no server, no tracking, works offline · reload to replay every animation
+    </footer>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================
+   GENERIC VISUAL BUILDERS
+   ============================================================ */
+function digits(str, opts={}){
+  opts = opts||{};
+  const hi = opts.hi||[], dim = opts.dim||[], good = opts.good||[];
+  const small = opts.small ? ' small' : '';
+  return '<div class="digit-row">' + [...String(str)].map((ch,idx)=>{
+    let cls = 'digit enter'+small;
+    if(hi.includes(idx)) cls += ' hi';
+    if(dim.includes(idx)) cls += ' dim';
+    if(good.includes(idx)) cls += ' good';
+    return `<span class="${cls}">${ch}</span>`;
+  }).join('') + '</div>';
+}
+function labelRow(count, marks){
+  marks = marks || [];
+  return '<div class="label-row">' + Array.from({length:count},(_,i)=>
+    `<span class="pos-label enter">${marks.includes(i) ? (i+1) : ''}</span>`
+  ).join('') + '</div>';
+}
+function opArrow(label){
+  return `<div class="op-arrow enter"><span class="op-label">${label}</span>
+    <svg class="arrow-svg" viewBox="0 0 60 24"><line x1="2" y1="12" x2="46" y2="12"/><polygon points="46,4 58,12 46,20"/></svg></div>`;
+}
+function resultBox(label, val){
+  return `<div class="result-box enter"><span class="rb-label">${label}</span><span class="rb-val">${val}</span></div>`;
+}
+function eqLine(html){
+  return `<div class="equation-line enter">${html}</div>`;
+}
+function chunkGroup(groups){
+  return '<div class="chunk-wrap">' + groups.map(g =>
+    '<div class="chunk enter">' + [...String(g)].map(ch=>`<span class="digit small">${ch}</span>`).join('') + '</div>'
+  ).join('') + '</div>';
+}
+function windowTable(center, size){
+  let start = center-2, end = center+2;
+  if(start < 0){ end += (0-start); start = 0; }
+  if(end > size-1){ start -= (end-(size-1)); end = size-1; if(start<0) start=0; }
+  let html = '<div class="mini-table">';
+  if(start>0) html += '<span class="tbl-ellipsis enter">&hellip;</span>';
+  for(let i=start;i<=end;i++){
+    html += `<div class="tbl-slot enter ${i===center?'filled':''}"><span class="tbl-idx">${i}</span>${i===center?'<span class="tbl-item">&#9679;</span>':''}</div>`;
+  }
+  if(end<size-1) html += '<span class="tbl-ellipsis enter">&hellip;</span>';
+  html += '</div>';
+  html += `<p class="tbl-caption enter">table size <strong>m = ${size}</strong> &nbsp;&rarr;&nbsp; record stored at <strong>index ${center}</strong></p>`;
+  return html;
+}
+
+/* ============================================================
+   STEP DEMO ENGINE
+   ============================================================ */
+class StepDemo{
+  constructor(root, steps){
+    this.root = root;
+    this.steps = steps;
+    this.i = 0;
+    this.playing = false;
+    this.timer = null;
+    this.visual = root.querySelector('.demo-visual');
+    this.explain = root.querySelector('.demo-explain');
+    this.dotsEl = root.querySelector('.step-dots');
+    this.dotsEl.innerHTML = steps.map((_,idx)=>`<span class="dot" data-i="${idx}" role="button" aria-label="Go to step ${idx+1}"></span>`).join('');
+    this.prevBtn = root.querySelector('[data-action="prev"]');
+    this.nextBtn = root.querySelector('[data-action="next"]');
+    this.playBtn = root.querySelector('[data-action="play"]');
+    this.prevBtn.addEventListener('click', ()=>{ this.stopPlay(); this.go(this.i-1); });
+    this.nextBtn.addEventListener('click', ()=>{ this.stopPlay(); this.go(this.i+1); });
+    this.playBtn.addEventListener('click', ()=> this.togglePlay());
+    this.dotsEl.addEventListener('click', e=>{
+      const d = e.target.closest('.dot');
+      if(d){ this.stopPlay(); this.go(+d.dataset.i); }
+    });
+    this.render();
+  }
+  go(i){
+    if(i<0) i=0;
+    if(i>=this.steps.length) i=this.steps.length-1;
+    this.i = i;
+    this.render();
+  }
+  render(){
+    const step = this.steps[this.i];
+    this.visual.innerHTML = step.html;
+    const enterEls = this.visual.querySelectorAll('.enter');
+    if(reduceMotion){
+      enterEls.forEach(el=>el.classList.add('show'));
+    } else {
+      requestAnimationFrame(()=>{
+        enterEls.forEach((el,idx)=>{
+          setTimeout(()=>el.classList.add('show'), idx*55);
+        });
+      });
+    }
+    this.explain.innerHTML = `<span class="step-tag">STEP ${this.i+1} OF ${this.steps.length}</span><p>${step.text}</p>`;
+    [...this.dotsEl.children].forEach((d,idx)=>d.classList.toggle('active', idx===this.i));
+    this.prevBtn.disabled = this.i===0;
+    this.nextBtn.toggleAttribute('disabled', false);
+    if(this.i===this.steps.length-1){
+      this.nextBtn.disabled = true;
+    } else {
+      this.nextBtn.disabled = false;
+    }
+  }
+  togglePlay(){
+    if(this.playing){ this.stopPlay(); return; }
+    if(this.i>=this.steps.length-1) this.go(0);
+    this.playing = true;
+    this.playBtn.textContent = '⏸ Pause';
+    this.timer = setInterval(()=>{
+      if(this.i>=this.steps.length-1){ this.stopPlay(); return; }
+      this.go(this.i+1);
+    }, 1900);
+  }
+  stopPlay(){
+    this.playing = false;
+    clearInterval(this.timer);
+    this.playBtn.textContent = '▶ Play all';
+  }
+}
+
+function demoShell(){
+  return `<div class="demo">
+    <div class="demo-visual"></div>
+    <div class="demo-explain"></div>
+    <div class="demo-controls">
+      <div class="btns">
+        <button class="dbtn" data-action="prev">&lsaquo; Back</button>
+        <button class="dbtn" data-action="next">Next &rsaquo;</button>
+        <button class="dbtn primary" data-action="play">&#9654; Play all</button>
+      </div>
+      <div class="step-dots"></div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   METHOD DEFINITIONS
+   ============================================================ */
+const methods = [];
+
+/* ---------- 1. DIRECT ---------- */
+methods.push({
+  id:'direct', num:'01', title:'Direct Hashing',
+  plain:'The simplest possible rule: the address IS the key. No arithmetic at all.',
+  formula:'h(key) = key',
+  notes:[['WHEN IT WORKS','Great when keys are small whole numbers packed close together — like employee IDs 0 to 99.'],
+         ['THE TRADE-OFF','If keys are sparse (say, only 5 employees but IDs up to 9999), you waste almost the whole table.']],
+  steps:[
+    { html: `<div>${digits('7')}</div>`, text:'We have a key: the number <strong class="mono">7</strong> — say, a small company\'s employee ID.' },
+    { html: `${digits('7')}${opArrow('h(key) = key')}`, text:'The direct method applies no transformation at all — the hash function is just the identity function.' },
+    { html: `${digits('7',{good:[0]})}${opArrow('=')}${resultBox('index',7)}`, text:'So the computed index is simply <strong class="mono">7</strong> — identical to the key we started with.' },
+    { html: windowTable(7,10), text:'That record is stored directly at <strong class="mono">table[7]</strong>. One-to-one, no calculation needed.' }
+  ],
+  tryIt:{ label:'employee ID', compute:(k)=>({ok:k>=0 && k<=999, val:k}), formula:'index = key' }
+});
+
+/* ---------- 2. SUBTRACTION ---------- */
+methods.push({
+  id:'subtraction', num:'02', title:'Subtraction Method',
+  plain:'A tiny variation on Direct: subtract a fixed starting value (the "base") from the key before using it as the address.',
+  formula:'h(key) = key − base',
+  notes:[['WHEN IT WORKS','Perfect when keys start at an awkward offset — like invoice numbers beginning at 1005 instead of 0.'],
+         ['THE TRADE-OFF','It only shifts the range down; it doesn\'t compress it. Keys still need to be reasonably dense.']],
+  steps:[
+    { html: `${digits('1008')}<div style="display:flex;gap:26px;align-items:center;"><span class="rb-label enter" style="opacity:0">base</span></div>${digits('1005')}`,
+      text:'Key <strong class="mono">1008</strong> comes from a system where every ID starts at a fixed base, <strong class="mono">1005</strong>.' },
+    { html: `${digits('1008')}${opArrow('&minus; 1005')}`, text:'Formula: <strong class="mono">h(key) = key &minus; base</strong>. We subtract the base to "re-zero" the range.' },
+    { html: eqLine(`<span class="eq-amber">1008</span> <span class="eq-muted">&minus;</span> <span class="eq-teal">1005</span> <span class="eq-muted">=</span> <span class="eq-amber">3</span>`), text:'1008 &minus; 1005 = <strong class="mono">3</strong>. Simple subtraction — that\'s the whole calculation.' },
+    { html: windowTable(3,10), text:'Index <strong class="mono">3</strong>. Now every ID from 1005–1014 maps neatly into a 10-slot table (0–9).' }
+  ],
+  tryIt:{ label:'ID (base 1005)', compute:(k)=>({ok:k>=1005 && k<=1104, val:k-1005}), formula:'index = key − 1005' }
+});
+
+/* ---------- 3. MODULO-DIVISION ---------- */
+methods.push({
+  id:'division', num:'03', title:'Modulo-Division Method',
+  plain:'Divide the key by the table size and keep the remainder. The most widely used hashing method in practice.',
+  formula:'h(key) = key mod m',
+  notes:[['WHEN IT WORKS','Works for almost any integer key, especially when m (the table size) is chosen as a prime number.'],
+         ['THE TRADE-OFF','A poorly chosen table size (e.g. a power of 2 with patterned keys) can cluster keys into a few slots.']],
+  steps:[
+    { html: `${digits('173')}${resultBox('table size (m)',7)}`, text:'Key <strong class="mono">173</strong>, and our hash table has <strong class="mono">m = 7</strong> slots.' },
+    { html: `${digits('173')}${opArrow('mod 7')}`, text:'Formula: <strong class="mono">h(key) = key mod m</strong> — divide by 7 and keep only the remainder.' },
+    { html: eqLine(`<span class="eq-amber">173</span> <span class="eq-muted">÷</span> <span class="eq-teal">7</span> <span class="eq-muted">=</span> 24 <span class="eq-muted">remainder</span> <span class="eq-amber">5</span>`), text:'7 × 24 = 168, and 173 &minus; 168 = <strong class="mono">5</strong>. That remainder is our index.' },
+    { html: windowTable(5,7), text:'Index <strong class="mono">5</strong>, inside a 7-slot table. Any key gives a remainder between 0 and 6 — always in range.' }
+  ],
+  tryIt:{ label:'key (m = 7)', compute:(k)=>({ok:k>=0, val: k>=0 ? k%7 : null}), formula:'index = key mod 7' }
+});
+
+/* ---------- 4. DIGIT EXTRACTION ---------- */
+methods.push({
+  id:'extraction', num:'04', title:'Digit Extraction Method',
+  plain:'Pick a few specific digit positions out of the key and glue them together to form the address. The rest of the key is simply ignored.',
+  formula:'h(key) = digits at chosen positions',
+  notes:[['WHEN IT WORKS','Handy when certain digits of a key are known to vary a lot — e.g. the middle of a product code.'],
+         ['THE TRADE-OFF','Ignoring most of the key means two very different keys can share the digits you picked — more collisions.']],
+  steps:[
+    { html: `${labelRow(6,[0,1,2,3,4,5])}${digits('812345')}`, text:'Key <strong class="mono">812345</strong>. Each digit has a position, numbered 1 to 6 from the left.' },
+    { html: `${labelRow(6,[1,4])}${digits('812345',{hi:[1,4]})}`, text:'We decide, in advance, to extract the <strong>2nd</strong> and <strong>5th</strong> digits — highlighted in amber.' },
+    { html: `${digits('812345',{dim:[0,2,3,5], hi:[1,4]})}${opArrow('pull out')}${digits('14',{good:[0,1]})}`, text:'Digit 2 is <strong class="mono">1</strong>, digit 5 is <strong class="mono">4</strong>. Placed side by side, they form <strong class="mono">14</strong>.' },
+    { html: windowTable(14,100), text:'Index <strong class="mono">14</strong>, in a 100-slot table. Notice: the digits we didn\'t pick never mattered.' }
+  ],
+  tryIt:{ label:'6-digit key', compute:(k)=>{ const s=String(k); if(s.length!==6) return {ok:false,val:null}; return {ok:true, val: parseInt(s[1]+s[4],10)}; }, formula:'index = digit2 + digit5 (needs a 6-digit key)' }
+});
+
+/* ---------- 5. MID-SQUARE ---------- */
+methods.push({
+  id:'midsquare', num:'05', title:'Mid-Square Method',
+  plain:'Square the key, then extract the digits sitting in the middle of the result. Squaring scrambles the key nicely — the middle digits tend to depend on every digit of the original.',
+  formula:'h(key) = middle digits of key²',
+  notes:[['WHEN IT WORKS','Good at spreading out keys that otherwise look suspiciously similar to each other.'],
+         ['THE TRADE-OFF','Squaring a large key can overflow standard integer types, and you must fix the number of "middle" digits in advance.']],
+  steps:[
+    { html: digits('44'), text:'Key <strong class="mono">44</strong>.' },
+    { html: `${digits('44')}${opArrow('square it')}`, text:'Formula: <strong class="mono">h(key) = middle digits of key²</strong>. First, we square the key.' },
+    { html: eqLine(`<span class="eq-amber">44</span> <span class="eq-muted">×</span> <span class="eq-amber">44</span> <span class="eq-muted">=</span> <span class="eq-teal">1936</span>`), text:'44 × 44 = <strong class="mono">1936</strong> — a 4-digit result.' },
+    { html: digits('1936',{dim:[0,3], hi:[1,2]}), text:'We take the two <em>middle</em> digits of 1936 — the outer digits (1 and 6) are dropped, leaving <strong class="mono">9</strong> and <strong class="mono">3</strong>.' },
+    { html: windowTable(93,100), text:'Index <strong class="mono">93</strong>. Even though 44 is a small, ordinary number, squaring spread it across the whole table.' }
+  ],
+  tryIt:{ label:'key', compute:(k)=>{ const sq=k*k; let s=String(sq); if(s.length<3){ return {ok:false,val:null}; } const midLen=2; const start=Math.max(0,Math.floor((s.length-midLen)/2)); return {ok:true, val: parseInt(s.substr(start,midLen),10)}; }, formula:'index = middle 2 digits of key²' }
+});
+
+/* ---------- 6. FOLDING ---------- */
+methods.push({
+  id:'folding', num:'06', title:'Folding Method',
+  plain:'Chop the key into equal-sized chunks, then add the chunks together. If the sum is still too big for the table, fold it once more (or take a final mod).',
+  formula:'h(key) = fold(key) → sum of chunks',
+  notes:[['WHEN IT WORKS','Ideal for long keys like phone numbers or card numbers, where every digit should influence the address.'],
+         ['THE TRADE-OFF','Almost always needs a final modulo step to force the sum back inside the table size.']],
+  steps:[
+    { html: digits('123456789'), text:'Key <strong class="mono">123456789</strong> — a 9-digit identifier, too long to use directly.' },
+    { html: `${chunkGroup(['123','456','789'])}`, text:'Split it into equal 3-digit chunks: <strong class="mono">123</strong>, <strong class="mono">456</strong>, <strong class="mono">789</strong>.' },
+    { html: eqLine(`<span class="eq-amber">123</span> + <span class="eq-amber">456</span> + <span class="eq-amber">789</span> <span class="eq-muted">=</span> <span class="eq-teal">1368</span>`), text:'Add every chunk together: 123 + 456 + 789 = <strong class="mono">1368</strong>.' },
+    { html: eqLine(`<span class="eq-teal">1368</span> <span class="eq-muted">mod</span> 1000 <span class="eq-muted">=</span> <span class="eq-amber">368</span>`), text:'The sum still has 4 digits but our table only has 1000 slots — one quick <strong class="mono">mod 1000</strong> folds it back in range.' },
+    { html: windowTable(368,1000), text:'Index <strong class="mono">368</strong>. Every digit of the original 9-digit key contributed to this address.' }
+  ],
+  tryIt:{ label:'9-digit key', compute:(k)=>{ const s=String(k); if(s.length!==9) return {ok:false,val:null}; const sum=parseInt(s.slice(0,3),10)+parseInt(s.slice(3,6),10)+parseInt(s.slice(6,9),10); return {ok:true, val:sum%1000}; }, formula:'index = (sum of three 3-digit chunks) mod 1000' }
+});
+
+/* ---------- 7. ROTATION ---------- */
+methods.push({
+  id:'rotation', num:'07', title:'Rotation Method',
+  plain:'Rotate the digits of the key — commonly, move the last digit to the front — then hash the rotated number, usually with division.',
+  formula:'h(key) = rotate(key) mod m',
+  notes:[['WHEN IT WORKS','Useful when the last digit of many keys is similar (e.g. a shared check digit), which would otherwise cause clustering.'],
+         ['THE TRADE-OFF','Rotation alone doesn\'t produce an index — it\'s always a warm-up step before another method, usually division.']],
+  steps:[
+    { html: digits('6321'), text:'Key <strong class="mono">6321</strong>.' },
+    { html: `${digits('6321',{hi:[3]})}${opArrow('move last digit to front')}`, text:'Take the last digit, <strong class="mono">1</strong>, and rotate it around to the front of the number.' },
+    { html: digits('1632',{good:[0]}), text:'The rotated key is now <strong class="mono">1632</strong> — every other digit just shifted one place right.' },
+    { html: `${digits('1632')}${opArrow('mod 100')}${resultBox('index',32)}`, text:'Now apply division hashing to the rotated number: 1632 mod 100 = <strong class="mono">32</strong>.' },
+    { html: windowTable(32,100), text:'Index <strong class="mono">32</strong>. Rotating first means the original last digit no longer dominates the result.' }
+  ],
+  tryIt:{ label:'key (4 digits)', compute:(k)=>{ const s=String(k); if(s.length!==4) return {ok:false,val:null}; const rotated = s[3]+s[0]+s[1]+s[2]; return {ok:true, val: parseInt(rotated,10)%100}; }, formula:'index = rotate(key) mod 100' }
+});
+
+/* ---------- 8. PSEUDORANDOM ---------- */
+methods.push({
+  id:'pseudorandom', num:'08', title:'Pseudorandom Generation Method',
+  plain:'Feed the key into a small formula that behaves like a random-number generator (a "linear congruential generator"), then keep it in range with a mod.',
+  formula:'h(key) = (a·key + c) mod m',
+  notes:[['WHEN IT WORKS','Cheap and effective for spreading integer keys evenly, especially when keys arrive in a predictable order.'],
+         ['THE TRADE-OFF','It only <em>looks</em> random — the constants a, c and m must be tuned, or results can repeat in patterns.']],
+  steps:[
+    { html: `${digits('17')}${resultBox('a',5)}${resultBox('c',3)}${resultBox('m',100)}`, text:'Key <strong class="mono">17</strong> acts as the "seed." We fix three constants ahead of time: a = 5, c = 3, m = 100.' },
+    { html: `${digits('17')}${opArrow('× 5, + 3')}`, text:'Formula: <strong class="mono">h(key) = (a·key + c) mod m</strong>. First compute <strong class="mono">a·key + c</strong>.' },
+    { html: eqLine(`<span class="eq-amber">5</span> <span class="eq-muted">×</span> <span class="eq-amber">17</span> <span class="eq-muted">+</span> <span class="eq-amber">3</span> <span class="eq-muted">=</span> <span class="eq-teal">88</span>`), text:'5 × 17 = 85, and 85 + 3 = <strong class="mono">88</strong>.' },
+    { html: eqLine(`<span class="eq-teal">88</span> <span class="eq-muted">mod</span> 100 <span class="eq-muted">=</span> <span class="eq-amber">88</span>`), text:'88 is already smaller than m = 100, so the mod step leaves it unchanged: index stays <strong class="mono">88</strong>.' },
+    { html: windowTable(88,100), text:'Index <strong class="mono">88</strong>. Change the seed key even slightly, and this formula jumps to a very different address.' }
+  ],
+  tryIt:{ label:'key (seed)', compute:(k)=>({ok:k>=0, val: k>=0 ? ((5*k+3)%100+100)%100 : null}), formula:'index = (5·key + 3) mod 100' }
+});
+
+/* ============================================================
+   RENDER METHOD SECTIONS
+   ============================================================ */
+const root = document.getElementById('methodsRoot');
+methods.forEach(m=>{
+  const section = document.createElement('section');
+  section.className = 'method';
+  section.id = m.id;
+  section.innerHTML = `
+    <div class="card">
+      <span class="tag-num">METHOD ${m.num} / 08</span>
+      <h2>${m.title}</h2>
+      <p class="plain">${m.plain}</p>
+      <div class="formula-box">${m.formula.replace('key','<span class="k">key</span>')}</div>
+      <div class="note-row">
+        ${m.notes.map(n=>`<div class="note"><h4>${n[0]}</h4><p>${n[1]}</p></div>`).join('')}
+      </div>
+      ${demoShell()}
+      <div class="try-it">
+        <h4>TRY IT YOURSELF — ${m.tryIt.label.toUpperCase()}</h4>
+        <div class="try-row">
+          <input type="number" inputmode="numeric" placeholder="enter a key" id="in-${m.id}">
+          <span class="try-arrow">&rarr;</span>
+          <span class="try-out" id="out-${m.id}">—</span>
+        </div>
+        <p class="try-note mono">${m.tryIt.formula}</p>
+      </div>
+    </div>
+  `;
+  root.appendChild(section);
+
+  new StepDemo(section, m.steps);
+
+  const input = section.querySelector(`#in-${m.id}`);
+  const out = section.querySelector(`#out-${m.id}`);
+  input.addEventListener('input', ()=>{
+    const raw = input.value.trim();
+    if(raw===''){ out.textContent='—'; out.classList.remove('warn'); return; }
+    const k = parseInt(raw,10);
+    if(Number.isNaN(k)){ out.textContent='?'; out.classList.add('warn'); return; }
+    const r = m.tryIt.compute(k);
+    if(!r.ok || r.val===null || Number.isNaN(r.val)){
+      out.textContent = 'n/a';
+      out.classList.add('warn');
+    } else {
+      out.textContent = r.val;
+      out.classList.remove('warn');
+    }
+  });
+});
+
+/* ============================================================
+   HERO LOOP
+   ============================================================ */
+(function(){
+  const tableEl = document.getElementById('heroTable');
+  for(let i=0;i<10;i++){
+    const s = document.createElement('div');
+    s.className = 'hd-slot';
+    s.textContent = i;
+    s.id = 'hs-'+i;
+    tableEl.appendChild(s);
+  }
+  const examples = [[23,3],[47,7],[81,1],[8,8],[164,4]];
+  let idx = 0;
+  const keyEl = document.getElementById('heroKey');
+  const idxEl = document.getElementById('heroIdx');
+  const keyCap = document.getElementById('heroKeyCap');
+  const cap = document.getElementById('heroCap');
+  function tick(){
+    const prev = examples[(idx-1+examples.length)%examples.length];
+    document.getElementById('hs-'+prev[1])?.classList.remove('lit');
+    const [k,i] = examples[idx];
+    keyEl.textContent = k; keyCap.textContent = k;
+    idxEl.textContent = i; cap.textContent = 'table['+i+']';
+    document.getElementById('hs-'+i)?.classList.add('lit');
+    idx = (idx+1) % examples.length;
+  }
+  tick();
+  if(!reduceMotion){ setInterval(tick, 2600); }
+})();
+
+/* ============================================================
+   COLLISION MINI ILLUSTRATION
+   ============================================================ */
+(function(){
+  const el = document.getElementById('collideVisual');
+  el.innerHTML = `
+    <div class="collide-slot" style="align-self:flex-end;">
+      <span class="tbl-idx">2</span>
+      <div class="collide-stack">
+        <span class="chip">12</span>
+        <span class="chip b">22</span>
+      </div>
+    </div>
+  `;
+})();
+
+/* ============================================================
+   SCROLLSPY NAV
+   ============================================================ */
+(function(){
+  const links = [...document.querySelectorAll('.side-nav a')];
+  const map = new Map(links.map(l=>[l.getAttribute('href').slice(1), l]));
+  const targets = ['intro', ...methods.map(m=>m.id), 'compare'].map(id=>document.getElementById(id)).filter(Boolean);
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const link = map.get(entry.target.id);
+      if(!link) return;
+      if(entry.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+  targets.forEach(t=>io.observe(t));
+})();
+</script>
+</body>
+</html>
