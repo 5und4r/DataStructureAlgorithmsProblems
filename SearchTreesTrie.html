@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BST, AVL, Red-Black & Trie Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#131838; --ink2:#1a2150; --ink3:#232b63; --line:#2e3878;
+  --text:#eef1ff; --muted:#a3abd8; --dim:#6c76b3;
+  --coral:#ff6b6b; --sun:#ffc94d; --mint:#3ddc97; --sky:#4cc9f0; --lilac:#b388ff; --peach:#ff9f68; --rose:#ff5d8f;
+  --rbred:#e63946; --rbblack:#14162b;
+  --head:'Fredoka','Trebuchet MS',system-ui,sans-serif;
+  --body:'Nunito','Segoe UI',system-ui,sans-serif;
+  --mono:'JetBrains Mono',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--text);background:var(--ink);line-height:1.6;min-height:100vh;
+  background-image:radial-gradient(circle at 10% -10%,rgba(255,201,77,.16),transparent 40%),radial-gradient(circle at 95% 5%,rgba(255,93,143,.16),transparent 38%),radial-gradient(circle at 50% 120%,rgba(76,201,240,.12),transparent 45%);background-attachment:fixed}
+button,select,input{font-family:inherit}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+b{color:#fff}
+code{font-family:var(--mono);font-size:.88em;background:#0f1430;padding:1px 6px;border-radius:6px;color:var(--sun)}
+
+/* hero */
+.hero{max-width:1480px;margin:0 auto;padding:28px 32px 10px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:center}
+.hero h1{font-family:var(--head);font-weight:700;font-size:clamp(1.9rem,4vw,3.2rem);line-height:1.08;letter-spacing:-.5px}
+.hero h1 .a{color:var(--mint)}.hero h1 .b{color:var(--sun)}.hero h1 .c{color:var(--rose)}.hero h1 .d{color:var(--sky)}
+.hero p{color:var(--muted);font-size:1.06rem;max-width:62ch;margin-top:12px}
+.keys{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 14px;font-size:.88rem;color:var(--muted)}
+.kbd{display:inline-block;font-family:var(--mono);font-size:.8rem;background:var(--ink3);border:1px solid var(--line);border-bottom-width:3px;padding:1px 8px;border-radius:7px;color:var(--text)}
+.hero-art{width:100%;max-height:230px}
+.hero-art .hl{stroke:#39448c;stroke-width:3.5}
+.hero-art .chain{animation:chainE 7s infinite}
+.hero-art .bal{animation:balE 7s infinite}
+@keyframes chainE{0%,30%{opacity:1}40%,88%{opacity:0}100%{opacity:1}}
+@keyframes balE{0%,32%{opacity:0}45%,85%{opacity:1}95%,100%{opacity:0}}
+.hero-art .hn text{fill:#141838;font:700 16px var(--head);text-anchor:middle}
+.hn30{animation:n30 7s ease-in-out infinite}.hn20{animation:n20 7s ease-in-out infinite}.hn10{animation:n10 7s ease-in-out infinite}
+@keyframes n30{0%,30%{transform:translate(240px,40px)}45%,85%{transform:translate(240px,125px)}100%{transform:translate(240px,40px)}}
+@keyframes n20{0%,30%{transform:translate(170px,110px)}45%,85%{transform:translate(170px,45px)}100%{transform:translate(170px,110px)}}
+@keyframes n10{0%,30%{transform:translate(100px,180px)}45%,85%{transform:translate(100px,125px)}100%{transform:translate(100px,180px)}}
+
+/* tabs */
+nav.tabs{position:sticky;top:0;z-index:30;background:rgba(19,24,56,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.tabs-in{max-width:1480px;margin:0 auto;padding:10px 32px;display:flex;gap:8px;overflow-x:auto}
+.tab{border:2px solid transparent;background:var(--ink2);color:var(--muted);font-weight:800;font-size:.95rem;padding:9px 18px;border-radius:14px;cursor:pointer;white-space:nowrap}
+.tab:hover{color:#fff}
+.tab.active{color:#141838;background:var(--tc,var(--sun))}
+main{max-width:1480px;margin:0 auto;padding:22px 32px 60px}
+.page{display:none}
+.page.active{display:block;animation:enter .35s ease}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h2.sec{font-family:var(--head);font-weight:600;font-size:clamp(1.5rem,2.6vw,2.1rem);margin:8px 0 6px}
+p.lead{color:var(--muted);max-width:78ch;margin-bottom:18px}
+
+/* theory */
+.panel{background:var(--ink2);border:1px solid var(--line);border-radius:22px;padding:22px 24px}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
+.panel h3{font-family:var(--head);font-weight:600;font-size:1.35rem;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.dot{width:14px;height:14px;border-radius:50%;display:inline-block;flex:none}
+ul.pts{list-style:none;display:grid;gap:9px}
+ul.pts li{position:relative;padding-left:28px}
+ul.pts li::before{content:"";position:absolute;left:4px;top:.5em;width:12px;height:12px;border-radius:4px;background:var(--bc,var(--sky));transform:rotate(45deg)}
+.vis-box{background:#11163a;border-radius:16px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.vis-box svg{width:100%;height:auto;max-height:300px}
+.cap{color:var(--muted);font-size:.86rem;text-align:center}
+.cases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.case{background:var(--ink3);border-radius:14px;padding:10px;text-align:center}
+.case svg{width:100%;max-width:120px;height:auto}
+.case b{display:block;font-family:var(--head);font-weight:600;font-size:1.05rem}
+.case span{color:var(--muted);font-size:.84rem}
+.rules{counter-reset:r;list-style:none;display:grid;gap:9px}
+.rules li{counter-increment:r;position:relative;padding-left:40px}
+.rules li::before{content:counter(r);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--rbred);color:#fff;font-weight:800;display:grid;place-items:center;font-size:.9rem}
+.rules li:nth-child(even)::before{background:#2a2d4a;border:2px solid #8b93c9}
+table.cmp{width:100%;border-collapse:separate;border-spacing:0;font-size:.93rem}
+table.cmp th,table.cmp td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+table.cmp thead th{font-family:var(--head);font-weight:600;font-size:1.05rem}
+table.cmp thead th:nth-child(2){color:var(--mint)}table.cmp thead th:nth-child(3){color:var(--sun)}table.cmp thead th:nth-child(4){color:var(--rose)}table.cmp thead th:nth-child(5){color:var(--sky)}
+table.cmp tbody th{color:var(--muted);font-weight:700;width:16%}
+.cx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.chip{background:var(--ink3);border:1px solid var(--line);border-radius:14px;padding:14px}
+.chip b{display:block;font-family:var(--head);font-weight:600}
+.chip .big{font-family:var(--mono);font-size:1.12rem;color:var(--sun);display:block;margin:4px 0}
+.chip span{color:var(--muted);font-size:.86rem}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.app{background:var(--ink3);border-radius:16px;padding:16px;border-top:4px solid var(--ac,var(--sky))}
+.app .e{font-size:1.7rem}
+.app h4{font-family:var(--head);font-weight:600;font-size:1.08rem;margin:4px 0}
+.app p{color:var(--muted);font-size:.9rem}
+.tag{display:inline-block;margin-top:8px;font-size:.78rem;font-weight:800;padding:2px 10px;border-radius:99px;color:#141838;background:var(--ac,var(--sky))}
+
+/* strips above demos */
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.strip .s{background:var(--ink2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;border-left:5px solid var(--sc,var(--sky))}
+.strip .s h4{font-family:var(--head);font-weight:600;font-size:1.02rem}
+.strip .s p{color:var(--muted);font-size:.88rem}
+
+/* operation bar */
+.opbar{background:var(--ink2);border:1px solid var(--line);border-radius:20px;padding:14px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end}
+.og label,.og .lb{display:block;font-size:.8rem;font-weight:800;color:var(--muted);margin-bottom:4px}
+.inp{background:#0f1434;border:2px solid var(--line);color:#fff;border-radius:11px;padding:8px 12px;font-family:var(--mono);font-size:.92rem;width:100px}
+.inp.wide{width:min(380px,78vw)}
+.inp:focus{border-color:var(--sky)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.pill{border:2px solid var(--line);background:var(--ink3);color:var(--muted);font-weight:800;font-size:.88rem;padding:7px 13px;border-radius:12px;cursor:pointer}
+.pill:hover{color:#fff}
+.pill.on{background:var(--sun);border-color:var(--sun);color:#141838}
+.presets{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem;color:var(--muted);font-weight:700}
+.pre{border:1.5px dashed #46529e;background:transparent;color:var(--text);padding:5px 11px;border-radius:10px;cursor:pointer;font-weight:700;font-size:.84rem}
+.pre:hover{border-color:var(--sun);color:var(--sun)}
+.msg{flex-basis:100%;color:var(--coral);font-weight:800;font-size:.9rem}
+.msg:empty{display:none}
+
+/* demo */
+.demo-top{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+.viz-card,.code-card,.explain,.controls{background:var(--ink2);border:1px solid var(--line);border-radius:20px}
+.viz-card{padding:12px 14px 10px;display:flex;flex-direction:column}
+.viz-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.viz-title{font-family:var(--head);font-weight:600;font-size:1.15rem}
+.viz-note{color:var(--muted);font-size:.85rem;font-weight:700}
+svg.viz{width:100%;height:clamp(300px,50vh,500px);display:block}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.82rem;color:var(--muted);padding:2px 4px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:13px;height:13px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.45)}
+.code-card{position:relative;min-height:300px;overflow:hidden}
+.code-head{height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--line);font-family:var(--head);font-weight:600}
+.code-head .lang{font-size:.78rem;font-family:var(--body);font-weight:800;background:var(--sky);color:#141838;padding:2px 10px;border-radius:99px}
+.code-box{position:absolute;inset:46px 0 0 0;overflow:auto;padding:10px 0;background:#0f1434}
+.cl{display:flex;font-family:var(--mono);font-size:12.5px;line-height:1.75;white-space:pre;padding:0 14px 0 6px;border-left:4px solid transparent;transition:background .25s}
+.cl .ln{width:26px;flex:none;text-align:right;margin-right:14px;color:#4a5494;user-select:none}
+.cl.hl{background:rgba(255,107,107,.2);border-left-color:var(--coral)}
+.cl.hl .ln{color:var(--coral)}
+.tk-k{color:#ff8fb1}.tk-t{color:#7fdcff}.tk-c{color:#6f7bb8;font-style:italic}.tk-s{color:#ffd479}.tk-n{color:#c3a6ff}.tk-p{color:#5ef0b0}
+
+.controls{margin-top:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{cursor:pointer;font-weight:800;font-size:.95rem;padding:10px 16px;border-radius:13px;background:var(--ink3);color:#fff;display:inline-flex;align-items:center;gap:7px;border:2px solid var(--line)}
+.btn:hover:not(:disabled){border-color:var(--sky)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.play{background:var(--mint);color:#102a20;border-color:var(--mint);min-width:110px;justify-content:center}
+.btn.play.pausing{background:var(--sun);border-color:var(--sun);color:#3a2a00}
+.btn.next{background:var(--coral);border-color:var(--coral);color:#2b0f0f;font-size:1.02rem;padding:11px 22px}
+.btn.run{background:var(--sky);border-color:var(--sky);color:#06283a}
+.progress{flex:1;min-width:140px;display:flex;flex-direction:column;gap:4px}
+.progress .lbl{font-size:.82rem;color:var(--muted);font-weight:700}
+.bar{height:10px;background:#0f1434;border-radius:99px;overflow:hidden;cursor:pointer}
+.bar div{height:100%;width:0;background:linear-gradient(90deg,var(--mint),var(--sun),var(--rose));border-radius:99px;transition:width .3s}
+.speed{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.85rem;font-weight:700}
+.speed input{accent-color:var(--sun);width:100px}
+
+.explain{margin-top:14px;padding:18px 22px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
+.stepno{display:inline-block;background:var(--lilac);color:#1d1240;font-weight:800;font-size:.82rem;padding:3px 12px;border-radius:99px}
+.ex-title{font-family:var(--head);font-weight:600;font-size:1.4rem;margin:8px 0 4px;color:var(--sun)}
+.ex-text{font-size:1.04rem;max-width:72ch}
+.ex-tip{margin-top:12px;background:rgba(76,201,240,.1);border:1px dashed rgba(76,201,240,.5);border-radius:12px;padding:9px 13px;font-size:.92rem;color:#cdeefb}
+.dsbox{margin-bottom:14px}
+.dsl{font-size:.84rem;font-weight:800;color:var(--muted);margin-bottom:6px}
+.items{display:flex;flex-wrap:wrap;gap:6px;min-height:38px;align-items:center;background:#0f1434;border-radius:12px;padding:6px 8px}
+.it{font-family:var(--mono);font-weight:600;font-size:.88rem;padding:4px 10px;border-radius:9px;background:var(--lilac);color:#1d1240;animation:pop .25s ease}
+.it.o{background:var(--mint);color:#0d2f20}
+.it.ch{min-width:30px;text-align:center;background:var(--ink3);color:var(--muted)}
+.it.ch.first{background:var(--coral);color:#fff;outline:3px solid #fff;outline-offset:1px}
+.it.ch.done{background:var(--lilac);color:#1d1240}
+.empty{color:var(--dim);font-size:.88rem;font-style:italic}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{background:var(--ink3);border-radius:10px;padding:4px 12px;font-weight:800;font-size:.9rem}
+.stat em{font-style:normal;color:var(--sun)}
+
+/* svg tree */
+.edge{stroke:#36418a;stroke-width:4.5;stroke-linecap:round;transition:stroke .3s}
+.edge.path{stroke:var(--lilac);stroke-width:7}
+.edge.new{stroke:var(--mint);stroke-width:7}
+.node .body{fill:#202a66;stroke:#5462b8;stroke-width:3.5;transition:fill .3s,stroke .3s}
+.node .lbl{fill:#fff;font-family:var(--head);font-weight:700;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node .halo{fill:none;stroke:transparent;stroke-width:4;transform-box:fill-box;transform-origin:center}
+.node .pop{transform-box:fill-box;transform-origin:center;animation:popin .45s ease}
+@keyframes popin{from{transform:scale(0)}70%{transform:scale(1.15)}to{transform:scale(1)}}
+.node.end .body{fill:#5a4a12;stroke:var(--sun);stroke-width:4}
+.node.onpath .body{fill:var(--lilac);stroke:#ece0ff}.node.onpath .lbl{fill:#1d1240}
+.node.cur .body{fill:var(--coral);stroke:#ffe0e0}.node.cur .lbl{fill:#fff}
+.node.new .body,.node.found .body,.node.ok .body{fill:var(--mint);stroke:#d3ffee}.node.new .lbl,.node.found .lbl,.node.ok .lbl{fill:#0d2f20}
+.node.del .body,.node.bad .body{fill:var(--rose);stroke:#ffe1ea;stroke-dasharray:6 4}
+.node.succ .body{fill:var(--sky);stroke:#e2f8ff}.node.succ .lbl{fill:#06283a}
+.node.rot .body{fill:var(--sun);stroke:#fff1c2}.node.rot .lbl{fill:#3a2a00}
+.node.probe .body{fill:#fff;stroke:var(--coral);stroke-dasharray:5 4;stroke-width:3}.node.probe .lbl{fill:#141838}
+.node.rb-r .body{fill:var(--rbred)!important;stroke:#ffb3b8}
+.node.rb-b .body{fill:var(--rbblack)!important;stroke:#8b93c9}
+.node.rb-r .lbl,.node.rb-b .lbl{fill:#fff!important}
+.node.rb-r.onpath .body,.node.rb-b.onpath .body{stroke:var(--lilac);stroke-width:6}
+.node.rb-r.cur .body,.node.rb-b.cur .body,.node.rb-r.new .body,.node.rb-b.new .body{stroke:var(--sun);stroke-width:7;stroke-dasharray:none}
+.node.ring .body{stroke:var(--sky)!important;stroke-width:7}
+.node.cur .halo,.node.found .halo,.node.bad .halo{stroke:var(--coral);animation:pulse 1.3s ease-out infinite}
+.node.found .halo{stroke:var(--mint)}
+@keyframes pulse{from{transform:scale(1);opacity:.9}to{transform:scale(1.8);opacity:0}}
+.badge rect{fill:#0f1434;stroke:var(--sun);stroke-width:2}
+.badge text{fill:var(--sun);font:700 12px var(--mono);text-anchor:middle;dominant-baseline:central}
+.badge.bad rect{stroke:var(--rose);fill:#3a0f22}.badge.bad text{fill:var(--rose)}
+
+/* code page */
+.prog{margin-bottom:24px}
+.prog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.prog-head h3{font-family:var(--head);font-weight:600;font-size:1.3rem}
+.prog pre{background:#0f1434;border:1px solid var(--line);border-radius:18px;padding:14px 0;overflow:auto;max-height:560px}
+.out-box{margin-top:10px;background:#0b2a22;border:1px solid #1f6e52;border-radius:14px;padding:12px 16px;font-family:var(--mono);font-size:.88rem;color:var(--mint);white-space:pre-wrap}
+.copy{background:var(--sky);color:#06283a;border:0;font-weight:800;padding:8px 16px;border-radius:12px;cursor:pointer}
+footer{text-align:center;color:var(--dim);font-size:.85rem;padding:0 20px 30px}
+
+@media (max-width:1100px){.strip,.cx,.cases{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:980px){
+  .hero{grid-template-columns:1fr}.hero-art{max-height:170px}
+  .demo-top,.explain,.row2{grid-template-columns:1fr}
+  .code-card{height:340px}
+  main,.hero,.tabs-in{padding-left:16px;padding-right:16px}
+}
+@media (max-width:560px){.strip,.cx,.cases{grid-template-columns:1fr}.btn{padding:9px 12px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div>
+    <h1><span class="a">BST</span>, <span class="b">AVL</span>, <span class="c">Red-Black</span> &amp; <span class="d">Trie</span> Explorer</h1>
+    <p>See how search trees stay fast and how tries find words by their prefix. Type your own keys, then step through every comparison, rotation and recolouring with the matching C++ line highlighted beside it.</p>
+    <div class="keys"><span><span class="kbd">→</span> next step</span><span><span class="kbd">←</span> previous</span><span><span class="kbd">Space</span> play / pause</span><span><span class="kbd">R</span> restart</span></div>
+  </div>
+  <svg class="hero-art" viewBox="0 0 520 230" aria-hidden="true">
+    <g class="chain"><line class="hl" x1="240" y1="40" x2="170" y2="110"/><line class="hl" x1="170" y1="110" x2="100" y2="180"/></g>
+    <g class="bal"><line class="hl" x1="170" y1="45" x2="100" y2="125"/><line class="hl" x1="170" y1="45" x2="240" y2="125"/></g>
+    <g class="hn hn30"><circle r="22" fill="#ff6b6b"/><text dy="6">30</text></g>
+    <g class="hn hn20"><circle r="22" fill="#ffc94d"/><text dy="6">20</text></g>
+    <g class="hn hn10"><circle r="22" fill="#4cc9f0"/><text dy="6">10</text></g>
+    <text x="170" y="222" fill="#a3abd8" font-family="Nunito" font-weight="700" font-size="13" text-anchor="middle">a rotation rebalances a chain</text>
+    <g stroke="#39448c" stroke-width="3"><line x1="420" y1="30" x2="420" y2="85"/><line x1="420" y1="85" x2="420" y2="140"/><line x1="420" y1="140" x2="360" y2="195"/><line x1="420" y1="140" x2="420" y2="195"/><line x1="420" y1="140" x2="480" y2="195"/></g>
+    <g font-family="Fredoka" font-weight="700" font-size="15" text-anchor="middle">
+      <circle cx="420" cy="30" r="16" fill="#202a66" stroke="#5462b8" stroke-width="3"/><text x="420" y="35" fill="#fff">•</text>
+      <circle cx="420" cy="85" r="16" fill="#b388ff"/><text x="420" y="90" fill="#1d1240">c</text>
+      <circle cx="420" cy="140" r="16" fill="#b388ff"/><text x="420" y="145" fill="#1d1240">a</text>
+      <circle cx="360" cy="195" r="16" fill="#ffc94d"/><text x="360" y="200" fill="#3a2a00">p</text>
+      <circle cx="420" cy="195" r="16" fill="#ffc94d"/><text x="420" y="200" fill="#3a2a00">r</text>
+      <circle cx="480" cy="195" r="16" fill="#ffc94d"/><text x="480" y="200" fill="#3a2a00">t</text>
+    </g>
+    <text x="420" y="225" fill="#a3abd8" font-family="Nunito" font-weight="700" font-size="13" text-anchor="middle">cap, car, cat share “ca”</text>
+  </svg>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-in">
+    <button class="tab active" data-page="theory" style="--tc:var(--sun)">📘 Theory</button>
+    <button class="tab" data-page="bst" style="--tc:var(--mint)">🌲 Binary Search Tree</button>
+    <button class="tab" data-page="avl" style="--tc:var(--sun)">⚖️ AVL Tree</button>
+    <button class="tab" data-page="rb" style="--tc:var(--rose)">🔴 Red-Black Tree</button>
+    <button class="tab" data-page="trie" style="--tc:var(--sky)">🔤 Trie</button>
+    <button class="tab" data-page="code" style="--tc:var(--peach)">💻 Full C++ Code</button>
+  </div>
+</nav>
+
+<main>
+<!-- ======================= THEORY ======================= -->
+<section class="page active" id="page-theory">
+  <h2 class="sec">Why search trees?</h2>
+  <p class="lead">A sorted array finds things fast but is slow to insert into. A linked list inserts fast but searches slowly. A <b>binary search tree</b> gives you both — as long as it stays <b>balanced</b>. AVL and Red-Black trees are BSTs that rebalance themselves automatically. A <b>trie</b> is a different kind of tree built specially for strings.</p>
+
+  <div class="row2">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--mint)"></span>Binary search tree (BST)</h3>
+      <ul class="pts" style="--bc:var(--mint)">
+        <li>Each node has at most two children: <b>left</b> and <b>right</b>.</li>
+        <li><b>BST rule:</b> every key in the left subtree is <b>smaller</b>, every key in the right subtree is <b>larger</b>.</li>
+        <li><b>Search:</b> compare with the node; go left if smaller, right if larger. Each step discards a whole subtree.</li>
+        <li><b>Insert:</b> search for the key; the empty spot where the search ends is where the new node goes.</li>
+        <li><b>Inorder traversal</b> (left, node, right) prints the keys in <b>sorted order</b>.</li>
+        <li>All operations cost <b>O(h)</b>, where h is the height of the tree.</li>
+      </ul>
+    </div>
+    <div class="vis-box">
+      <svg viewBox="0 0 460 270" role="img" aria-label="BST rule: left subtree smaller, right subtree larger than the root">
+        <rect x="18" y="88" width="200" height="160" rx="20" fill="rgba(76,201,240,.12)" stroke="#4cc9f0" stroke-dasharray="6 5"/>
+        <rect x="242" y="88" width="200" height="160" rx="20" fill="rgba(255,107,107,.12)" stroke="#ff6b6b" stroke-dasharray="6 5"/>
+        <text x="118" y="264" text-anchor="middle" fill="#4cc9f0" font-family="Nunito" font-weight="800" font-size="13">all keys &lt; 8</text>
+        <text x="342" y="264" text-anchor="middle" fill="#ff6b6b" font-family="Nunito" font-weight="800" font-size="13">all keys &gt; 8</text>
+        <g stroke="#5462b8" stroke-width="3.5"><line x1="230" y1="45" x2="118" y2="125"/><line x1="230" y1="45" x2="342" y2="125"/><line x1="118" y1="125" x2="65" y2="205"/><line x1="118" y1="125" x2="171" y2="205"/><line x1="342" y1="125" x2="400" y2="205"/></g>
+        <g font-family="Fredoka" font-weight="700" font-size="17" text-anchor="middle">
+          <circle cx="230" cy="45" r="23" fill="#ffc94d"/><text x="230" y="51" fill="#3a2a00">8</text>
+          <circle cx="118" cy="125" r="22" fill="#4cc9f0"/><text x="118" y="131" fill="#06283a">3</text>
+          <circle cx="342" cy="125" r="22" fill="#ff6b6b"/><text x="342" y="131" fill="#fff">10</text>
+          <circle cx="65" cy="205" r="20" fill="#4cc9f0"/><text x="65" y="211" fill="#06283a">1</text>
+          <circle cx="171" cy="205" r="20" fill="#4cc9f0"/><text x="171" y="211" fill="#06283a">6</text>
+          <circle cx="400" cy="205" r="20" fill="#ff6b6b"/><text x="400" y="211" fill="#fff">14</text>
+        </g>
+      </svg>
+      <span class="cap">Inorder: 1 3 6 8 10 14 — always sorted</span>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="vis-box">
+      <svg viewBox="0 0 540 260" role="img" aria-label="Skewed BST of height 5 compared with a balanced BST of height 3">
+        <g stroke="#ff5d8f" stroke-width="3"><line x1="40" y1="30" x2="85" y2="78"/><line x1="85" y1="78" x2="130" y2="126"/><line x1="130" y1="126" x2="175" y2="174"/><line x1="175" y1="174" x2="220" y2="222"/></g>
+        <g font-family="Fredoka" font-weight="700" font-size="14" text-anchor="middle" fill="#fff">
+          <circle cx="40" cy="30" r="18" fill="#ff5d8f"/><text x="40" y="35">10</text>
+          <circle cx="85" cy="78" r="18" fill="#ff5d8f"/><text x="85" y="83">20</text>
+          <circle cx="130" cy="126" r="18" fill="#ff5d8f"/><text x="130" y="131">30</text>
+          <circle cx="175" cy="174" r="18" fill="#ff5d8f"/><text x="175" y="179">40</text>
+          <circle cx="220" cy="222" r="18" fill="#ff5d8f"/><text x="220" y="227">50</text>
+        </g>
+        <g stroke="#3ddc97" stroke-width="3"><line x1="410" y1="50" x2="345" y2="125"/><line x1="410" y1="50" x2="475" y2="125"/><line x1="345" y1="125" x2="310" y2="200"/><line x1="475" y1="125" x2="510" y2="200"/></g>
+        <g font-family="Fredoka" font-weight="700" font-size="14" text-anchor="middle" fill="#0d2f20">
+          <circle cx="410" cy="50" r="18" fill="#3ddc97"/><text x="410" y="55">30</text>
+          <circle cx="345" cy="125" r="18" fill="#3ddc97"/><text x="345" y="130">20</text>
+          <circle cx="475" cy="125" r="18" fill="#3ddc97"/><text x="475" y="130">40</text>
+          <circle cx="310" cy="200" r="18" fill="#3ddc97"/><text x="310" y="205">10</text>
+          <circle cx="510" cy="200" r="18" fill="#3ddc97"/><text x="510" y="205">50</text>
+        </g>
+        <g font-family="Nunito" font-weight="800" font-size="13" text-anchor="middle"><text x="130" y="255" fill="#ff5d8f">skewed: height 5 → O(n)</text><text x="410" y="250" fill="#3ddc97">balanced: height 3 → O(log n)</text></g>
+      </svg>
+      <span class="cap">Same five keys, inserted in a different order</span>
+    </div>
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--rose)"></span>The balancing problem</h3>
+      <ul class="pts" style="--bc:var(--rose)">
+        <li>Insert keys in <b>sorted order</b> into a plain BST and every node goes to the right — the tree becomes a <b>linked list</b>.</li>
+        <li>Height becomes <b>n</b>, so search, insert and delete slow down to <b>O(n)</b>.</li>
+        <li>A <b>balanced</b> tree keeps height close to <b>log₂ n</b>: 1,000,000 keys need only about <b>20</b> comparisons.</li>
+        <li><b>Self-balancing</b> trees (AVL, Red-Black) check a rule after every insert or delete and repair the shape with <b>rotations</b>.</li>
+        <li>A rotation is a small, local pointer change that keeps the BST order but changes the height.</li>
+      </ul>
+      <h3 style="margin-top:16px"><span class="dot" style="background:var(--sky)"></span>Deleting from a BST</h3>
+      <ul class="pts" style="--bc:var(--sky)">
+        <li><b>Leaf:</b> just remove it.</li>
+        <li><b>One child:</b> the child takes the deleted node's place.</li>
+        <li><b>Two children:</b> copy in the <b>inorder successor</b> (smallest key on the right side), then delete that successor.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--sun)"></span>AVL tree</h3>
+      <ul class="pts" style="--bc:var(--sun)">
+        <li>Named after inventors <b>Adelson-Velsky and Landis</b> (1962) — the first self-balancing BST.</li>
+        <li><b>Balance factor</b> = height(left subtree) − height(right subtree).</li>
+        <li><b>AVL rule:</b> every node's balance factor must be <b>−1, 0 or +1</b>.</li>
+        <li>After inserting, walk back up updating heights. The first node with ±2 is fixed by one of <b>four rotation cases</b>.</li>
+        <li>Height stays below about <b>1.44 log₂ n</b> — the most tightly balanced common BST, so lookups are very fast.</li>
+        <li>Trade-off: stricter balance means slightly more rotation work on inserts and deletes.</li>
+      </ul>
+    </div>
+    <div class="vis-box">
+      <svg viewBox="0 0 560 230" role="img" aria-label="Right rotation fixing a left-left imbalance">
+        <defs><marker id="arA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ffc94d"/></marker></defs>
+        <g stroke="#5462b8" stroke-width="3"><line x1="140" y1="40" x2="90" y2="105"/><line x1="90" y1="105" x2="45" y2="170"/><line x1="90" y1="105" x2="130" y2="170"/><line x1="140" y1="40" x2="190" y2="105"/></g>
+        <g fill="rgba(179,136,255,.3)" stroke="#b388ff" stroke-width="2"><polygon points="130,160 112,200 148,200"/><polygon points="190,95 172,135 208,135"/></g>
+        <g font-family="JetBrains Mono" font-size="12" fill="#e9dcff" text-anchor="middle"><text x="130" y="195">T2</text><text x="190" y="130">T3</text></g>
+        <g font-family="Fredoka" font-weight="700" font-size="16" text-anchor="middle">
+          <circle cx="140" cy="40" r="21" fill="#ff5d8f"/><text x="140" y="46" fill="#fff">30</text>
+          <circle cx="90" cy="105" r="21" fill="#ffc94d"/><text x="90" y="111" fill="#3a2a00">20</text>
+          <circle cx="45" cy="170" r="21" fill="#ffc94d"/><text x="45" y="176" fill="#3a2a00">10</text>
+        </g>
+        <text x="185" y="40" fill="#ff5d8f" font-family="JetBrains Mono" font-size="13" font-weight="600">bf +2</text>
+        <line x1="240" y1="110" x2="315" y2="110" stroke="#ffc94d" stroke-width="4" marker-end="url(#arA)"/>
+        <text x="278" y="98" fill="#ffc94d" font-family="Nunito" font-weight="800" font-size="13" text-anchor="middle">rotate right</text>
+        <g stroke="#5462b8" stroke-width="3"><line x1="430" y1="50" x2="370" y2="120"/><line x1="430" y1="50" x2="490" y2="120"/><line x1="490" y1="120" x2="455" y2="180"/><line x1="490" y1="120" x2="525" y2="180"/></g>
+        <g fill="rgba(179,136,255,.3)" stroke="#b388ff" stroke-width="2"><polygon points="455,170 437,210 473,210"/><polygon points="525,170 507,210 543,210"/></g>
+        <g font-family="JetBrains Mono" font-size="12" fill="#e9dcff" text-anchor="middle"><text x="455" y="205">T2</text><text x="525" y="205">T3</text></g>
+        <g font-family="Fredoka" font-weight="700" font-size="16" text-anchor="middle">
+          <circle cx="430" cy="50" r="21" fill="#3ddc97"/><text x="430" y="56" fill="#0d2f20">20</text>
+          <circle cx="370" cy="120" r="21" fill="#3ddc97"/><text x="370" y="126" fill="#0d2f20">10</text>
+          <circle cx="490" cy="120" r="21" fill="#3ddc97"/><text x="490" y="126" fill="#0d2f20">30</text>
+        </g>
+      </svg>
+      <span class="cap">20 moves up, 30 moves down, subtree T2 changes parent — order is preserved</span>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px">
+    <h3><span class="dot" style="background:var(--sun)"></span>The four AVL imbalance cases</h3>
+    <p style="color:var(--muted)">Name the case by the path from the unbalanced node down toward the newly inserted key.</p>
+    <div class="cases">
+      <div class="case"><svg viewBox="0 0 100 100"><g stroke="#ffc94d" stroke-width="3"><line x1="70" y1="18" x2="48" y2="50"/><line x1="48" y1="50" x2="26" y2="82"/></g><g fill="#ffc94d"><circle cx="70" cy="18" r="11"/><circle cx="48" cy="50" r="11"/><circle cx="26" cy="82" r="11"/></g></svg><b>LL</b><span>left, then left → one right rotation</span></div>
+      <div class="case"><svg viewBox="0 0 100 100"><g stroke="#4cc9f0" stroke-width="3"><line x1="30" y1="18" x2="52" y2="50"/><line x1="52" y1="50" x2="74" y2="82"/></g><g fill="#4cc9f0"><circle cx="30" cy="18" r="11"/><circle cx="52" cy="50" r="11"/><circle cx="74" cy="82" r="11"/></g></svg><b>RR</b><span>right, then right → one left rotation</span></div>
+      <div class="case"><svg viewBox="0 0 100 100"><g stroke="#ff9f68" stroke-width="3"><line x1="70" y1="18" x2="40" y2="50"/><line x1="40" y1="50" x2="64" y2="82"/></g><g fill="#ff9f68"><circle cx="70" cy="18" r="11"/><circle cx="40" cy="50" r="11"/><circle cx="64" cy="82" r="11"/></g></svg><b>LR</b><span>left, then right → rotate left, then right</span></div>
+      <div class="case"><svg viewBox="0 0 100 100"><g stroke="#b388ff" stroke-width="3"><line x1="30" y1="18" x2="60" y2="50"/><line x1="60" y1="50" x2="36" y2="82"/></g><g fill="#b388ff"><circle cx="30" cy="18" r="11"/><circle cx="60" cy="50" r="11"/><circle cx="36" cy="82" r="11"/></g></svg><b>RL</b><span>right, then left → rotate right, then left</span></div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--rbred)"></span>Red-Black tree</h3>
+      <p style="color:var(--muted);margin-bottom:10px">Every node is painted red or black. Five rules keep the tree roughly balanced:</p>
+      <ol class="rules">
+        <li>Every node is either <b>red</b> or <b>black</b>.</li>
+        <li>The <b>root</b> is always black.</li>
+        <li>Every empty child (<b>NIL</b>) counts as black.</li>
+        <li>A red node never has a <b>red child</b> — no two reds in a row.</li>
+        <li>Every path from a node down to its NIL leaves has the <b>same number of black nodes</b> (its black-height).</li>
+      </ol>
+      <ul class="pts" style="--bc:var(--rbred);margin-top:12px">
+        <li>Together these guarantee height ≤ <b>2 log₂(n + 1)</b>.</li>
+        <li>New nodes are inserted <b>red</b>. If the parent is also red, look at the <b>uncle</b>: red uncle → <b>recolour</b>; black uncle → <b>rotate</b> (and recolour).</li>
+        <li>Looser than AVL, so it does <b>fewer rotations</b> — at most 2 per insert. That is why <code>std::map</code> and <code>std::set</code> use it.</li>
+      </ul>
+    </div>
+    <div class="vis-box">
+      <svg viewBox="0 0 520 280" role="img" aria-label="Example red-black tree with NIL leaves">
+        <g stroke="#5462b8" stroke-width="3"><line x1="260" y1="40" x2="150" y2="110"/><line x1="260" y1="40" x2="370" y2="110"/><line x1="150" y1="110" x2="90" y2="185"/><line x1="150" y1="110" x2="210" y2="185"/><line x1="370" y1="110" x2="320" y2="185"/><line x1="370" y1="110" x2="430" y2="185"/><line x1="210" y1="185" x2="188" y2="245"/><line x1="210" y1="185" x2="232" y2="245"/></g>
+        <g font-family="Fredoka" font-weight="700" font-size="16" text-anchor="middle" fill="#fff">
+          <circle cx="260" cy="40" r="22" fill="#14162b" stroke="#8b93c9" stroke-width="3"/><text x="260" y="46">13</text>
+          <circle cx="150" cy="110" r="22" fill="#e63946" stroke="#ffb3b8" stroke-width="3"/><text x="150" y="116">8</text>
+          <circle cx="370" cy="110" r="22" fill="#e63946" stroke="#ffb3b8" stroke-width="3"/><text x="370" y="116">17</text>
+          <circle cx="90" cy="185" r="20" fill="#14162b" stroke="#8b93c9" stroke-width="3"/><text x="90" y="191">1</text>
+          <circle cx="210" cy="185" r="20" fill="#14162b" stroke="#8b93c9" stroke-width="3"/><text x="210" y="191">11</text>
+          <circle cx="320" cy="185" r="20" fill="#14162b" stroke="#8b93c9" stroke-width="3"/><text x="320" y="191">15</text>
+          <circle cx="430" cy="185" r="20" fill="#14162b" stroke="#8b93c9" stroke-width="3"/><text x="430" y="191">25</text>
+        </g>
+        <g fill="#000" stroke="#6c76b3"><rect x="174" y="235" width="28" height="20" rx="4"/><rect x="218" y="235" width="28" height="20" rx="4"/></g>
+        <g font-family="JetBrains Mono" font-size="9" fill="#a3abd8" text-anchor="middle"><text x="188" y="249">NIL</text><text x="232" y="249">NIL</text></g>
+        <text x="420" y="255" fill="#ffc94d" font-family="Nunito" font-weight="800" font-size="13" text-anchor="middle">black-height = 2 on every path</text>
+      </svg>
+      <span class="cap">Reds (8, 17) never touch another red; each path down has 2 black nodes below the root</span>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="vis-box">
+      <svg viewBox="0 0 520 290" role="img" aria-label="Trie storing to, tea, ten, in and inn">
+        <g stroke="#5462b8" stroke-width="3"><line x1="260" y1="35" x2="170" y2="100"/><line x1="260" y1="35" x2="380" y2="100"/><line x1="170" y1="100" x2="110" y2="170"/><line x1="170" y1="100" x2="225" y2="170"/><line x1="225" y1="170" x2="185" y2="240"/><line x1="225" y1="170" x2="265" y2="240"/><line x1="380" y1="100" x2="380" y2="170"/><line x1="380" y1="170" x2="380" y2="240"/></g>
+        <g font-family="Fredoka" font-weight="700" font-size="17" text-anchor="middle">
+          <circle cx="260" cy="35" r="20" fill="#202a66" stroke="#5462b8" stroke-width="3"/><text x="260" y="41" fill="#fff">•</text>
+          <circle cx="170" cy="100" r="20" fill="#b388ff"/><text x="170" y="106" fill="#1d1240">t</text>
+          <circle cx="380" cy="100" r="20" fill="#b388ff"/><text x="380" y="106" fill="#1d1240">i</text>
+          <circle cx="110" cy="170" r="20" fill="#ffc94d"/><text x="110" y="176" fill="#3a2a00">o</text>
+          <circle cx="225" cy="170" r="20" fill="#b388ff"/><text x="225" y="176" fill="#1d1240">e</text>
+          <circle cx="185" cy="240" r="20" fill="#ffc94d"/><text x="185" y="246" fill="#3a2a00">a</text>
+          <circle cx="265" cy="240" r="20" fill="#ffc94d"/><text x="265" y="246" fill="#3a2a00">n</text>
+          <circle cx="380" cy="170" r="20" fill="#ffc94d"/><text x="380" y="176" fill="#3a2a00">n</text>
+          <circle cx="380" cy="240" r="20" fill="#ffc94d"/><text x="380" y="246" fill="#3a2a00">n</text>
+        </g>
+        <g font-family="Nunito" font-size="12" font-weight="800" fill="#ffc94d"><text x="60" y="175">to</text><text x="150" y="278">tea</text><text x="255" y="278">ten</text><text x="410" y="175">in</text><text x="410" y="245">inn</text></g>
+      </svg>
+      <span class="cap">Gold nodes mark the end of a word (isEnd = true)</span>
+    </div>
+    <div class="panel">
+      <h3><span class="dot" style="background:var(--sky)"></span>Trie (prefix tree)</h3>
+      <ul class="pts" style="--bc:var(--sky)">
+        <li>A tree for <b>strings</b>. Each edge stands for <b>one character</b>; the path from the root spells a prefix.</li>
+        <li>Words with a common start <b>share nodes</b>: tea and ten share “te”.</li>
+        <li>Each node has up to 26 children (for a–z) and an <b>isEnd</b> flag that marks a complete word.</li>
+        <li><b>Insert / search</b> cost <b>O(L)</b>, where L is the word length — independent of how many words are stored.</li>
+        <li><b>Prefix queries</b> are the superpower: walk to the prefix node, then everything below it starts with that prefix.</li>
+        <li>Trade-off: uses more memory than a hash set because of the child pointers.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px">
+    <h3><span class="dot" style="background:var(--lilac)"></span>Side-by-side comparison</h3>
+    <div style="overflow-x:auto">
+    <table class="cmp">
+      <thead><tr><th></th><th>BST</th><th>AVL</th><th>Red-Black</th><th>Trie</th></tr></thead>
+      <tbody>
+        <tr><th>Shape rule</th><td>None</td><td>Balance factor −1, 0, +1</td><td>No red-red, equal black-height</td><td>One level per character</td></tr>
+        <tr><th>Height</th><td>log n to n</td><td>≤ 1.44 log n</td><td>≤ 2 log n</td><td>Length of the longest word</td></tr>
+        <tr><th>Search</th><td>O(h) — worst O(n)</td><td>O(log n)</td><td>O(log n)</td><td>O(L)</td></tr>
+        <tr><th>Insert / delete</th><td>O(h) — worst O(n)</td><td>O(log n)</td><td>O(log n)</td><td>O(L)</td></tr>
+        <tr><th>Rotations per insert</th><td>0</td><td>Up to 2</td><td>Up to 2, plus recolouring</td><td>None</td></tr>
+        <tr><th>Best when</th><td>Data arrives in random order</td><td>Many more lookups than updates</td><td>Frequent inserts and deletes</td><td>Prefix search on words</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-bottom:20px">
+    <h3><span class="dot" style="background:var(--sun)"></span>Complexity cheat sheet</h3>
+    <div class="cx">
+      <div class="chip"><b>BST</b><span class="big">O(log n) avg</span><span>O(n) worst when skewed</span></div>
+      <div class="chip"><b>AVL</b><span class="big">O(log n)</span><span>guaranteed for search, insert and delete</span></div>
+      <div class="chip"><b>Red-Black</b><span class="big">O(log n)</span><span>guaranteed, with cheaper updates than AVL</span></div>
+      <div class="chip"><b>Trie</b><span class="big">O(L)</span><span>L = word length; space O(total characters)</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--mint)"></span>Where you meet these in real life</h3>
+    <div class="apps">
+      <div class="app" style="--ac:var(--rose)"><div class="e">🧰</div><h4>C++ map and set</h4><p><code>std::map</code>, <code>std::set</code> and <code>multimap</code> keep keys sorted.</p><span class="tag">Red-Black</span></div>
+      <div class="app" style="--ac:var(--rose)"><div class="e">☕</div><h4>Java collections</h4><p>TreeMap, TreeSet, and HashMap buckets with many collisions.</p><span class="tag">Red-Black</span></div>
+      <div class="app" style="--ac:var(--rose)"><div class="e">🐧</div><h4>Linux CPU scheduler</h4><p>The fair scheduler picks the task that has run the least.</p><span class="tag">Red-Black</span></div>
+      <div class="app" style="--ac:var(--sun)"><div class="e">🗄️</div><h4>In-memory databases</h4><p>Read-heavy indexes where lookup speed matters most.</p><span class="tag">AVL</span></div>
+      <div class="app" style="--ac:var(--sun)"><div class="e">🏆</div><h4>Leaderboards &amp; ranges</h4><p>“Players with scores between 500 and 800” in sorted order.</p><span class="tag">Balanced BST</span></div>
+      <div class="app" style="--ac:var(--mint)"><div class="e">🧾</div><h4>Compiler symbol tables</h4><p>Look up variable names while compiling a program.</p><span class="tag">BST</span></div>
+      <div class="app" style="--ac:var(--sky)"><div class="e">⌨️</div><h4>Autocomplete</h4><p>Search boxes and phone keyboards suggest words as you type.</p><span class="tag">Trie</span></div>
+      <div class="app" style="--ac:var(--sky)"><div class="e">✅</div><h4>Spell checkers</h4><p>Check a word, then suggest close matches from the dictionary.</p><span class="tag">Trie</span></div>
+      <div class="app" style="--ac:var(--sky)"><div class="e">🌐</div><h4>Internet routing</h4><p>Routers find the longest matching IP address prefix.</p><span class="tag">Trie</span></div>
+      <div class="app" style="--ac:var(--sky)"><div class="e">🎲</div><h4>Word games</h4><p>Boggle and Scrabble solvers stop early when a prefix is not a word.</p><span class="tag">Trie</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= BST ======================= -->
+<section class="page" id="page-bst">
+  <h2 class="sec">Binary search tree</h2>
+  <p class="lead">Enter your own keys or pick a ready-made example. The white dashed bubble is the key being placed or searched — follow it as it moves down the tree.</p>
+  <div class="strip">
+    <div class="s" style="--sc:var(--mint)"><h4>Insert</h4><p>Walk down comparing keys; attach at the first empty spot.</p></div>
+    <div class="s" style="--sc:var(--lilac)"><h4>Search</h4><p>Smaller → left, larger → right, equal → found, NULL → not present.</p></div>
+    <div class="s" style="--sc:var(--rose)"><h4>Delete</h4><p>Three cases: leaf, one child, or two children (use the successor).</p></div>
+    <div class="s" style="--sc:var(--sun)"><h4>Cost</h4><p>Every operation follows one path, so it costs O(height).</p></div>
+  </div>
+  <div class="opbar">
+    <div class="og"><label for="bst-vals">Tree keys (insert order)</label><input class="inp wide" id="bst-vals" value="50 30 70 20 40 60 80 35 65"></div>
+    <div class="og"><span class="lb">Operation</span><div class="seg" id="bst-op"><button class="pill on" data-op="build">Build by inserting</button><button class="pill" data-op="search">Search</button><button class="pill" data-op="delete">Delete</button></div></div>
+    <div class="og" id="bst-key-g" style="display:none"><label for="bst-key">Key</label><input class="inp" id="bst-key" value="35"></div>
+    <button class="btn run" id="bst-run">Run animation</button>
+    <div class="presets">Examples:
+      <button class="pre" data-op="build" data-vals="50 30 70 20 40 60 80 35 65">Build a bushy tree</button>
+      <button class="pre" data-op="build" data-vals="10 20 30 40 50 60">Sorted input (skews!)</button>
+      <button class="pre" data-op="search" data-key="35">Search 35</button>
+      <button class="pre" data-op="search" data-key="45">Search 45 (missing)</button>
+      <button class="pre" data-op="delete" data-key="20">Delete leaf 20</button>
+      <button class="pre" data-op="delete" data-key="60">Delete 60 (one child)</button>
+      <button class="pre" data-op="delete" data-key="30">Delete 30 (two children)</button>
+    </div>
+    <div class="msg" id="bst-msg"></div>
+  </div>
+  <div id="slot-bst"></div>
+</section>
+
+<!-- ======================= AVL ======================= -->
+<section class="page" id="page-avl">
+  <h2 class="sec">AVL tree</h2>
+  <p class="lead">Each badge shows the node's <b>balance factor</b>. Watch it climb to ±2 after an insert, then watch the rotation slide nodes into a balanced shape.</p>
+  <div class="strip">
+    <div class="s" style="--sc:var(--mint)"><h4>1. Insert like a BST</h4><p>Compare and walk down to an empty spot.</p></div>
+    <div class="s" style="--sc:var(--sky)"><h4>2. Walk back up</h4><p>Update each ancestor's height and balance factor.</p></div>
+    <div class="s" style="--sc:var(--rose)"><h4>3. Find ±2</h4><p>The first unbalanced node decides the case: LL, RR, LR or RL.</p></div>
+    <div class="s" style="--sc:var(--sun)"><h4>4. Rotate</h4><p>One or two rotations restore balance. Done.</p></div>
+  </div>
+  <div class="opbar">
+    <div class="og"><label for="avl-vals">Keys to insert</label><input class="inp wide" id="avl-vals" value="10 20 30 40 50 25"></div>
+    <button class="btn run" id="avl-run">Run animation</button>
+    <div class="presets">Examples:
+      <button class="pre" data-vals="30 20 10">LL case</button>
+      <button class="pre" data-vals="10 20 30">RR case</button>
+      <button class="pre" data-vals="30 10 20">LR case</button>
+      <button class="pre" data-vals="10 30 20">RL case</button>
+      <button class="pre" data-vals="10 20 30 40 50 25">Mixed build</button>
+      <button class="pre" data-vals="1 2 3 4 5 6 7">Sorted 1–7 (stays balanced!)</button>
+    </div>
+    <div class="msg" id="avl-msg"></div>
+  </div>
+  <div id="slot-avl"></div>
+</section>
+
+<!-- ======================= RED-BLACK ======================= -->
+<section class="page" id="page-rb">
+  <h2 class="sec">Red-Black tree</h2>
+  <p class="lead">Every new key starts <b>red</b>. If that creates two reds in a row, the colour of the <b>uncle</b> decides between recolouring and rotating. Yellow rings mark the node being fixed; blue rings mark its family.</p>
+  <div class="strip">
+    <div class="s" style="--sc:var(--rbred)"><h4>Insert red</h4><p>BST insert, then colour the new node red.</p></div>
+    <div class="s" style="--sc:var(--coral)"><h4>Case 1 · red uncle</h4><p>Recolour parent and uncle black, grandparent red; move up.</p></div>
+    <div class="s" style="--sc:var(--sun)"><h4>Case 2 · triangle</h4><p>Black uncle, inner child: rotate the parent to make a line.</p></div>
+    <div class="s" style="--sc:var(--mint)"><h4>Case 3 · line</h4><p>Black uncle, outer child: recolour and rotate the grandparent.</p></div>
+  </div>
+  <div class="opbar">
+    <div class="og"><label for="rb-vals">Keys to insert</label><input class="inp wide" id="rb-vals" value="10 20 30 15 25 5 1"></div>
+    <button class="btn run" id="rb-run">Run animation</button>
+    <div class="presets">Examples:
+      <button class="pre" data-vals="10 20 30">Case 3 (line)</button>
+      <button class="pre" data-vals="10 5 15 1">Case 1 (red uncle)</button>
+      <button class="pre" data-vals="10 20 15">Case 2 (triangle)</button>
+      <button class="pre" data-vals="10 20 30 15 25 5 1">Mixed build</button>
+      <button class="pre" data-vals="1 2 3 4 5 6 7 8">Sorted 1–8</button>
+    </div>
+    <div class="msg" id="rb-msg"></div>
+  </div>
+  <div id="slot-rb"></div>
+</section>
+
+<!-- ======================= TRIE ======================= -->
+<section class="page" id="page-trie">
+  <h2 class="sec">Trie</h2>
+  <p class="lead">The panel below the tree shows the word letter by letter — the red letter is the one being processed. Gold nodes with a ★ end a complete word.</p>
+  <div class="strip">
+    <div class="s" style="--sc:var(--mint)"><h4>Insert</h4><p>Follow existing letters; create a node for each missing one; mark the end.</p></div>
+    <div class="s" style="--sc:var(--lilac)"><h4>Search</h4><p>Follow every letter. Found only if the last node is marked as a word end.</p></div>
+    <div class="s" style="--sc:var(--sky)"><h4>Autocomplete</h4><p>Walk to the prefix, then collect every word below it.</p></div>
+    <div class="s" style="--sc:var(--sun)"><h4>Cost</h4><p>O(length of word) — no matter how big the dictionary is.</p></div>
+  </div>
+  <div class="opbar">
+    <div class="og"><label for="trie-words">Words (lowercase a–z)</label><input class="inp wide" id="trie-words" value="cat car cart card dog do dot"></div>
+    <div class="og"><span class="lb">Operation</span><div class="seg" id="trie-op"><button class="pill on" data-op="build">Build by inserting</button><button class="pill" data-op="search">Search word</button><button class="pill" data-op="auto">Autocomplete prefix</button></div></div>
+    <div class="og" id="trie-q-g" style="display:none"><label for="trie-q">Word / prefix</label><input class="inp" id="trie-q" value="car"></div>
+    <button class="btn run" id="trie-run">Run animation</button>
+    <div class="presets">Examples:
+      <button class="pre" data-op="search" data-q="car">Search “car”</button>
+      <button class="pre" data-op="search" data-q="ca">Search “ca” (only a prefix)</button>
+      <button class="pre" data-op="search" data-q="cab">Search “cab” (missing)</button>
+      <button class="pre" data-op="auto" data-q="ca">Autocomplete “ca”</button>
+      <button class="pre" data-op="auto" data-q="do">Autocomplete “do”</button>
+    </div>
+    <div class="msg" id="trie-msg"></div>
+  </div>
+  <div id="slot-trie"></div>
+</section>
+
+<!-- ======================= CODE ======================= -->
+<section class="page" id="page-code">
+  <h2 class="sec">Complete C++ programs</h2>
+  <p class="lead">Each program compiles on its own with <code>g++ -std=c++17 file.cpp</code>. The expected output is shown under each one.</p>
+  <div class="prog"><div class="prog-head"><h3>🌲 Binary search tree</h3><button class="copy" data-src="src-bst">Copy code</button></div><pre id="pre-bst"></pre>
+    <div class="out-box">Inorder: 20 30 35 40 50 60 65 70 80
+Search 35: found
+Search 45: not found
+After deleting 20 (leaf)        : 30 35 40 50 60 65 70 80
+After deleting 60 (one child)   : 30 35 40 50 65 70 80
+After deleting 30 (two children): 35 40 50 65 70 80</div></div>
+  <div class="prog"><div class="prog-head"><h3>⚖️ AVL tree</h3><button class="copy" data-src="src-avl">Copy code</button></div><pre id="pre-avl"></pre>
+    <div class="out-box">Preorder: 30 20 10 25 40 50
+Inorder : 10 20 25 30 40 50
+Height  : 3</div></div>
+  <div class="prog"><div class="prog-head"><h3>🔴 Red-Black tree</h3><button class="copy" data-src="src-rb">Copy code</button></div><pre id="pre-rb"></pre>
+    <div class="out-box" id="rb-out"></div></div>
+  <div class="prog"><div class="prog-head"><h3>🔤 Trie</h3><button class="copy" data-src="src-trie">Copy code</button></div><pre id="pre-trie"></pre>
+    <div class="out-box">search("car")  : true
+search("ca")   : false
+search("cab")  : false
+startsWith("ca"): true
+autocomplete("ca"): car card cart cat
+autocomplete("do"): do dog dot</div></div>
+</section>
+</main>
+<footer>BST, AVL, Red-Black &amp; Trie Explorer · a single offline-ready HTML file</footer>
+
+<!-- ======================= FULL PROGRAMS ======================= -->
+<script type="text/plain" id="src-bst">#include <bits/stdc++.h>
+using namespace std;
+
+struct Node {
+    int key;
+    Node *left, *right;
+    Node(int k) : key(k), left(nullptr), right(nullptr) {}
+};
+
+// Insert: walk down until an empty spot is found
+Node* insert(Node* root, int key) {
+    if (root == nullptr) return new Node(key);
+    if (key < root->key)      root->left  = insert(root->left, key);
+    else if (key > root->key) root->right = insert(root->right, key);
+    return root;                          // duplicates are ignored
+}
+
+// Search: go left if smaller, right if larger
+Node* search(Node* root, int key) {
+    while (root != nullptr) {
+        if (key == root->key) return root;
+        root = (key < root->key) ? root->left : root->right;
+    }
+    return nullptr;
+}
+
+// Delete: leaf, one child, or two children
+Node* remove(Node* root, int key) {
+    if (!root) return nullptr;
+    if (key < root->key)      root->left  = remove(root->left, key);
+    else if (key > root->key) root->right = remove(root->right, key);
+    else {
+        if (!root->left)  { Node* r = root->right; delete root; return r; }
+        if (!root->right) { Node* l = root->left;  delete root; return l; }
+        Node* s = root->right;            // two children:
+        while (s->left) s = s->left;      // find inorder successor
+        root->key = s->key;               // copy it up
+        root->right = remove(root->right, s->key);
+    }
+    return root;
+}
+
+void inorder(Node* r) {
+    if (!r) return;
+    inorder(r->left); cout << r->key << " "; inorder(r->right);
+}
+
+int main() {
+    Node* root = nullptr;
+    for (int v : {50, 30, 70, 20, 40, 60, 80, 35, 65}) root = insert(root, v);
+
+    cout << "Inorder: "; inorder(root); cout << "\n";
+    cout << "Search 35: " << (search(root, 35) ? "found" : "not found") << "\n";
+    cout << "Search 45: " << (search(root, 45) ? "found" : "not found") << "\n";
+
+    root = remove(root, 20);
+    cout << "After deleting 20 (leaf)        : "; inorder(root); cout << "\n";
+    root = remove(root, 60);
+    cout << "After deleting 60 (one child)   : "; inorder(root); cout << "\n";
+    root = remove(root, 30);
+    cout << "After deleting 30 (two children): "; inorder(root); cout << "\n";
+    return 0;
+}</script>
+
+<script type="text/plain" id="src-avl">#include <bits/stdc++.h>
+using namespace std;
+
+struct Node {
+    int key, height;
+    Node *left, *right;
+    Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
+};
+
+int height(Node* n)  { return n ? n->height : 0; }
+int balance(Node* n) { return n ? height(n->left) - height(n->right) : 0; }
+void update(Node* n) { n->height = 1 + max(height(n->left), height(n->right)); }
+
+Node* rotateRight(Node* y) {
+    Node* x = y->left;
+    y->left = x->right;
+    x->right = y;
+    update(y); update(x);
+    return x;                             // x is the new subtree root
+}
+
+Node* rotateLeft(Node* x) {
+    Node* y = x->right;
+    x->right = y->left;
+    y->left = x;
+    update(x); update(y);
+    return y;                             // y is the new subtree root
+}
+
+Node* insert(Node* node, int key) {
+    if (!node) return new Node(key);
+    if (key < node->key)      node->left  = insert(node->left, key);
+    else if (key > node->key) node->right = insert(node->right, key);
+    else return node;                     // no duplicates
+
+    update(node);
+    int bf = balance(node);
+
+    if (bf > 1 && key < node->left->key)   return rotateRight(node);   // LL
+    if (bf < -1 && key > node->right->key) return rotateLeft(node);    // RR
+    if (bf > 1 && key > node->left->key) {                              // LR
+        node->left = rotateLeft(node->left);
+        return rotateRight(node);
+    }
+    if (bf < -1 && key < node->right->key) {                            // RL
+        node->right = rotateRight(node->right);
+        return rotateLeft(node);
+    }
+    return node;
+}
+
+void preorder(Node* r) { if (!r) return; cout << r->key << " "; preorder(r->left); preorder(r->right); }
+void inorder(Node* r)  { if (!r) return; inorder(r->left); cout << r->key << " "; inorder(r->right); }
+
+int main() {
+    Node* root = nullptr;
+    for (int v : {10, 20, 30, 40, 50, 25}) root = insert(root, v);
+    cout << "Preorder: "; preorder(root); cout << "\n";
+    cout << "Inorder : "; inorder(root);  cout << "\n";
+    cout << "Height  : " << height(root) << "\n";
+    return 0;
+}</script>
+
+<script type="text/plain" id="src-rb">#include <bits/stdc++.h>
+using namespace std;
+
+enum Color { RED, BLACK };
+
+struct Node {
+    int key;
+    Color color;
+    Node *left, *right, *parent;
+    Node(int k) : key(k), color(RED), left(nullptr), right(nullptr), parent(nullptr) {}
+};
+
+class RedBlackTree {
+    Node* root = nullptr;
+
+    void rotateLeft(Node* x) {
+        Node* y = x->right;
+        x->right = y->left;
+        if (y->left) y->left->parent = x;
+        y->parent = x->parent;
+        if (!x->parent)              root = y;
+        else if (x == x->parent->left) x->parent->left = y;
+        else                          x->parent->right = y;
+        y->left = x;
+        x->parent = y;
+    }
+
+    void rotateRight(Node* x) {
+        Node* y = x->left;
+        x->left = y->right;
+        if (y->right) y->right->parent = x;
+        y->parent = x->parent;
+        if (!x->parent)               root = y;
+        else if (x == x->parent->right) x->parent->right = y;
+        else                           x->parent->left = y;
+        y->right = x;
+        x->parent = y;
+    }
+
+    void fixInsert(Node* z) {
+        while (z->parent && z->parent->color == RED) {
+            Node* p = z->parent;
+            Node* g = p->parent;                       // exists: a red node is never the root
+            Node* u = (p == g->left) ? g->right : g->left;   // uncle
+            if (u && u->color == RED) {                // Case 1: recolour
+                p->color = BLACK; u->color = BLACK; g->color = RED;
+                z = g;
+            } else if (p == g->left) {
+                if (z == p->right) { z = p; rotateLeft(z); }    // Case 2: triangle
+                z->parent->color = BLACK; g->color = RED;       // Case 3: line
+                rotateRight(g);
+            } else {
+                if (z == p->left) { z = p; rotateRight(z); }    // Case 2 (mirror)
+                z->parent->color = BLACK; g->color = RED;       // Case 3 (mirror)
+                rotateLeft(g);
+            }
+        }
+        root->color = BLACK;                           // rule 2
+    }
+
+    void preorder(Node* n) {
+        if (!n) return;
+        cout << n->key << (n->color == RED ? "(R) " : "(B) ");
+        preorder(n->left); preorder(n->right);
+    }
+
+public:
+    void insert(int key) {
+        Node* parent = nullptr;
+        Node* cur = root;
+        while (cur) {                                  // ordinary BST walk
+            parent = cur;
+            if (key == cur->key) return;               // ignore duplicates
+            cur = (key < cur->key) ? cur->left : cur->right;
+        }
+        Node* z = new Node(key);                       // new nodes are red
+        z->parent = parent;
+        if (!parent)              root = z;
+        else if (key < parent->key) parent->left = z;
+        else                       parent->right = z;
+        fixInsert(z);
+    }
+    void print() { preorder(root); cout << "\n"; }
+};
+
+int main() {
+    RedBlackTree t;
+    for (int v : {10, 20, 30, 15, 25, 5, 1}) t.insert(v);
+    cout << "Preorder with colours: ";
+    t.print();
+    return 0;
+}</script>
+
+<script type="text/plain" id="src-trie">#include <bits/stdc++.h>
+using namespace std;
+
+struct TrieNode {
+    TrieNode* child[26] = {};             // one slot per letter a-z
+    bool isEnd = false;                   // does a word end here?
+};
+
+void insert(TrieNode* root, const string& word) {
+    TrieNode* cur = root;
+    for (char ch : word) {
+        int i = ch - 'a';
+        if (!cur->child[i]) cur->child[i] = new TrieNode();   // create
+        cur = cur->child[i];                                    // move down
+    }
+    cur->isEnd = true;                    // mark the end of the word
+}
+
+TrieNode* walk(TrieNode* root, const string& s) {
+    TrieNode* cur = root;
+    for (char ch : s) {
+        if (!cur->child[ch - 'a']) return nullptr;   // path breaks
+        cur = cur->child[ch - 'a'];
+    }
+    return cur;
+}
+
+bool search(TrieNode* root, const string& word) {
+    TrieNode* n = walk(root, word);
+    return n && n->isEnd;                 // must be a full word
+}
+
+bool startsWith(TrieNode* root, const string& prefix) {
+    return walk(root, prefix) != nullptr;
+}
+
+void collect(TrieNode* n, string& cur, vector<string>& out) {
+    if (n->isEnd) out.push_back(cur);
+    for (int i = 0; i < 26; i++)
+        if (n->child[i]) {
+            cur.push_back('a' + i);
+            collect(n->child[i], cur, out);
+            cur.pop_back();               // backtrack
+        }
+}
+
+vector<string> autocomplete(TrieNode* root, string prefix) {
+    vector<string> out;
+    TrieNode* n = walk(root, prefix);
+    if (n) collect(n, prefix, out);
+    return out;
+}
+
+int main() {
+    TrieNode* root = new TrieNode();
+    for (string w : {"cat", "car", "cart", "card", "dog", "do", "dot"}) insert(root, w);
+
+    cout << boolalpha;
+    cout << "search(\"car\")  : " << search(root, "car") << "\n";
+    cout << "search(\"ca\")   : " << search(root, "ca")  << "\n";
+    cout << "search(\"cab\")  : " << search(root, "cab") << "\n";
+    cout << "startsWith(\"ca\"): " << startsWith(root, "ca") << "\n";
+    for (string p : {"ca", "do"}) {
+        cout << "autocomplete(\"" << p << "\"): ";
+        for (auto& w : autocomplete(root, p)) cout << w << " ";
+        cout << "\n";
+    }
+    return 0;
+}</script>
+
+<script>
+/* ================= helpers ================= */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const NS='http://www.w3.org/2000/svg';
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const REDUCE=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function hl(src){
+  const re=/(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)')|(#\w+)|\b(int|void|bool|return|if|else|while|for|struct|class|enum|auto|const|using|namespace|new|delete|nullptr|true|false|break|public|char)\b|\b(vector|string|cout|Node|TrieNode|Color|RED|BLACK|std|main|max|RedBlackTree|boolalpha)\b|\b(\d+)\b/gm;
+  let out='',last=0,m;
+  while((m=re.exec(src))){const c=m[1]?'c':m[2]?'s':m[3]?'p':m[4]?'k':m[5]?'t':'n';out+=esc(src.slice(last,m.index))+`<span class="tk-${c}">${esc(m[0])}</span>`;last=re.lastIndex;}
+  return out+esc(src.slice(last));
+}
+const codeHTML=lines=>lines.map((l,i)=>`<div class="cl"><span class="ln">${i+1}</span><span>${hl(l)||' '}</span></div>`).join('');
+
+/* ================= tree view with smooth motion ================= */
+class TreeView{
+  constructor(svg){this.svg=svg;svg.setAttribute('viewBox','0 0 800 420');svg.innerHTML='<g class="E"></g><g class="N"></g>';this.E=svg.firstChild;this.N=svg.lastChild;this.els=new Map();this.pos=new Map();this.raf=0;}
+  reset(){cancelAnimationFrame(this.raf);this.E.innerHTML='';this.N.innerHTML='';this.els.clear();this.pos.clear();}
+  render(snap){
+    cancelAnimationFrame(this.raf);
+    const want=new Map(snap.nodes.map(n=>[String(n.id),n]));
+    for(const [id,el] of this.els)if(!want.has(id)){el.remove();this.els.delete(id);this.pos.delete(id);}
+    const from=new Map();
+    for(const [id,n] of want){
+      let el=this.els.get(id);
+      if(!el){el=document.createElementNS(NS,'g');el.innerHTML='<g class="pop"><circle class="halo"/><circle class="body"/><text class="lbl"></text><g class="badge"><rect/><text/></g></g>';this.N.appendChild(el);this.els.set(id,el);from.set(id,{x:n.x,y:n.y});}
+      else from.set(id,this.pos.get(id)||{x:n.x,y:n.y});
+      el.setAttribute('class','node '+(n.cls||''));
+      const r=n.r||24;$$('circle',el).forEach(c=>c.setAttribute('r',r));
+      const t=$('.lbl',el);t.textContent=n.label;t.setAttribute('font-size',Math.round(r*(String(n.label).length>2?.62:.8)));
+      const bg=$('.badge',el);
+      if(n.badge!==undefined){const w=14+7.5*String(n.badge).length;bg.style.display='';bg.setAttribute('class','badge '+(n.bcls||''));const rc=$('rect',bg);rc.setAttribute('x',r*.45);rc.setAttribute('y',-r-20);rc.setAttribute('width',w);rc.setAttribute('height',20);rc.setAttribute('rx',10);const bt=$('text',bg);bt.setAttribute('x',r*.45+w/2);bt.setAttribute('y',-r-10);bt.textContent=n.badge;}
+      else bg.style.display='none';
+    }
+    const pr=this.els.get('__probe');if(pr)this.N.appendChild(pr);
+    this.E.innerHTML='';
+    const lines=snap.edges.map(e=>{const l=document.createElementNS(NS,'line');l.setAttribute('class','edge '+(e.cls||''));this.E.appendChild(l);return{l,a:String(e.a),b:String(e.b)};});
+    const dur=REDUCE?0:520,t0=performance.now();
+    const frame=now=>{
+      const t=dur?Math.min(1,(now-t0)/dur):1,k=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,cur=new Map();
+      for(const [id,n] of want){const f=from.get(id),x=f.x+(n.x-f.x)*k,y=f.y+(n.y-f.y)*k;cur.set(id,{x,y});this.els.get(id).setAttribute('transform',`translate(${x},${y})`);}
+      for(const {l,a,b} of lines){const A=cur.get(a),B=cur.get(b);if(A&&B){l.setAttribute('x1',A.x);l.setAttribute('y1',A.y);l.setAttribute('x2',B.x);l.setAttribute('y2',B.y);}}
+      this.pos=cur;if(t<1)this.raf=requestAnimationFrame(frame);
+    };
+    frame(t0);
+  }
+}
+
+/* ================= binary-tree helpers ================= */
+const nd=k=>({k,l:null,r:null,h:1,c:'R',p:null});
+const inorderKeys=(n,a=[])=>{if(n){inorderKeys(n.l,a);a.push(n.k);inorderKeys(n.r,a);}return a;};
+const hOf=n=>n?1+Math.max(hOf(n.l),hOf(n.r)):0;
+const cnt=n=>n?1+cnt(n.l)+cnt(n.r):0;
+function binSnap(root,o={}){
+  const list=[];let i=0,maxD=0;
+  (function w(n,d,p){if(!n)return;w(n.l,d+1,n);list.push({n,d,p,i:i++});if(d>maxD)maxD=d;w(n.r,d+1,n);})(root,0,null);
+  const N=list.length,sp=Math.min(110,760/Math.max(N,1)),x0=400-sp*(N-1)/2,yg=Math.min(88,320/Math.max(maxD,1)),r=Math.max(14,Math.min(25,sp*.42,yg*.36));
+  const nodes=list.map(({n,d,i})=>({id:n.k,label:n.k,x:x0+sp*i,y:55+d*yg,r,
+    cls:[o.base?o.base(n):'',(o.cls&&o.cls[n.k])||''].join(' '),badge:o.badge?o.badge(n):undefined,bcls:o.bcls?o.bcls(n):''}));
+  const edges=list.filter(e=>e.p).map(({n,p})=>({a:p.k,b:n.k,cls:(o.ecls&&o.ecls[n.k])||''}));
+  if(o.probe){const t=nodes.find(z=>z.id===o.probe.at);
+    nodes.push(t?{id:'__probe',label:o.probe.v,x:t.x-t.r-18,y:t.y-t.r-14,r:Math.max(14,r*.75),cls:'probe'}:{id:'__probe',label:o.probe.v,x:400,y:55,r,cls:'probe'});}
+  return {nodes,edges};
+}
+function pathOpts(path,cur,extra){const cls={},ecls={};path.forEach((k,i)=>{cls[k]='onpath';if(i>0)ecls[k]='path';});if(cur!==undefined&&cur!==null)cls[cur]='cur';Object.assign(cls,extra||{});return{cls,ecls};}
+function bstPut(T,v){const z=nd(v);if(!T.root){T.root=z;return z;}let c=T.root;for(;;){if(v===c.k)return null;const d=v<c.k?'l':'r';if(!c[d]){c[d]=z;z.p=c;return z;}c=c[d];}}
+function bstInsert(T,v,snap,L){
+  if(!T.root){T.root=nd(v);snap(`Insert ${v}`,`The tree is empty, so <b>${v}</b> becomes the <b>root</b>.`,L.nw,{cls:{[v]:'new'}});return T.root;}
+  let c=T.root;const path=[],ds=[];
+  for(;;){
+    path.push(c.k);
+    if(v===c.k){snap(`${v} is already in the tree`,`<b>${v}</b> equals <b>${c.k}</b>. A search tree keeps each key only once, so this duplicate is skipped.`,L.dup,{...pathOpts(path,c.k),probe:{v,at:c.k},ds});return null;}
+    const left=v<c.k,d=left?'l':'r',side=left?'left':'right';
+    ds.push(`${v} ${left?'<':'>'} ${c.k} → ${side}`);
+    snap(`Compare ${v} with ${c.k}`,`<b>${v} ${left?'&lt;':'&gt;'} ${c.k}</b>, so ${v} belongs in the <b>${side}</b> subtree of ${c.k}.`+(c[d]?` Move down to <b>${c[d].k}</b>.`:` That ${side} child is <b>empty</b> — this is where ${v} goes.`),left?L.left:L.right,{...pathOpts(path,c.k),probe:{v,at:c.k},ds:[...ds]});
+    if(!c[d]){const z=nd(v);z.p=c;c[d]=z;const o=pathOpts(path,null,{[v]:'new'});o.ecls[v]='new';
+      snap(`Insert ${v}`,`Create node <b>${v}</b> as the <b>${side} child</b> of <b>${c.k}</b>. It took ${path.length} comparison(s).`,L.nw,{...o,ds:[...ds]});return z;}
+    c=c[d];
+  }
+}
+
+/* ================= C++ snippets beside the demos ================= */
+const CODE={
+ bstIns:['Node* insert(Node* root, int key) {','    if (root == nullptr) return new Node(key);    // empty spot found','    if (key < root->key)      root->left  = insert(root->left, key);','    else if (key > root->key) root->right = insert(root->right, key);','    return root;                                  // duplicates ignored','}'],
+ bstSearch:['Node* search(Node* root, int key) {','    while (root != nullptr) {','        if (key == root->key) return root;        // found','        root = (key < root->key) ? root->left : root->right;','    }','    return nullptr;                               // not found','}'],
+ bstDel:['Node* remove(Node* root, int key) {','    if (!root) return nullptr;                    // key not present','    if (key < root->key)      root->left  = remove(root->left, key);','    else if (key > root->key) root->right = remove(root->right, key);','    else {                                        // found it','        if (!root->left)  { Node* r = root->right; delete root; return r; }','        if (!root->right) { Node* l = root->left;  delete root; return l; }','        Node* s = root->right;                    // two children:','        while (s->left) s = s->left;              // inorder successor','        root->key = s->key;                       // copy it up','        root->right = remove(root->right, s->key);','    }','    return root;','}'],
+ avl:['int height(Node* n)  { return n ? n->height : 0; }','int balance(Node* n) { return n ? height(n->left) - height(n->right) : 0; }','Node* insert(Node* node, int key) {','    if (!node) return new Node(key);                 // empty spot','    if (key < node->key)      node->left  = insert(node->left, key);','    else if (key > node->key) node->right = insert(node->right, key);','    else return node;                                // duplicate','    node->height = 1 + max(height(node->left), height(node->right));','    int bf = balance(node);','    if (bf > 1 && key < node->left->key)   return rotateRight(node);   // LL','    if (bf < -1 && key > node->right->key) return rotateLeft(node);    // RR','    if (bf > 1 && key > node->left->key) {                              // LR','        node->left = rotateLeft(node->left);   return rotateRight(node); }','    if (bf < -1 && key < node->right->key) {                            // RL','        node->right = rotateRight(node->right); return rotateLeft(node); }','    return node;','}','Node* rotateRight(Node* y) {','    Node* x = y->left;   y->left = x->right;   x->right = y;','    update(y);  update(x);','    return x;                                        // new subtree root','}','Node* rotateLeft(Node* x) {','    Node* y = x->right;  x->right = y->left;   y->left = x;','    update(x);  update(y);','    return y;                                        // new subtree root','}'],
+ rb:['void insert(int key) {','    Node* z = bstInsert(key);           // ordinary BST insert','    z->color = RED;                     // new nodes start red','    fixInsert(z);','}','void fixInsert(Node* z) {','    while (z->parent && z->parent->color == RED) {','        Node* p = z->parent;  Node* g = p->parent;','        Node* u = (p == g->left) ? g->right : g->left;    // uncle','        if (u && u->color == RED) {                         // Case 1','            p->color = BLACK;  u->color = BLACK;  g->color = RED;','            z = g;                                          // move up','        } else {','            if (p == g->left) {','                if (z == p->right) { z = p; rotateLeft(z); }    // Case 2','                z->parent->color = BLACK;  g->color = RED;','                rotateRight(g);                                 // Case 3','            } else {','                if (z == p->left) { z = p; rotateRight(z); }    // Case 2','                z->parent->color = BLACK;  g->color = RED;','                rotateLeft(g);                                  // Case 3','            }','        }','    }','    root->color = BLACK;                // the root is always black','}'],
+ trieIns:['struct TrieNode {','    TrieNode* child[26] = {};      // one slot per letter','    bool isEnd = false;            // does a word end here?','};','void insert(TrieNode* root, const string& word) {','    TrieNode* cur = root;','    for (char ch : word) {','        int i = ch - \'a\';','        if (!cur->child[i]) cur->child[i] = new TrieNode();   // create','        cur = cur->child[i];                                    // move down','    }','    cur->isEnd = true;             // mark end of word','}'],
+ trieSearch:['bool search(TrieNode* root, const string& word) {','    TrieNode* cur = root;','    for (char ch : word) {','        int i = ch - \'a\';','        if (!cur->child[i]) return false;   // path breaks','        cur = cur->child[i];','    }','    return cur->isEnd;                      // a word, not just a prefix?','}'],
+ trieAuto:['void collect(TrieNode* n, string& cur, vector<string>& out) {','    if (n->isEnd) out.push_back(cur);        // found a word','    for (int i = 0; i < 26; i++)','        if (n->child[i]) {','            cur.push_back(\'a\' + i);','            collect(n->child[i], cur, out);','            cur.pop_back();                   // backtrack','        }','}','vector<string> autocomplete(TrieNode* root, string prefix) {','    TrieNode* cur = root;','    for (char ch : prefix) {','        if (!cur->child[ch - \'a\']) return {};   // no word has this prefix','        cur = cur->child[ch - \'a\'];','    }','    vector<string> out;  collect(cur, prefix, out);','    return out;','}']
+};
+
+/* ================= BST generators ================= */
+const bstStats=T=>({nodes:cnt(T.root),height:hOf(T.root)});
+function bstSnapper(T,S){return(t,x,line,o={})=>S.push({t,x,line,tree:binSnap(T.root,o),ds:o.ds||[],dsl:'Comparisons made',out:inorderKeys(T.root),outl:'Inorder traversal (always sorted)',stats:bstStats(T)});}
+const BL={nw:[1],left:[2],right:[3],dup:[4]};
+function genBSTBuild(vals){
+  const T={root:null},S=[],snap=bstSnapper(T,S);
+  snap('Start with an empty tree',`We will insert <b>${vals.join(', ')}</b> one at a time. Each new key walks down from the root until it finds an empty spot.`,[],{});
+  vals.forEach(v=>bstInsert(T,v,snap,BL));
+  const h=hOf(T.root),n=cnt(T.root);
+  snap('Tree built 🎉',`${n} keys, height <b>${h}</b>. `+(h>=n&&n>2?'Every key went the same way — the tree is a <b>skewed chain</b>, so searches cost O(n). This is exactly the problem AVL and Red-Black trees solve.':`A perfectly balanced tree of ${n} keys would have height ${Math.ceil(Math.log2(n+1))}. The inorder list below is sorted.`),[],{});
+  return S;
+}
+function genBSTSearch(vals,k){
+  const T={root:null},S=[],snap=bstSnapper(T,S);vals.forEach(v=>bstPut(T,v));
+  snap(`Search for ${k}`,'Start at the root. At every node we compare once and throw away one whole subtree.',[1],{probe:T.root?{v:k,at:T.root.k}:null});
+  let c=T.root;const path=[],ds=[];
+  while(c){path.push(c.k);
+    if(k===c.k){ds.push(`${k} = ${c.k} ✓`);snap(`Found ${k}!`,`<b>${k}</b> equals the current node — found after <b>${path.length}</b> comparison(s) out of ${cnt(T.root)} keys.`,[2],{...pathOpts(path,null,{[c.k]:'found'}),ds});return S;}
+    const left=k<c.k,side=left?'left':'right';ds.push(`${k} ${left?'<':'>'} ${c.k} → ${side}`);
+    snap(`Compare ${k} with ${c.k}`,`<b>${k} ${left?'&lt;':'&gt;'} ${c.k}</b>, so if ${k} exists it must be in the <b>${side}</b> subtree. `+(c[left?'l':'r']?`Move to <b>${c[left?'l':'r'].k}</b>.`:`But that child is NULL…`),[3],{...pathOpts(path,c.k),probe:{v:k,at:c.k},ds:[...ds]});
+    c=left?c.l:c.r;
+  }
+  snap(`${k} is not in the tree`,`We reached an empty child (NULL), so <b>${k}</b> is not stored. Only ${path.length} node(s) had to be checked.`,[5],{...pathOpts(path),ds});
+  return S;
+}
+function genBSTDelete(vals,k){
+  const T={root:null},S=[],snap=bstSnapper(T,S);vals.forEach(v=>bstPut(T,v));
+  snap(`Delete ${k}`,'First find the node, exactly like a search.',[0],{probe:T.root?{v:k,at:T.root.k}:null});
+  let c=T.root,par=null;const path=[],ds=[];
+  while(c&&c.k!==k){path.push(c.k);const left=k<c.k;ds.push(`${k} ${left?'<':'>'} ${c.k} → ${left?'left':'right'}`);
+    snap(`Compare ${k} with ${c.k}`,`<b>${k} ${left?'&lt;':'&gt;'} ${c.k}</b>, so go <b>${left?'left':'right'}</b>.`,left?[2]:[3],{...pathOpts(path,c.k),probe:{v:k,at:c.k},ds:[...ds]});par=c;c=left?c.l:c.r;}
+  if(!c){snap(`${k} not found`,`The search ended at NULL, so there is nothing to delete. The tree is unchanged.`,[1],{...pathOpts(path),ds});return S;}
+  path.push(c.k);
+  const setChild=(p,old,nw)=>{if(!p)T.root=nw;else if(p.l===old)p.l=nw;else p.r=nw;};
+  if(!c.l&&!c.r){
+    snap(`Found ${k} — Case 1: leaf`,`<b>${k}</b> has no children. Remove it and set its parent's pointer to NULL.`,[4,5],{...pathOpts(path,null,{[k]:'del'}),ds});
+    setChild(par,c,null);snap(`${k} removed`,'The leaf is gone. No other node had to move.',[5],{});
+  }else if(!c.l||!c.r){
+    const ch=c.l||c.r;
+    snap(`Found ${k} — Case 2: one child`,`<b>${k}</b> has a single child, <b>${ch.k}</b>. Remove ${k} and link ${ch.k} straight to ${par?`<b>${par.k}</b>`:'the root position'}.`,c.l?[6]:[5],{cls:{[k]:'del',[ch.k]:'succ'}});
+    setChild(par,c,ch);snap(`${k} removed`,`<b>${ch.k}</b> (with its whole subtree) moved up into ${k}'s place. Sorted order is unchanged.`,c.l?[6]:[5],{cls:{[ch.k]:'new'}});
+  }else{
+    snap(`Found ${k} — Case 3: two children`,`<b>${k}</b> has two children, so we cannot simply unlink it. Replace it with its <b>inorder successor</b>: the smallest key in its right subtree.`,[7],{cls:{[k]:'del'}});
+    let s=c.r,sp=c;const sPath=[s.k];
+    snap(`Go right to ${s.k}`,`The successor is somewhere in the right subtree of ${k}. Step once to the right…`,[7],{cls:{[k]:'del',[s.k]:'cur'},ecls:{[s.k]:'path'}});
+    while(s.l){sp=s;s=s.l;sPath.push(s.k);const cl={[k]:'del'};sPath.forEach(x=>cl[x]='onpath');cl[s.k]='cur';const ec={};sPath.forEach(x=>ec[x]='path');
+      snap(`Go left to ${s.k}`,'…then keep going left as far as possible, because left means smaller.',[8],{cls:cl,ecls:ec});}
+    snap(`Successor is ${s.k}`,`<b>${s.k}</b> has no left child, so it is the smallest key bigger than ${k}. Putting it in ${k}'s place keeps everything on the left smaller and everything on the right bigger.`,[8],{cls:{[k]:'del',[s.k]:'succ'}});
+    if(sp===c)c.r=s.r;else sp.l=s.r;c.k=s.k;
+    snap(`Copy ${s.k} up, remove the old ${s.k}`,`The node that held ${k} now holds <b>${s.k}</b>. The old successor node had at most a right child, so removing it is the easy Case 1 or 2.`,[9,10],{cls:{[s.k]:'new'}});
+  }
+  snap('Delete complete 🎉','The inorder list below is still sorted, so the BST rule holds everywhere.',[12],{});
+  return S;
+}
+
+/* ================= AVL generator ================= */
+function genAVL(vals){
+  const T={root:null},S=[];
+  const H=n=>n?n.h:0,BF=n=>H(n.l)-H(n.r),up=n=>{n.h=1+Math.max(H(n.l),H(n.r));};
+  const fmt=b=>(b>0?'+':'')+b;
+  const snap=(t,x,line,o={})=>S.push({t,x,line,tree:binSnap(T.root,{...o,badge:n=>fmt(BF(n)),bcls:n=>Math.abs(BF(n))>1?'bad':''}),ds:o.ds||[],dsl:'Comparisons made',out:inorderKeys(T.root),outl:'Inorder traversal (sorted)',stats:{nodes:cnt(T.root),height:hOf(T.root)}});
+  const rotR=y=>{const x=y.l;y.l=x.r;x.r=y;up(y);up(x);return x;};
+  const rotL=x=>{const y=x.r;x.r=y.l;y.l=x;up(x);up(y);return y;};
+  const pathTo=v=>{const p=[];let c=T.root;while(c&&c.k!==v){p.push(c);c=v<c.k?c.l:c.r;}return p;};
+  const RR_=[17,18,19,20],RL_=[22,23,24,25];
+  snap('Start with an empty AVL tree',`Keys to insert: <b>${vals.join(', ')}</b>. The badge on each node is its <b>balance factor</b> = height(left) − height(right). It must stay −1, 0 or +1.`,[]);
+  for(const v of vals){
+    if(!bstInsert(T,v,snap,{nw:[3],left:[4],right:[5],dup:[6]}))continue;
+    const path=pathTo(v);
+    for(let i=path.length-1;i>=0;i--){
+      const n=path[i];up(n);const b=BF(n);
+      if(Math.abs(b)<=1){snap(`Update ${n.k}: balance ${fmt(b)}`,`Back on the way up: height(${n.k}) = <b>${n.h}</b>, balance = ${H(n.l)} − ${H(n.r)} = <b>${fmt(b)}</b>. That is within −1…+1, so ${n.k} is fine.`,[7,8],{cls:{[n.k]:'cur'}});continue;}
+      const kase=b>1?(v<n.l.k?'LL':'LR'):(v>n.r.k?'RR':'RL');
+      const ch=b>1?n.l:n.r,gc=kase==='LL'?ch.l:kase==='LR'?ch.r:kase==='RR'?ch.r:ch.l;
+      const fix={LL:`one <b>right rotation</b> at ${n.k}`,RR:`one <b>left rotation</b> at ${n.k}`,LR:`<b>left-rotate</b> ${ch.k}, then <b>right-rotate</b> ${n.k}`,RL:`<b>right-rotate</b> ${ch.k}, then <b>left-rotate</b> ${n.k}`}[kase];
+      snap(`${n.k} is unbalanced (${fmt(b)}) — ${kase} case`,`Balance factor of <b>${n.k}</b> is <b>${fmt(b)}</b>. The new key ${v} went into the <b>${kase[0]==='L'?'left':'right'}</b> child's <b>${kase[1]==='L'?'left':'right'}</b> side: the <b>${kase} case</b>. Fix: ${fix}.`,{LL:[9],RR:[10],LR:[11,12],RL:[13,14]}[kase],{cls:{[n.k]:'bad',[ch.k]:'rot',[gc.k]:'rot'}});
+      if(kase==='LR'){n.l=rotL(ch);snap(`Step 1: left-rotate ${ch.k}`,`<b>${gc.k}</b> moves up above <b>${ch.k}</b>. The zig-zag is now a straight left-left line, which one right rotation can fix.`,RL_,{cls:{[n.k]:'bad',[gc.k]:'rot',[ch.k]:'rot'}});}
+      if(kase==='RL'){n.r=rotR(ch);snap(`Step 1: right-rotate ${ch.k}`,`<b>${gc.k}</b> moves up above <b>${ch.k}</b>. The zig-zag is now a straight right-right line, which one left rotation can fix.`,RR_,{cls:{[n.k]:'bad',[gc.k]:'rot',[ch.k]:'rot'}});}
+      const right=kase==='LL'||kase==='LR',sub=right?rotR(n):rotL(n),par=i>0?path[i-1]:null;
+      if(!par)T.root=sub;else if(par.l===n)par.l=sub;else par.r=sub;
+      snap(`${right?'Right':'Left'} rotation at ${n.k} — done`,`<b>${sub.k}</b> moves up and <b>${n.k}</b> moves down to become its ${right?'right':'left'} child. All balance factors are back in range, and this subtree is as tall as it was before the insert, so nothing above needs fixing.`,right?RR_:RL_,{cls:{[sub.k]:'ok',[sub.l.k]:'ok',[sub.r.k]:'ok'}});
+      break;
+    }
+  }
+  snap('AVL tree complete 🎉',`Every balance factor is −1, 0 or +1. <b>${cnt(T.root)}</b> keys fit in height <b>${hOf(T.root)}</b>, so any search needs at most ${hOf(T.root)} comparisons.`,[]);
+  return S;
+}
+
+/* ================= Red-Black generator ================= */
+function rbBuild(vals,S){
+  const T={root:null};
+  const bh=()=>{let n=T.root,b=0;while(n){if(n.c==='B')b++;n=n.l;}return b;};
+  const col=n=>n&&n.c==='R'?'red':'black';
+  const snap=S?(t,x,line,o={})=>S.push({t,x,line,tree:binSnap(T.root,{...o,base:n=>n.c==='R'?'rb-r':'rb-b'}),ds:o.ds||[],dsl:'Comparisons made',out:inorderKeys(T.root),outl:'Inorder traversal (sorted)',stats:{nodes:cnt(T.root),height:hOf(T.root),'black-height':bh()}}):()=>{};
+  const rotL=x=>{const y=x.r;x.r=y.l;if(y.l)y.l.p=x;y.p=x.p;if(!x.p)T.root=y;else if(x===x.p.l)x.p.l=y;else x.p.r=y;y.l=x;x.p=y;};
+  const rotR=x=>{const y=x.l;x.l=y.r;if(y.r)y.r.p=x;y.p=x.p;if(!x.p)T.root=y;else if(x===x.p.r)x.p.r=y;else x.p.l=y;y.r=x;x.p=y;};
+  snap('Start with an empty Red-Black tree',`Keys to insert: <b>${vals.join(', ')}</b>. Watch the colours: no two reds may touch, and every path must have the same number of blacks.`,[]);
+  for(const v of vals){
+    let z=bstInsert(T,v,snap,{nw:[1],left:[1],right:[1],dup:[1]});if(!z)continue;
+    snap(`${v} starts red`,'New nodes are always <b>red</b> — adding a red node never changes how many black nodes a path has.'+(z.p?(z.p.c==='R'?` But its parent <b>${z.p.k}</b> is red too: <b>two reds in a row</b> break rule 4.`:` Its parent <b>${z.p.k}</b> is black, so no rule is broken.`):' It is the root, though, and the root must be black.'),[2],{cls:{[v]:'cur'}});
+    while(z.p&&z.p.c==='R'){
+      const p=z.p,g=p.p,u=p===g.l?g.r:g.l;
+      const cl={[z.k]:'cur',[p.k]:'ring',[g.k]:'ring'};if(u)cl[u.k]='ring';
+      snap(`Red-red conflict: ${z.k} under ${p.k}`,`Find the <b>uncle</b> — the parent's sibling: ${u?`<b>${u.k}</b>, which is <b>${col(u)}</b>`:'it does not exist (<b>NIL</b>), which counts as <b>black</b>'}. The uncle's colour decides the fix.`,[6,7,8],{cls:cl});
+      if(u&&u.c==='R'){p.c='B';u.c='B';g.c='R';
+        snap('Case 1: red uncle → recolour',`Paint parent <b>${p.k}</b> and uncle <b>${u.k}</b> black and grandparent <b>${g.k}</b> red. Every path still has the same number of blacks. ${g.k} might now clash with its own parent, so we continue checking from <b>${g.k}</b>.`,[9,10,11],{cls:{[g.k]:'cur'}});
+        z=g;continue;}
+      const left=p===g.l;
+      if(left?z===p.r:z===p.l){const zk=z.k,pk=p.k;left?rotL(p):rotR(p);z=p;
+        snap('Case 2: triangle → rotate the parent',`The uncle is black and <b>${zk}</b> is an <b>inner</b> child, forming a triangle. ${left?'Left':'Right'}-rotate at <b>${pk}</b> so the three nodes line up. Now <b>${pk}</b> is the lower red node.`,left?[14]:[18],{cls:{[zk]:'ring',[pk]:'cur'}});}
+      const P=z.p,G=P.p;P.c='B';G.c='R';left?rotR(G):rotL(G);
+      snap('Case 3: line → recolour and rotate',`Paint <b>${P.k}</b> black and <b>${G.k}</b> red, then ${left?'right':'left'}-rotate at <b>${G.k}</b>. <b>${P.k}</b> rises to take its place and the red-red conflict is gone.`,left?[15,16]:[19,20],{cls:{[P.k]:'new'}});
+    }
+    if(T.root.c==='R'){T.root.c='B';snap('The root must be black',`Root <b>${T.root.k}</b> is red, so paint it black. This adds one black node to every path equally, so the paths stay balanced.`,[24],{cls:{[T.root.k]:'cur'}});}
+    else snap(`${v} inserted ✓`,`All rules hold: the root is black, no red node has a red child, and every path down has <b>${bh()}</b> black node(s).`,[24],{});
+  }
+  snap('Red-Black tree complete 🎉',`<b>${cnt(T.root)}</b> keys, height <b>${hOf(T.root)}</b>, black-height <b>${bh()}</b>. Height can never exceed 2·log₂(n+1) = ${(2*Math.log2(cnt(T.root)+1)).toFixed(1)}.`,[]);
+  return T;
+}
+function genRB(vals){const S=[];rbBuild(vals,S);return S;}
+
+/* ================= Trie generators ================= */
+const tnode=pre=>({id:'^'+pre,ch:pre.slice(-1),kids:{},end:false});
+const tWords=(n,pre='',a=[])=>{if(n.end)a.push(pre);Object.keys(n.kids).sort().forEach(k=>tWords(n.kids[k],pre+k,a));return a;};
+const tCount=n=>1+Object.values(n.kids).reduce((s,k)=>s+tCount(k),0);
+function trieSnap(R,o={}){
+  let leaf=0,maxD=0;const all=[];
+  (function place(n,d){n._d=d;if(d>maxD)maxD=d;all.push(n);const ks=Object.keys(n.kids).sort();if(!ks.length)n._x=leaf++;else{ks.forEach(k=>place(n.kids[k],d+1));n._x=(n.kids[ks[0]]._x+n.kids[ks[ks.length-1]]._x)/2;}})(R,0);
+  const sp=Math.min(100,740/Math.max(leaf,1)),yg=Math.min(82,330/Math.max(maxD,1)),r=Math.max(14,Math.min(23,sp*.4,yg*.34));
+  const X=n=>400+(n._x-(leaf-1)/2)*sp;
+  const nodes=all.map(n=>({id:n.id,label:n.id==='^'?'•':n.ch,x:X(n),y:50+n._d*yg,r,cls:[n.end?'end':'',(o.cls&&o.cls[n.id])||''].join(' '),badge:n.end?'★':undefined}));
+  const edges=[];all.forEach(n=>Object.values(n.kids).forEach(k=>edges.push({a:n.id,b:k.id,cls:(o.ecls&&o.ecls[k.id])||''})));
+  return{nodes,edges};
+}
+function triePath(w,upto,last){const cls={},ecls={};for(let j=0;j<=upto;j++){const id='^'+w.slice(0,j);cls[id]='onpath';if(j>0)ecls[id]='path';}if(last)cls['^'+w.slice(0,upto)]=last;return{cls,ecls};}
+const chips=(w,i)=>w.split('').map((c,j)=>({v:c,c:'ch '+(j<i?'done':j===i?'first':'')}));
+function trieSnapper(R,S,outFn,outl){return(t,x,line,o={})=>S.push({t,x,line,tree:trieSnap(R,o),ds:o.ds||[],dsl:o.dsl||'',out:outFn(),outl,stats:{words:tWords(R).length,nodes:tCount(R)}});}
+function trieInsertSilent(R,w){let c=R;for(let i=0;i<w.length;i++){if(!c.kids[w[i]])c.kids[w[i]]=tnode(w.slice(0,i+1));c=c.kids[w[i]];}c.end=true;}
+function genTrieBuild(words){
+  const R=tnode(''),S=[],snap=trieSnapper(R,S,()=>tWords(R),'Words stored (alphabetical)');
+  snap('An empty trie','A trie starts with only the root (•). Every step down an edge adds one letter.',[0,1,2,3],{dsl:'Word being inserted'});
+  for(const w of words){
+    let c=R;
+    for(let i=0;i<w.length;i++){const ch=w[i],pre=w.slice(0,i+1),dsl=`Inserting “${w}”`;
+      if(c.kids[ch]){c=c.kids[ch];snap(`'${ch}' already exists`,`Inserting <b>${w}</b>: the path <b>${pre}</b> is already in the trie (a shared prefix), so just move down — no new node needed.`,[8,9],{...triePath(w,i+1,'cur'),ds:chips(w,i),dsl});}
+      else{c.kids[ch]=tnode(pre);c=c.kids[ch];const o=triePath(w,i+1,'new');o.ecls[c.id]='new';
+        snap(`Create node '${ch}'`,`There is no child for <b>'${ch}'</b> yet, so create one and move into it. The path from the root now spells <b>${pre}</b>.`,[8,9],{...o,ds:chips(w,i),dsl});}
+    }
+    const was=c.end;c.end=true;
+    snap(was?`“${w}” was already stored`:`Mark the end of “${w}”`,was?`The last node is already marked as a word end, so nothing changes.`:`Set <b>isEnd = true</b> on the last node (★). Without this flag we could not tell the word <b>${w}</b> apart from a longer word's prefix.`,[11],{...triePath(w,w.length,'found'),ds:chips(w,w.length),dsl:`Inserting “${w}”`});
+  }
+  const total=words.reduce((s,w)=>s+w.length,0);
+  snap('Trie built 🎉',`${tWords(R).length} words with ${total} letters in total need only <b>${tCount(R)-1}</b> letter nodes, because shared prefixes are stored once.`,[],{});
+  return S;
+}
+function genTrieSearch(words,q){
+  const R=tnode(''),S=[],snap=trieSnapper(R,S,()=>tWords(R),'Words stored');words.forEach(w=>trieInsertSilent(R,w));
+  const dsl=`Searching “${q}”`;
+  snap(`Search for “${q}”`,'Start at the root and follow one edge per letter.',[1],{cls:{'^':'cur'},ds:chips(q,0),dsl});
+  let c=R;
+  for(let i=0;i<q.length;i++){const ch=q[i];
+    if(!c.kids[ch]){snap(`No edge for '${ch}' — not found`,`After matching <b>${q.slice(0,i)||'(nothing yet)'}</b>, there is no child for <b>'${ch}'</b>. So <b>${q}</b> is not in the trie — we stopped after only ${i+1} letter check(s).`,[4],{...triePath(q,i,'del'),ds:chips(q,i),dsl});return S;}
+    c=c.kids[ch];snap(`Follow '${ch}'`,`A child for <b>'${ch}'</b> exists. Move down — the path now spells <b>${q.slice(0,i+1)}</b>.`,[5],{...triePath(q,i+1,'cur'),ds:chips(q,i),dsl});
+  }
+  if(c.end)snap(`Found “${q}” ✓`,`Every letter matched and this node has <b>isEnd = true</b> (★), so <b>${q}</b> is a stored word.`,[7],{...triePath(q,q.length,'found'),ds:chips(q,q.length),dsl});
+  else snap(`“${q}” is only a prefix`,`Every letter matched, but <b>isEnd</b> is false here. Words such as <b>${tWords(c,q).join(', ')}</b> start with “${q}”, but “${q}” itself was never inserted, so search returns false.`,[7],{...triePath(q,q.length,'del'),ds:chips(q,q.length),dsl});
+  return S;
+}
+function genTrieAuto(words,q){
+  const R=tnode(''),S=[],res=[],snap=trieSnapper(R,S,()=>[...res],'Suggestions');words.forEach(w=>trieInsertSilent(R,w));
+  const dsl=`Prefix “${q}”`;
+  snap(`Autocomplete “${q}”`,'Step 1: walk down the letters of the prefix, exactly like a search.',[10],{cls:{'^':'cur'},ds:chips(q,0),dsl});
+  let c=R;
+  for(let i=0;i<q.length;i++){const ch=q[i];
+    if(!c.kids[ch]){snap(`No edge for '${ch}'`,`No stored word starts with <b>${q}</b>, so there are no suggestions.`,[12],{...triePath(q,i,'del'),ds:chips(q,i),dsl});return S;}
+    c=c.kids[ch];snap(`Follow '${ch}'`,`Move down to <b>${q.slice(0,i+1)}</b>.`,[13],{...triePath(q,i+1,'cur'),ds:chips(q,i),dsl});
+  }
+  snap(`Reached the “${q}” node`,`Step 2: every word in the subtree under this node starts with <b>${q}</b>. Explore it depth-first, letter by letter in alphabetical order.`,[15],{...triePath(q,q.length,'cur'),ds:chips(q,q.length),dsl});
+  const vis=new Set();
+  const dfs=(n,s)=>{vis.add(n.id);const cls={};vis.forEach(id=>cls[id]='onpath');cls[n.id]=n.end?'found':'cur';const ecls={};vis.forEach(id=>{if(id!=='^')ecls[id]='path';});
+    if(n.end)res.push(s);
+    snap(n.end?`Word found: “${s}”`:`Explore “${s}”`,n.end?`This node is marked ★, so <b>${s}</b> is a complete word — add it to the suggestions.`:`“${s}” is not a word by itself; keep going deeper.`,n.end?[1]:[2,3,4,5],{cls,ecls,ds:s.split('').map(c2=>({v:c2,c:'ch done'})),dsl:'Current string'});
+    Object.keys(n.kids).sort().forEach(k=>dfs(n.kids[k],s+k));};
+  dfs(c,q);
+  snap(`${res.length} suggestion(s) 🎉`,`Autocomplete for <b>${q}</b>: <b>${res.join(', ')}</b>. Because we visited children in a–z order, the list is already alphabetical.`,[16],{});
+  return S;
+}
+
+/* ================= player ================= */
+const SPEEDS=[2800,2000,1400,900,500];
+function demoLayout(title,note){
+  return `<div class="demo">
+  <div class="demo-top">
+    <div class="viz-card"><div class="viz-head"><div class="viz-title">${title}</div><div class="viz-note">${note}</div></div>
+      <svg class="viz" role="img" aria-label="Animated tree"></svg><div class="legend"></div></div>
+    <div class="code-card"><div class="code-head"><span class="fn">code</span><span class="lang">C++</span></div><div class="code-box"></div></div>
+  </div>
+  <div class="controls">
+    <button class="btn b-reset" title="Restart (R)">⏮ Restart</button>
+    <button class="btn b-prev" title="Previous step (←)">◀ Previous</button>
+    <button class="btn play b-play" title="Play / pause (Space)">▶ Play</button>
+    <button class="btn next b-next" title="Next step (→)">Next ▶</button>
+    <div class="progress"><span class="lbl">Step <span class="si">1</span> of <span class="sn">1</span></span><div class="bar"><div></div></div></div>
+    <label class="speed">🐢<input type="range" min="0" max="4" value="2" aria-label="Animation speed">🐇</label>
+  </div>
+  <div class="explain" aria-live="polite">
+    <div><span class="stepno">Step 1</span><h3 class="ex-title"></h3><p class="ex-text"></p><div class="ex-tip"></div></div>
+    <div><div class="dsbox"><div class="dsl ds-l"></div><div class="items ds-i"></div></div>
+      <div class="dsbox"><div class="dsl out-l"></div><div class="items out-i"></div></div><div class="stats"></div></div>
+  </div></div>`;
+}
+class Player{
+  constructor(root){
+    this.r=root;this.view=new TreeView($('.viz',root));this.box=$('.code-box',root);this.steps=[];this.i=0;this.timer=null;this.speed=SPEEDS[2];
+    $('.b-next',root).onclick=()=>{this.pause();this.next();};
+    $('.b-prev',root).onclick=()=>{this.pause();this.go(this.i-1);};
+    $('.b-reset',root).onclick=()=>{this.pause();this.go(0);};
+    $('.b-play',root).onclick=()=>this.toggle();
+    $('.speed input',root).oninput=e=>{this.speed=SPEEDS[+e.target.value];if(this.timer){this.pause();this.play();}};
+    $('.bar',root).onclick=e=>{const b=e.currentTarget.getBoundingClientRect();this.pause();this.go(Math.round((e.clientX-b.left)/b.width*(this.steps.length-1)));};
+  }
+  load(c){
+    this.pause();this.view.reset();
+    this.box.innerHTML=codeHTML(c.code);this.lines=$$('.cl',this.box);
+    $('.fn',this.r).textContent=c.fn;
+    $('.legend',this.r).innerHTML=c.legend.map(([col,t])=>`<span><i style="background:${col}"></i>${t}</span>`).join('');
+    this.tip=c.tip;this.steps=c.steps;this.go(0);
+  }
+  go(i){
+    i=Math.max(0,Math.min(this.steps.length-1,i));this.i=i;const s=this.steps[i],R=this.r,N=this.steps.length;
+    this.view.render(s.tree);
+    const L=[].concat(s.line??[]);
+    this.lines.forEach((el,k)=>el.classList.toggle('hl',L.includes(k)));
+    if(L.length&&this.lines[L[0]])this.box.scrollTo({top:Math.max(0,this.lines[L[0]].offsetTop-this.box.clientHeight/2+20),behavior:'smooth'});
+    $('.stepno',R).textContent=`Step ${i+1} of ${N}`;
+    $('.ex-title',R).innerHTML=s.t;$('.ex-text',R).innerHTML=s.x;$('.ex-tip',R).innerHTML='💡 '+(s.tip||this.tip);
+    $('.ds-l',R).textContent=s.dsl||'Comparisons made';
+    $('.ds-i',R).innerHTML=s.ds.length?s.ds.map(v=>typeof v==='object'?`<span class="it ${v.c}">${esc(v.v)}</span>`:`<span class="it">${esc(v)}</span>`).join(''):'<span class="empty">nothing yet</span>';
+    $('.out-l',R).textContent=s.outl;
+    $('.out-i',R).innerHTML=s.out.length?s.out.map(v=>`<span class="it o">${esc(v)}</span>`).join(''):'<span class="empty">empty</span>';
+    $('.stats',R).innerHTML=Object.entries(s.stats||{}).map(([k,v])=>`<span class="stat">${k}: <em>${v}</em></span>`).join('');
+    $('.si',R).textContent=i+1;$('.sn',R).textContent=N;
+    $('.bar div',R).style.width=(N>1?i/(N-1)*100:100)+'%';
+    $('.b-prev',R).disabled=i===0;$('.b-next',R).disabled=i===N-1;
+  }
+  next(){if(this.i<this.steps.length-1)this.go(this.i+1);else this.pause();}
+  play(){if(this.i>=this.steps.length-1)this.go(0);this.timer=setInterval(()=>{this.next();if(this.i>=this.steps.length-1)this.pause();},this.speed);this.btn();}
+  pause(){clearInterval(this.timer);this.timer=null;this.btn();}
+  toggle(){this.timer?this.pause():this.play();}
+  btn(){const b=$('.b-play',this.r);b.textContent=this.timer?'⏸ Pause':'▶ Play';b.classList.toggle('pausing',!!this.timer);}
+}
+
+/* ================= input parsing ================= */
+function parseNums(str){
+  const t=str.trim().split(/[\s,]+/).filter(Boolean);
+  if(!t.length)return{msg:'Enter at least one key, for example: 50 30 70'};
+  if(t.length>15)return{msg:'Use at most 15 keys so the tree fits on screen.'};
+  const v=t.map(Number);if(v.some(x=>!Number.isInteger(x)||x<1||x>999))return{msg:'Keys must be whole numbers from 1 to 999, separated by spaces.'};
+  return{ok:true,vals:v};
+}
+function parseWords(str){
+  const t=str.trim().toLowerCase().split(/[\s,]+/).filter(Boolean);
+  if(!t.length)return{msg:'Enter at least one word, for example: cat car dog'};
+  if(t.length>10)return{msg:'Use at most 10 words so the trie fits on screen.'};
+  if(t.some(w=>!/^[a-z]{1,10}$/.test(w)))return{msg:'Words may only use the letters a–z (up to 10 letters each).'};
+  return{ok:true,vals:t};
+}
+const say=(id,m)=>{$(id).textContent=m||'';};
+
+/* ================= wire up ================= */
+$('#slot-bst').innerHTML=demoLayout('Binary search tree','Dashed bubble = key being placed or searched');
+$('#slot-avl').innerHTML=demoLayout('AVL tree','Badge = balance factor (left height − right height)');
+$('#slot-rb').innerHTML=demoLayout('Red-Black tree','Yellow ring = node being fixed · blue rings = its family');
+$('#slot-trie').innerHTML=demoLayout('Trie','★ = a complete word ends here');
+const P={bst:new Player($('#slot-bst .demo')),avl:new Player($('#slot-avl .demo')),rb:new Player($('#slot-rb .demo')),trie:new Player($('#slot-trie .demo'))};
+
+const LEG={
+  bst:[['var(--coral)','Current node'],['var(--lilac)','Path taken'],['var(--mint)','Inserted / found'],['var(--rose)','To delete'],['var(--sky)','Successor / moving child'],['#fff','Key being placed']],
+  avl:[['var(--coral)','Current node'],['var(--lilac)','Path taken'],['var(--rose)','Unbalanced (±2)'],['var(--sun)','Nodes in the rotation'],['var(--mint)','Balanced / new']],
+  rb:[['var(--rbred)','Red node'],['var(--rbblack)','Black node'],['var(--sun)','Yellow ring: node being fixed'],['var(--sky)','Blue ring: parent, uncle, grandparent'],['#fff','Key being placed']],
+  trie:[['var(--coral)','Current node'],['var(--lilac)','Path so far'],['var(--mint)','New node / word found'],['#5a4a12','Word end (★)'],['var(--rose)','Mismatch / not a word']]
+};
+const TIPS={
+  build:'Insert order decides the shape. Random order usually gives a bushy tree; sorted order gives a chain.',
+  search:'Each comparison discards a whole subtree, so a search costs O(height), not O(n).',
+  delete:'The inorder successor works because it is bigger than everything on the left and smaller than everything else on the right.',
+  avl:'Only the first unbalanced node on the way up needs fixing during an insert — after the rotation, the subtree is back to its old height.',
+  rb:'Recolouring (Case 1) can repeat up the tree, but rotations happen at most twice per insert. That is why Red-Black trees are cheap to update.',
+  tb:'Inserting a word costs O(length of the word). Shared prefixes are stored only once.',
+  ts:'A search can fail in two ways: the path breaks, or the path exists but the last node is not marked as a word end.',
+  ta:'This is how a search box suggests completions: find the prefix node, then list its subtree.'
+};
+
+/* BST */
+let bstOp='build';
+function setBstOp(op){bstOp=op;$$('#bst-op .pill').forEach(b=>b.classList.toggle('on',b.dataset.op===op));$('#bst-key-g').style.display=op==='build'?'none':'';}
+function runBST(){
+  const r=parseNums($('#bst-vals').value);if(!r.ok)return say('#bst-msg',r.msg);
+  let steps,code,fn;
+  if(bstOp==='build'){steps=genBSTBuild(r.vals);code=CODE.bstIns;fn='insert()';}
+  else{const k=Number($('#bst-key').value);if(!Number.isInteger(k)||k<1||k>999)return say('#bst-msg','Enter a key from 1 to 999.');
+    if(bstOp==='search'){steps=genBSTSearch(r.vals,k);code=CODE.bstSearch;fn='search()';}else{steps=genBSTDelete(r.vals,k);code=CODE.bstDel;fn='remove()';}}
+  say('#bst-msg');P.bst.load({code,fn,steps,legend:LEG.bst,tip:TIPS[bstOp]});
+}
+$$('#bst-op .pill').forEach(b=>b.onclick=()=>{setBstOp(b.dataset.op);runBST();});
+$('#bst-run').onclick=runBST;
+$$('#page-bst .pre').forEach(b=>b.onclick=()=>{setBstOp(b.dataset.op);$('#bst-vals').value=b.dataset.vals||'50 30 70 20 40 60 80 35 65';if(b.dataset.key)$('#bst-key').value=b.dataset.key;runBST();});
+
+/* AVL & RB */
+function runAVL(){const r=parseNums($('#avl-vals').value);if(!r.ok)return say('#avl-msg',r.msg);say('#avl-msg');P.avl.load({code:CODE.avl,fn:'insert()',steps:genAVL(r.vals),legend:LEG.avl,tip:TIPS.avl});}
+function runRB(){const r=parseNums($('#rb-vals').value);if(!r.ok)return say('#rb-msg',r.msg);say('#rb-msg');P.rb.load({code:CODE.rb,fn:'insert() + fixInsert()',steps:genRB(r.vals),legend:LEG.rb,tip:TIPS.rb});}
+$('#avl-run').onclick=runAVL;$('#rb-run').onclick=runRB;
+$$('#page-avl .pre').forEach(b=>b.onclick=()=>{$('#avl-vals').value=b.dataset.vals;runAVL();});
+$$('#page-rb .pre').forEach(b=>b.onclick=()=>{$('#rb-vals').value=b.dataset.vals;runRB();});
+['avl','rb','bst'].forEach(k=>$(`#${k}-vals`).addEventListener('keydown',e=>{if(e.key==='Enter')$(`#${k}-run`).click();}));
+$('#bst-key').addEventListener('keydown',e=>{if(e.key==='Enter')runBST();});
+
+/* Trie */
+let trieOp='build';
+function setTrieOp(op){trieOp=op;$$('#trie-op .pill').forEach(b=>b.classList.toggle('on',b.dataset.op===op));$('#trie-q-g').style.display=op==='build'?'none':'';}
+function runTrie(){
+  const r=parseWords($('#trie-words').value);if(!r.ok)return say('#trie-msg',r.msg);
+  let steps,code,fn,tip;
+  if(trieOp==='build'){steps=genTrieBuild(r.vals);code=CODE.trieIns;fn='insert()';tip=TIPS.tb;}
+  else{const q=$('#trie-q').value.trim().toLowerCase();if(!/^[a-z]{1,10}$/.test(q))return say('#trie-msg','The word or prefix may only use letters a–z.');
+    if(trieOp==='search'){steps=genTrieSearch(r.vals,q);code=CODE.trieSearch;fn='search()';tip=TIPS.ts;}
+    else{steps=genTrieAuto(r.vals,q);code=CODE.trieAuto;fn='autocomplete()';tip=TIPS.ta;}}
+  say('#trie-msg');P.trie.load({code,fn,steps,legend:LEG.trie,tip});
+}
+$$('#trie-op .pill').forEach(b=>b.onclick=()=>{setTrieOp(b.dataset.op);runTrie();});
+$('#trie-run').onclick=runTrie;
+$$('#page-trie .pre').forEach(b=>b.onclick=()=>{setTrieOp(b.dataset.op);$('#trie-q').value=b.dataset.q;runTrie();});
+['#trie-words','#trie-q'].forEach(s=>$(s).addEventListener('keydown',e=>{if(e.key==='Enter')runTrie();}));
+
+runBST();runAVL();runRB();runTrie();
+
+/* tabs + keyboard */
+let active='theory';
+$$('.tab').forEach(t=>t.onclick=()=>{
+  active=t.dataset.page;
+  $$('.tab').forEach(x=>x.classList.toggle('active',x===t));
+  $$('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+active));
+  Object.values(P).forEach(p=>p.pause());
+  const pl=P[active];if(pl){pl.view.reset();pl.go(pl.i);}
+});
+document.addEventListener('keydown',e=>{
+  const pl=P[active];if(!pl||/SELECT|INPUT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==='ArrowRight'){e.preventDefault();pl.pause();pl.next();}
+  else if(e.key==='ArrowLeft'){e.preventDefault();pl.pause();pl.go(pl.i-1);}
+  else if(e.key===' '){e.preventDefault();pl.toggle();}
+  else if(e.key==='r'||e.key==='R'){pl.pause();pl.go(0);}
+});
+
+/* full code page */
+['bst','avl','rb','trie'].forEach(k=>{$('#pre-'+k).innerHTML=codeHTML($('#src-'+k).textContent.split('\n'));});
+(()=>{const T=rbBuild([10,20,30,15,25,5,1],null),a=[];(function pre(n){if(!n)return;a.push(n.k+'('+n.c+')');pre(n.l);pre(n.r);})(T.root);$('#rb-out').textContent='Preorder with colours: '+a.join(' ');})();
+$$('.copy').forEach(b=>b.onclick=()=>{
+  const txt=$('#'+b.dataset.src).textContent,done=()=>{b.textContent='Copied ✓';setTimeout(()=>b.textContent='Copy code',1600);};
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();};
+  if(navigator.clipboard)navigator.clipboard.writeText(txt).then(done,fb);else fb();
+});
+</script>
+</body>
+</html>
