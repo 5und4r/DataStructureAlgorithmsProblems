@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Programming Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --card:rgba(255,255,255,.06); --border:rgba(255,255,255,.13);
+  --text:#eef0ff; --muted:#aab0d8;
+  --purple:#a855f7; --pink:#ec4899; --cyan:#22d3ee; --amber:#fbbf24;
+  --green:#34d399; --blue:#60a5fa; --orange:#fb923c;
+  --drawer:min(560px,44vw);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Poppins',system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);overflow:hidden;
+  background:
+    radial-gradient(circle at 8% 8%,rgba(124,58,237,.45) 0,transparent 38%),
+    radial-gradient(circle at 92% 15%,rgba(8,145,178,.40) 0,transparent 38%),
+    radial-gradient(circle at 55% 105%,rgba(219,39,119,.35) 0,transparent 45%),
+    linear-gradient(135deg,#0f0c29,#191540 50%,#0b1a2c);
+}
+button{font-family:inherit}
+.app{height:100vh;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;padding:12px 16px;transition:margin-right .35s ease}
+body.code-open .app{margin-right:var(--drawer)}
+
+/* ---------- top bar ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:9px 16px;backdrop-filter:blur(12px);flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-weight:800;font-size:1.05rem;background:linear-gradient(135deg,var(--purple),var(--pink));box-shadow:0 6px 22px rgba(236,72,153,.45)}
+.brand h1{font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#fff,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand p{font-size:.74rem;color:var(--muted)}
+.tabs{display:flex;gap:5px;background:rgba(0,0,0,.28);padding:5px;border-radius:999px}
+.tab{border:0;background:transparent;color:var(--muted);padding:8px 18px;border-radius:999px;font-weight:600;font-size:.88rem;cursor:pointer;transition:.25s}
+.tab:hover{color:#fff}
+.tab.active{color:#fff;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 4px 18px rgba(219,39,119,.45)}
+.code-btn{border:1px solid rgba(34,211,238,.5);background:rgba(34,211,238,.12);color:#a5f3fc;padding:8px 16px;border-radius:12px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.85rem;transition:.25s}
+.code-btn:hover,.code-btn.on{background:linear-gradient(135deg,#0891b2,#7c3aed);color:#fff;border-color:transparent}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:46px;padding:6px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px}
+.chip{padding:6px 13px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--muted);font-weight:500;font-size:.78rem;cursor:pointer;transition:.2s}
+.chip:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.chip.on{background:linear-gradient(135deg,#7c3aed,#db2777);color:#fff;border-color:transparent}
+.seg{display:flex;gap:4px;background:rgba(0,0,0,.3);border-radius:12px;padding:4px}
+.seg button{border:0;background:transparent;color:var(--muted);padding:7px 13px;border-radius:9px;font-weight:600;font-size:.8rem;cursor:pointer;transition:.2s}
+.seg button:hover{color:#fff}
+.seg button.on{background:linear-gradient(135deg,#0891b2,#7c3aed);color:#fff}
+.range{display:flex;align-items:center;gap:8px;font-size:.84rem;color:var(--muted)}
+.range b{color:#fff;min-width:18px;display:inline-block;text-align:center}
+input[type=range]{accent-color:#ec4899;width:120px;cursor:pointer}
+select{background:#1e1b4b;color:#fff;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font-family:inherit}
+.btn{border:1px solid var(--border);background:rgba(255,255,255,.07);color:#fff;padding:7px 13px;border-radius:10px;font-weight:600;font-size:.8rem;cursor:pointer;transition:.2s}
+.btn:hover{background:rgba(255,255,255,.16)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.74rem;color:var(--muted);margin-left:auto}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-2px}
+.hint{font-size:.75rem;color:var(--muted);margin-left:auto}
+kbd{background:rgba(255,255,255,.12);border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:.72rem}
+
+/* ---------- stage ---------- */
+.stage{min-height:0;min-width:0;position:relative;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;padding:14px;backdrop-filter:blur(8px)}
+.panel{background:rgba(0,0,0,.22);border:1px solid var(--border);border-radius:14px;padding:10px 12px}
+.panel h4{font-size:.8rem;color:#e9d5ff;margin-bottom:8px;font-weight:600}
+.tip{font-size:.8rem;line-height:1.5;color:#dbeafe}
+
+/* ---------- explanation footer ---------- */
+.explain{display:grid;grid-template-columns:1fr minmax(250px,36%);grid-template-rows:1fr auto;gap:10px 18px;padding:12px 18px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(236,72,153,.14) 50%,rgba(6,182,212,.16));border:1px solid rgba(255,255,255,.18);height:clamp(175px,27vh,240px)}
+.ex-left{min-height:0;overflow:auto;padding-right:6px}
+.ex-head{display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap}
+.badge{background:linear-gradient(135deg,#f59e0b,#ec4899);color:#fff;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+#exTitle{font-size:1.05rem;font-weight:700}
+#exText{font-size:.9rem;line-height:1.6;color:#e2e6ff}
+.ex-formula{font-family:'JetBrains Mono',monospace;font-size:.86rem;line-height:1.6;white-space:pre-wrap;background:rgba(0,0,0,.38);border:1px solid rgba(251,191,36,.4);border-radius:12px;padding:10px 14px;color:#fde68a;overflow:auto;display:flex;align-items:center;min-height:0}
+.ctrl-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctrl{border:0;width:38px;height:34px;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;font-size:.95rem;cursor:pointer;transition:.2s}
+.ctrl:hover{background:rgba(255,255,255,.22)}
+.ctrl:disabled{opacity:.3;cursor:not-allowed}
+.play{width:auto;padding:0 18px;font-weight:700;background:linear-gradient(135deg,#10b981,#06b6d4)}
+.play.pause{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.progress{flex:1;min-width:120px;height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#a855f7,#ec4899);transition:width .3s}
+.flash{animation:flash .45s ease}
+@keyframes flash{from{opacity:.35;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.c-pink{color:#f9a8d4}.c-blue{color:#93c5fd}.c-green{color:#6ee7b7}.c-amber{color:#fcd34d}.c-cyan{color:#67e8f9}.c-purple{color:#d8b4fe}.c-orange{color:#fdba74}
+
+/* ---------- overview slides ---------- */
+.slide{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:18px;animation:fadeUp .5s ease;overflow:auto;padding:6px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hero-tag{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#a5f3fc;border:1px solid rgba(165,243,252,.35);padding:4px 14px;border-radius:999px}
+.big{font-size:clamp(1.6rem,3.6vw,2.9rem);font-weight:800;text-align:center;line-height:1.15}
+.g1{background:linear-gradient(90deg,#a855f7,#ec4899);-webkit-background-clip:text;background-clip:text;color:transparent}
+.g2{background:linear-gradient(90deg,#22d3ee,#34d399);-webkit-background-clip:text;background-clip:text;color:transparent}
+.flow{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap;justify-content:center}
+.fcard{width:clamp(130px,15vw,190px);padding:18px 14px;border-radius:18px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;border:1px solid rgba(255,255,255,.18);animation:fadeUp .6s ease both}
+.fcard .ico{font-size:2.2rem}
+.fcard b{font-size:1rem}.fcard small{font-size:.78rem;color:#e0e7ff;opacity:.85}
+.c1{background:linear-gradient(160deg,rgba(168,85,247,.45),rgba(168,85,247,.1))}
+.c2{background:linear-gradient(160deg,rgba(236,72,153,.45),rgba(236,72,153,.1));animation-delay:.1s}
+.c3{background:linear-gradient(160deg,rgba(34,211,238,.45),rgba(34,211,238,.1));animation-delay:.2s}
+.c4{background:linear-gradient(160deg,rgba(52,211,153,.45),rgba(52,211,153,.1));animation-delay:.3s}
+.c5{background:linear-gradient(160deg,rgba(251,191,36,.45),rgba(251,191,36,.1));animation-delay:.4s}
+.arrow{align-self:center;font-size:1.6rem;color:#fcd34d}
+.two{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;width:100%;height:100%;align-items:center}
+.callout{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:9px}
+.callout h3{font-size:1rem;color:#fbcfe8}
+.callout p{font-size:.85rem;color:#dbeafe;line-height:1.5}
+.callout ol{padding-left:18px;font-size:.85rem;line-height:1.7;color:#e0e7ff}
+.rep{display:grid;grid-template-columns:48px 1fr 34px;align-items:center;gap:8px;font-size:.82rem}
+.rbar{height:12px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.rbar div{height:100%;background:linear-gradient(90deg,#fb923c,#ec4899);border-radius:99px}
+.tcells{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.tcell{width:clamp(48px,6vw,68px);padding:10px 4px;border-radius:12px;text-align:center;animation:fadeUp .5s ease both}
+.tcell small{display:block;font-size:.7rem;opacity:.85}.tcell b{font-size:1.2rem}
+.cmp{border-collapse:separate;border-spacing:0 6px;width:min(900px,100%);font-size:.88rem}
+.cmp th{padding:10px 14px;font-size:.95rem;text-align:left}
+.cmp .th1{background:linear-gradient(135deg,rgba(168,85,247,.5),rgba(236,72,153,.3));border-radius:12px 12px 0 0}
+.cmp .th2{background:linear-gradient(135deg,rgba(6,182,212,.5),rgba(52,211,153,.3));border-radius:12px 12px 0 0}
+.cmp .th3{background:linear-gradient(135deg,rgba(251,191,36,.5),rgba(251,146,60,.3));border-radius:12px 12px 0 0}
+.cmp td{padding:9px 14px;background:rgba(255,255,255,.05)}
+.cmp td:first-child{font-weight:600;color:#fcd34d;border-radius:10px 0 0 10px}
+.cmp td:last-child{border-radius:0 10px 10px 0}
+.recipe{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;width:100%}
+.rcard{border-radius:18px;padding:16px 14px;border:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;gap:8px;animation:fadeUp .6s ease both}
+.rcard .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:rgba(0,0,0,.35)}
+.rcard b{font-size:.98rem}.rcard p{font-size:.8rem;color:#e0e7ff;line-height:1.45}
+.rcard code{font-family:'JetBrains Mono',monospace;font-size:.74rem;background:rgba(0,0,0,.35);padding:5px 7px;border-radius:7px;display:block;color:#fde68a}
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;max-width:1100px}
+.app-card{display:flex;gap:12px;align-items:center;padding:13px 15px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid var(--border);animation:fadeUp .5s ease both;transition:.25s}
+.app-card:hover{transform:translateY(-3px);background:rgba(255,255,255,.12)}
+.app-card .em{font-size:1.9rem;width:52px;height:52px;display:grid;place-items:center;border-radius:14px;flex-shrink:0}
+.app-card b{font-size:.92rem;display:block}.app-card small{font-size:.76rem;color:var(--muted)}
+
+/* ---------- tree ---------- */
+.tree-box{min-height:0;min-width:0;height:100%;border-radius:14px;background:radial-gradient(circle at 50% 0,rgba(124,58,237,.18),transparent 65%)}
+.tree{width:100%;height:100%;display:block}
+.edge{stroke:rgba(255,255,255,.35);stroke-width:2.2}
+.edge.ghost{stroke:rgba(255,255,255,.12);stroke-dasharray:4 5}
+.edge.active{stroke:#a78bfa}
+.edge.hit{stroke:#67e8f9}
+.tnode circle{fill:#1e1b4b;stroke:#6366f1;stroke-width:2.5;transition:.3s}
+.tnode text{fill:#fff;font-size:13px;font-weight:600;text-anchor:middle;font-family:Poppins,sans-serif}
+.tnode.ghost{opacity:.22}
+.tnode.ghost circle{stroke-dasharray:4 4;fill:transparent}
+.tnode.active circle{fill:#6d28d9;stroke:#c4b5fd}
+.tnode.done circle{fill:#047857;stroke:#6ee7b7}
+.tnode.dup.active circle{fill:#c2410c;stroke:#fdba74}
+.tnode.dup.done circle{fill:#9a3412;stroke:#fb923c}
+.tnode.hit circle{fill:#0e7490;stroke:#67e8f9}
+.tnode.cur circle{stroke:#fff;stroke-width:4.5;filter:drop-shadow(0 0 10px #fbbf24)}
+.tnode .vp rect{fill:#fbbf24}
+.tnode .vp text{fill:#1f1300;font-size:11.5px;font-weight:700}
+
+/* ---------- fibonacci ---------- */
+.fib-wrap{display:grid;grid-template-columns:1fr 270px;gap:14px;height:100%}
+.side{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:auto}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{padding:10px 12px;border-radius:14px;border:1px solid var(--border)}
+.stat span{font-size:.72rem;color:#e0e7ff;opacity:.85}
+.stat b{display:block;font-size:1.55rem;font-weight:800;line-height:1.2}
+.stat b small{font-size:.8rem;opacity:.6;font-weight:500}
+.s1{background:linear-gradient(150deg,rgba(168,85,247,.45),rgba(168,85,247,.08))}
+.s2{background:linear-gradient(150deg,rgba(251,146,60,.45),rgba(251,146,60,.08))}
+.s3{background:linear-gradient(150deg,rgba(34,211,238,.45),rgba(34,211,238,.08))}
+.bars{display:flex;align-items:flex-end;gap:6px;height:130px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px}
+.bar .b{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(#fb923c,#ec4899);min-height:3px;transition:height .35s}
+.bar span{font-size:.64rem;color:var(--muted)}
+.bar em{font-style:normal;font-size:.7rem;font-weight:700}
+.memo{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mcell{border-radius:10px;padding:6px 4px;text-align:center;background:rgba(255,255,255,.05);border:1px solid var(--border);transition:.3s}
+.mcell small{display:block;font-size:.64rem;color:var(--muted)}
+.mcell b{font-size:1rem}
+.mcell.set{background:rgba(6,182,212,.25);border-color:#22d3ee}
+.mcell.base{background:rgba(52,211,153,.15)}
+.mcell.just{background:linear-gradient(135deg,#f59e0b,#ec4899);border-color:transparent;transform:scale(1.07)}
+.mcell.read{background:linear-gradient(135deg,#06b6d4,#3b82f6);border-color:#fff;transform:scale(1.07)}
+.tab-wrap{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px}
+.tab-title{font-size:.95rem;color:#c4b5fd;font-weight:600}
+.cells{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:100%}
+.cell{width:clamp(50px,5.4vw,72px);height:clamp(58px,8vh,78px);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.05);border:1.5px dashed rgba(255,255,255,.25);transition:.3s}
+.cell small{font-size:.66rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.cell b{font-size:1.25rem}
+.cell.ghost{opacity:.2}
+.cell.f{background:rgba(99,102,241,.28);border:1.5px solid #818cf8}
+.cell.src1{background:rgba(96,165,250,.35);border:2px solid #60a5fa}
+.cell.src2{background:rgba(244,114,182,.35);border:2px solid #f472b6}
+.cell.cur,.cell.ans{background:linear-gradient(135deg,#f59e0b,#ec4899);border:2px solid #fff;transform:scale(1.1);animation:pop .4s ease}
+.cell.cur small,.cell.ans small{color:#fff}
+@keyframes pop{0%{transform:scale(.7)}70%{transform:scale(1.18)}100%{transform:scale(1.1)}}
+.eqn{font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,2vw,1.5rem);padding:12px 24px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid rgba(251,191,36,.35);text-align:center}
+.compare{width:min(720px,100%);display:flex;flex-direction:column;gap:8px}
+.crow{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:10px;font-size:.8rem}
+.ctrack{height:16px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.ctrack div{height:100%;border-radius:99px;transition:width .5s}
+.crow b{text-align:right}
+
+/* ---------- knapsack ---------- */
+.kn-wrap{display:grid;grid-template-columns:255px 1fr;gap:14px;height:100%}
+.kn-left{display:flex;flex-direction:column;gap:7px;min-height:0;overflow:auto}
+.kn-left h4{font-size:.8rem;color:#e9d5ff}
+.item{display:flex;align-items:center;gap:10px;padding:5px 10px;flex-shrink:0;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--border);transition:.3s}
+.item .em{font-size:1.3rem}
+.item b{font-size:.86rem;display:block}
+.item small{font-size:.72rem;color:var(--muted)}
+.item .tag{margin-left:auto;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:99px}
+.item.cur{border-color:#f472b6;box-shadow:0 0 0 2px rgba(244,114,182,.35);background:rgba(236,72,153,.14)}
+.item.taken{border-color:#34d399;background:rgba(52,211,153,.16)}
+.item.taken .tag{background:#10b981}
+.item.left{opacity:.45}
+.item.left .tag{background:#475569}
+.bag{margin-top:auto;flex-shrink:0;padding:8px 10px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--border);display:flex;gap:12px;align-items:center}
+.bag-vis{width:46px;height:56px;border-radius:10px 10px 16px 16px;border:2.5px solid #fbbf24;position:relative;overflow:hidden;flex-shrink:0;background:rgba(251,191,36,.07)}
+.bag-vis::before{content:'';position:absolute;top:-10px;left:16px;width:22px;height:14px;border:2.5px solid #fbbf24;border-bottom:0;border-radius:10px 10px 0 0}
+.bag-fill{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(#34d399,#059669);transition:height .5s}
+.bag-txt{font-size:.76rem;line-height:1.45}
+.bag-txt b{font-size:1.05rem;color:#fcd34d}
+.kn-right{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.kn-title{display:flex;align-items:center;gap:10px;font-size:.88rem;color:#c4b5fd;font-weight:600}
+.ktable{flex:1;display:grid;gap:4px;min-height:0}
+.kc{display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);font-weight:700;font-size:clamp(.78rem,1.35vw,1.12rem);transition:.25s;min-height:0;position:relative}
+.kc.hd{background:transparent;border:0;color:var(--muted);font-size:.78rem;font-weight:600}
+.kc.corner{font-size:.68rem}
+.kc.rh{justify-content:flex-start;gap:8px;padding:0 8px;font-weight:600;font-size:.8rem;background:rgba(255,255,255,.06)}
+.kc.rh small{display:block;font-size:.66rem;color:var(--muted);font-weight:500}
+.kc.rh .em{font-size:1.15rem}
+.kc.rh.on{background:rgba(236,72,153,.22);border-color:#f472b6}
+.kc.f{background:rgba(99,102,241,.24);color:#e0e7ff}
+.kc.z{background:rgba(148,163,184,.12);color:#94a3b8}
+.kc.pulse{animation:pop .45s ease}
+.kc.skip{background:rgba(96,165,250,.32);box-shadow:inset 0 0 0 3px #60a5fa}
+.kc.take{background:rgba(244,114,182,.32);box-shadow:inset 0 0 0 3px #f472b6}
+.kc.path{background:rgba(52,211,153,.32);box-shadow:inset 0 0 0 2px #34d399}
+.kc.cur{background:linear-gradient(135deg,#f59e0b,#ec4899);color:#fff;z-index:2;box-shadow:0 0 18px rgba(245,158,11,.6);animation:pop .4s ease;transform:scale(1.1)}
+.kc.ans{background:linear-gradient(135deg,#fde047,#f59e0b);color:#1f1300;box-shadow:0 0 20px rgba(253,224,71,.6)}
+
+/* ---------- code drawer ---------- */
+.drawer{position:fixed;top:0;right:0;height:100vh;width:var(--drawer);background:linear-gradient(180deg,#120f2e,#0b1324);border-left:1px solid rgba(34,211,238,.35);transform:translateX(100%);transition:transform .35s ease;z-index:20;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.5)}
+body.code-open .drawer{transform:none}
+.dr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px 8px}
+.dr-head h3{font-size:1rem;color:#a5f3fc}
+.dr-head p{font-size:.74rem;color:var(--muted);margin-top:2px}
+.dr-btns{display:flex;gap:6px}
+.dr-note{margin:0 16px 8px;font-size:.74rem;color:#fde68a;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:6px 10px;border-radius:9px}
+.code{flex:1;overflow:auto;margin:0 12px 12px;padding:10px 0;border-radius:12px;background:#0a0a1a;border:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.65}
+.code .ln{display:flex;padding:0 12px 0 0;border-left:3px solid transparent;transition:background .3s}
+.code .ln.hl{background:linear-gradient(90deg,rgba(251,191,36,.28),rgba(236,72,153,.08));border-left-color:#fbbf24}
+.code .no{width:38px;flex-shrink:0;text-align:right;padding-right:12px;color:#4b5280;user-select:none}
+.code .tx{white-space:pre;color:#e2e8f0}
+.kw{color:#c792ea}.ty{color:#82aaff}.num{color:#f78c6c}.str{color:#c3e88d}.cm{color:#697098;font-style:italic}.pp{color:#89ddff}
+
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100vh}
+  body.code-open .app{margin-right:0}
+  .drawer{width:100vw}
+  .stage{height:62vh}
+  .fib-wrap,.kn-wrap,.two{grid-template-columns:1fr;overflow:auto}
+  .explain{grid-template-columns:1fr;height:auto}
+  .recipe{grid-template-columns:repeat(2,1fr)}
+  .apps{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">DP</div>
+      <div><h1>Dynamic Programming</h1><p>Interactive learning dashboard · Overview · Fibonacci · 0/1 Knapsack</p></div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="overview">🧭 Overview</button>
+      <button class="tab" data-tab="fib">🌀 Fibonacci</button>
+      <button class="tab" data-tab="knap">🎒 0/1 Knapsack</button>
+    </nav>
+    <button class="code-btn" id="codeBtn">{ } C++ Code</button>
+  </header>
+
+  <section class="toolbar" id="toolbar"></section>
+
+  <main class="stage" id="stage"></main>
+
+  <footer class="explain">
+    <div class="ex-left" id="exLeft">
+      <div class="ex-head"><span class="badge" id="stepBadge">Step 1 / 1</span><h2 id="exTitle"></h2></div>
+      <p id="exText"></p>
+    </div>
+    <div class="ex-formula" id="exFormula"></div>
+    <div class="ctrl-row">
+      <button class="ctrl" id="bFirst" title="First step">⏮</button>
+      <button class="ctrl" id="bPrev" title="Previous (←)">◀</button>
+      <button class="ctrl play" id="bPlay" title="Play / Pause (Space)">▶ Play</button>
+      <button class="ctrl" id="bNext" title="Next (→)">▶</button>
+      <button class="ctrl" id="bLast" title="Last step">⏭</button>
+      <label class="range" style="margin-left:8px">Speed <input type="range" id="speed" min="0.5" max="3" step="0.5" value="1"><b id="speedV">1×</b></label>
+      <div class="progress"><div id="progBar"></div></div>
+    </div>
+  </footer>
+</div>
+
+<aside class="drawer" id="drawer">
+  <div class="dr-head">
+    <div><h3 id="drTitle">C++ Code</h3><p id="drSub"></p></div>
+    <div class="dr-btns">
+      <button class="btn" id="cpBtn">📋 Copy</button>
+      <button class="btn" id="dlBtn">⬇ .cpp</button>
+      <button class="btn" id="drClose">✕</button>
+    </div>
+  </div>
+  <div class="dr-note">✨ Highlighted lines = the code executing in the current step of the demo</div>
+  <pre class="code" id="codeBox"></pre>
+</aside>
+
+<script>
+/* =================== utilities =================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fibv = k => { let a=0,b=1; for(let i=0;i<k;i++){ [a,b]=[b,a+b]; } return a; };
+
+const App = { tab:'overview', steps:[], idx:0, playing:false, timer:null, speed:1, line:[], codeOpen:false };
+
+/* Build the full recursion tree for fib(n), naive or memoized */
+function simTree(n, memoMode){
+  const nodes=[], steps=[], memo={}, seen={};
+  function rec(k,parent,depth){
+    const id=nodes.length;
+    const nd={id,k,depth,parent,children:[],val:null,dup:!!seen[k],hit:false};
+    seen[k]=true; nodes.push(nd);
+    if(parent!==null) nodes[parent].children.push(id);
+    if(memoMode && k>1 && memo[k]!==undefined){ nd.hit=true; nd.val=memo[k]; steps.push({t:'hit',id,k,v:memo[k]}); return memo[k]; }
+    if(k<=1){ nd.val=k; steps.push({t:'base',id,k,v:k}); return k; }
+    steps.push({t:'call',id,k});
+    const a=rec(k-1,id,depth+1), b=rec(k-2,id,depth+1);
+    const v=a+b; nd.val=v; if(memoMode) memo[k]=v;
+    steps.push({t:'ret',id,k,v,a,b});
+    return v;
+  }
+  rec(n,null,0);
+  let leaf=0,maxD=0;
+  (function walk(id){
+    const nd=nodes[id]; maxD=Math.max(maxD,nd.depth);
+    if(!nd.children.length){ nd.lx=leaf++; return; }
+    nd.children.forEach(walk);
+    const c=nd.children; nd.lx=(nodes[c[0]].lx+nodes[c[c.length-1]].lx)/2;
+  })(0);
+  return {nodes,steps,leaves:leaf,maxD};
+}
+
+function treeSVG(T, stateOf){
+  const sx=64, sy=80, r=23, pad=26;
+  const W=Math.max(T.leaves,4)*sx+pad*2, H=T.maxD*sy+2*r+pad*2+24;
+  const off=(W-T.leaves*sx)/2;
+  const X=n=>off+sx/2+n.lx*sx, Y=n=>pad+r+n.depth*sy;
+  let e='', g='';
+  T.nodes.forEach(n=>{
+    if(n.parent===null) return;
+    const p=T.nodes[n.parent], st=stateOf(n);
+    e+=`<line class="edge ${st.cls}" x1="${X(p)}" y1="${Y(p)}" x2="${X(n)}" y2="${Y(n)}"/>`;
+  });
+  T.nodes.forEach(n=>{
+    const st=stateOf(n);
+    g+=`<g class="tnode ${st.cls}${st.cur?' cur':''}" transform="translate(${X(n)},${Y(n)})"><circle r="${r}"/><text dy="4.5">F(${n.k})</text>${st.val!=null?`<g class="vp"><rect x="-18" y="${r+5}" width="36" height="18" rx="9"/><text y="${r+18}">${st.val}</text></g>`:''}</g>`;
+  });
+  return `<svg class="tree" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${e}${g}</svg>`;
+}
+
+/* tiny C++ syntax highlighter */
+function hlLine(line){
+  let code=line, cmt='';
+  const ci=line.indexOf('//'); if(ci>=0){ code=line.slice(0,ci); cmt=line.slice(ci); }
+  let out;
+  if(code.trim().startsWith('#')) out=`<span class="pp">${esc(code)}</span>`;
+  else out=esc(code).replace(/("[^"]*")|\b(int|long|void|return|if|else|for|while|using|namespace|bool|const)\b|\b(vector|cout|endl|max|std|size)\b|\b(\d+)\b/g,
+    (m,s,k,t,num)=> s?`<span class="str">${s}</span>` : k?`<span class="kw">${k}</span>` : t?`<span class="ty">${t}</span>` : `<span class="num">${num}</span>`);
+  return out+(cmt?`<span class="cm">${esc(cmt)}</span>`:'');
+}
+
+/* =================== OVERVIEW =================== */
+const Overview = {
+  slides:[
+    { chip:'Intro', title:'What is Dynamic Programming? 🤔',
+      text:'<b>Dynamic Programming (DP)</b> is a problem-solving technique introduced by <b>Richard Bellman</b> in the 1950s. It solves a big problem by breaking it into smaller <b class="c-pink">overlapping subproblems</b>, solving each subproblem <b class="c-green">only once</b>, and <b class="c-cyan">storing</b> the answer in a table so it can be reused. This often turns an <b>exponential-time</b> algorithm into a fast <b>polynomial-time</b> one.',
+      formula:'Dynamic Programming\n   = Recursion + Memory 🧠\n\n"Remember the past so you\n never repeat the work."', line:[],
+      html:()=>`<div class="hero-tag">Richard Bellman · 1950s</div>
+        <h2 class="big">Solve once. <span class="g1">Remember.</span> <span class="g2">Reuse.</span></h2>
+        <div class="flow">
+          <div class="fcard c1"><div class="ico">🧩</div><b>Big Problem</b><small>e.g. find F(50) or the best knapsack</small></div><div class="arrow">➜</div>
+          <div class="fcard c2"><div class="ico">✂️</div><b>Break it</b><small>into smaller subproblems</small></div><div class="arrow">➜</div>
+          <div class="fcard c3"><div class="ico">💾</div><b>Store</b><small>each answer in a table</small></div><div class="arrow">➜</div>
+          <div class="fcard c4"><div class="ico">♻️</div><b>Reuse</b><small>instead of recomputing</small></div>
+        </div>` },
+    { chip:'Overlap', title:'Key Property 1 — Overlapping Subproblems 🔁',
+      text:'A problem has <b>overlapping subproblems</b> when the same smaller problem is solved <b>again and again</b>. In the recursion tree for F(5), every <b class="c-orange">orange node</b> is repeated work: F(3) is computed twice, F(2) three times and F(1) five times. DP solves each distinct subproblem just once.',
+      formula:'Naive F(5)  →  15 function calls\nDistinct subproblems → only 6\n         (F(0) … F(5))', line:[],
+      html:()=>{ const T=simTree(5,false);
+        const reps=[5,4,3,2,1,0].map(k=>{const c=T.nodes.filter(x=>x.k===k).length; return `<div class="rep"><span>F(${k})</span><div class="rbar"><div style="width:${c/5*100}%"></div></div><b>${c}×</b></div>`;}).join('');
+        return `<div class="two"><div class="tree-box">${treeSVG(T,nd=>({cls:'done'+(nd.dup?' dup':''),val:nd.val}))}</div>
+          <div class="callout"><h3>🔁 How often is each F(k) computed?</h3>${reps}<p>🟢 first time computed &nbsp; 🟠 repeated (wasted) work</p></div></div>`; } },
+    { chip:'Substructure', title:'Key Property 2 — Optimal Substructure 🧱',
+      text:'A problem has <b>optimal substructure</b> when its best solution is built from the <b>best solutions of its subproblems</b>. If the shortest route from A to D passes through B, then the part A → B must itself be the shortest route from A to B — otherwise we could swap in a shorter piece and improve the whole route.',
+      formula:'best(A → D) = min over x of\n   [ best(A → x) + cost(x → D) ]\n\nA→C→B→D = 2 + 1 + 5 = 8 ✅', line:[],
+      html:()=>`<div class="two"><div class="tree-box"><svg class="tree" viewBox="0 0 620 400">
+        <defs><linearGradient id="pg" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+        <line x1="90" y1="210" x2="320" y2="90" stroke="rgba(255,255,255,.3)" stroke-width="3"/><text x="190" y="135" fill="#cbd5e1" font-size="17">4</text>
+        <line x1="90" y1="210" x2="270" y2="330" stroke="url(#pg)" stroke-width="7"/><text x="160" y="295" fill="#fde68a" font-size="17" font-weight="700">2</text>
+        <line x1="270" y1="330" x2="320" y2="90" stroke="url(#pg)" stroke-width="7"/><text x="305" y="220" fill="#fde68a" font-size="17" font-weight="700">1</text>
+        <line x1="320" y1="90" x2="540" y2="210" stroke="url(#pg)" stroke-width="7"/><text x="435" y="135" fill="#fde68a" font-size="17" font-weight="700">5</text>
+        <line x1="270" y1="330" x2="540" y2="210" stroke="rgba(255,255,255,.3)" stroke-width="3"/><text x="410" y="295" fill="#cbd5e1" font-size="17">8</text>
+        ${[['A',90,210,'#7c3aed','🏠 Start'],['B',320,90,'#db2777',''],['C',270,330,'#0891b2',''],['D',540,210,'#059669','🏫 Goal']].map(([l,x,y,c,t])=>`<circle cx="${x}" cy="${y}" r="30" fill="${c}" stroke="#fff" stroke-width="3"/><text x="${x}" y="${y+7}" text-anchor="middle" fill="#fff" font-size="21" font-weight="800">${l}</text><text x="${x}" y="${y+56}" text-anchor="middle" fill="#cbd5e1" font-size="14">${t}</text>`).join('')}
+      </svg></div>
+      <div class="callout"><h3>🧱 Building from best pieces</h3>
+        <p>Shortest A → D is <b class="c-amber">A → C → B → D = 8</b>.</p>
+        <p>Its piece A → B (via C) costs <b>3</b>, which is also the <b class="c-green">shortest</b> way from A to B (direct edge costs 4).</p>
+        <p>So we can solve "best A → B" first, store it, and build bigger answers on top of it. That is exactly what DP does.</p></div></div>` },
+    { chip:'Memoization', title:'Approach 1 — Memoization (Top-Down) 🧠',
+      text:'Write the natural <b>recursive</b> solution, but keep a <b class="c-cyan">memo</b> (cache) table. Before computing a subproblem, check the memo: if the answer is already there, return it instantly (<b class="c-cyan">cyan nodes</b>); otherwise compute it and store it. Whole subtrees disappear, so F(6) needs only 11 calls instead of 25.',
+      formula:'if (memo[n] != -1)\n    return memo[n];   // reuse\nmemo[n] = fib(n-1) + fib(n-2);', line:[6,7,8,9,10],
+      html:()=>{ const T=simTree(6,true);
+        return `<div class="two"><div class="tree-box">${treeSVG(T,nd=>({cls:nd.hit?'hit':'done',val:nd.val}))}</div>
+        <div class="callout"><h3>🧠 Top-down in 3 moves</h3><ol><li>Start from the <b>big</b> problem F(n) and recurse.</li><li><b>Check</b> the memo before computing.</li><li><b>Store</b> each new answer in the memo.</li></ol>
+        <div class="rep"><span>Naive</span><div class="rbar"><div style="width:100%"></div></div><b>25</b></div>
+        <div class="rep"><span>Memo</span><div class="rbar"><div style="width:44%;background:linear-gradient(90deg,#22d3ee,#34d399)"></div></div><b>11</b></div>
+        <p>🟢 computed once &nbsp; 🔵 memo hit (subtree skipped)</p></div></div>`; } },
+    { chip:'Tabulation', title:'Approach 2 — Tabulation (Bottom-Up) 📊',
+      text:'Flip the direction: start from the <b>base cases</b> and fill a table step by step until you reach the answer. Every value needed is <b>already in the table</b> when you need it, so there is no recursion and no call stack — just a simple <b>for loop</b>. This is usually the fastest DP style in practice.',
+      formula:'dp[0] = 0;  dp[1] = 1;\nfor (i = 2; i <= n; i++)\n    dp[i] = dp[i-1] + dp[i-2];', line:[14,15,16,17,18,19],
+      html:()=>{ const cols=['#7c3aed','#8b5cf6','#a855f7','#c026d3','#db2777','#e11d48','#f97316','#f59e0b','#eab308','#22c55e','#06b6d4'];
+        return `<h2 class="big" style="font-size:clamp(1.2rem,2.4vw,1.8rem)">Fill the table <span class="g2">left ➜ right</span></h2>
+        <div class="tcells">${cols.map((c,i)=>`<div class="tcell" style="background:linear-gradient(160deg,${c},${c}55);animation-delay:${i*.08}s"><small>dp[${i}]</small><b>${fibv(i)}</b></div>`).join('')}</div>
+        <div class="flow" style="margin-top:6px">
+          <div class="fcard c3"><div class="ico">🧱</div><b>Base cases</b><small>dp[0] = 0, dp[1] = 1</small></div><div class="arrow">➜</div>
+          <div class="fcard c1"><div class="ico">🔁</div><b>Loop upward</b><small>i = 2, 3, … n</small></div><div class="arrow">➜</div>
+          <div class="fcard c4"><div class="ico">🏁</div><b>Answer</b><small>read dp[n]</small></div></div>`; } },
+    { chip:'Compare', title:'Memoization vs Tabulation ⚖️',
+      text:'Both approaches give the <b>same answer</b> with the same time complexity — they differ in <b>direction</b> and <b>style</b>. Memoization is easiest to write straight from the recurrence; tabulation avoids recursion overhead and makes space optimisation easy (Fibonacci needs only the last two values → O(1) space).',
+      formula:'Same subproblems, same answer.\nTop-down  : recursion + cache\nBottom-up : loops + table', line:[],
+      html:()=>`<table class="cmp"><thead><tr><th></th><th class="th1">🧠 Memoization (Top-Down)</th><th class="th2">📊 Tabulation (Bottom-Up)</th></tr></thead><tbody>
+        <tr><td>Direction</td><td>Starts from the big problem F(n)</td><td>Starts from the base cases</td></tr>
+        <tr><td>Technique</td><td>Recursion + cache (memo)</td><td>Iteration (loops) + table</td></tr>
+        <tr><td>Subproblems solved</td><td>Only the ones actually needed</td><td>All of them, in a fixed order</td></tr>
+        <tr><td>Overhead</td><td>Function calls, stack depth</td><td>No recursion — usually faster</td></tr>
+        <tr><td>Ease of writing</td><td>Very natural from the recurrence</td><td>Must plan the fill order</td></tr>
+        <tr><td>Fibonacci cost</td><td>O(n) time · O(n) space</td><td>O(n) time · O(n) → O(1) space</td></tr></tbody></table>` },
+    { chip:'Recipe', title:'The 5-Step DP Recipe 🍳',
+      text:'Almost every DP problem can be solved with these five steps. <b>1)</b> Define what a table entry means. <b>2)</b> Write how it depends on smaller entries. <b>3)</b> Fill in the base cases. <b>4)</b> Compute in the right order. <b>5)</b> Read the final answer. We will apply this recipe to <b>Fibonacci</b> and <b>Knapsack</b> in the next tabs.',
+      formula:'State → Recurrence → Base cases\n      → Order → Answer', line:[],
+      html:()=>`<div class="recipe">
+        <div class="rcard c1"><div class="num">1</div><b>Define the state</b><p>What does one cell of the table mean?</p><code>dp[i] = F(i)</code><code>dp[i][w] = best value</code></div>
+        <div class="rcard c2"><div class="num">2</div><b>Find the recurrence</b><p>How does a state use smaller states?</p><code>dp[i]=dp[i-1]+dp[i-2]</code></div>
+        <div class="rcard c3"><div class="num">3</div><b>Set base cases</b><p>The smallest answers we already know.</p><code>dp[0]=0, dp[1]=1</code></div>
+        <div class="rcard c4"><div class="num">4</div><b>Choose the order</b><p>Small → large, so inputs are ready.</p><code>for i = 2 … n</code></div>
+        <div class="rcard c5"><div class="num">5</div><b>Read the answer</b><p>Usually the last cell of the table.</p><code>dp[n]  /  dp[n][W]</code></div></div>` },
+    { chip:'Applications', title:'Where is DP used? 🌍',
+      text:'DP is everywhere: <b>GPS navigation</b> (shortest paths), <b>spell-checkers</b> (edit distance), <b>git diff</b> (longest common subsequence), <b>DNA alignment</b> in bioinformatics, <b>speech recognition</b> (Viterbi algorithm), <b>reinforcement learning</b> (Bellman equation), finance and resource planning (knapsack-style budgeting).',
+      formula:'If a problem has\n  ✔ overlapping subproblems\n  ✔ optimal substructure\n→ think Dynamic Programming!', line:[],
+      html:()=>{ const a=[['🎒','Knapsack / Budgeting','Choose projects within a budget','#7c3aed'],['🗺️','Shortest Paths','Bellman-Ford, Floyd-Warshall, GPS','#0891b2'],['✍️','Spell Check','Edit (Levenshtein) distance','#db2777'],['🧬','Bioinformatics','DNA / protein sequence alignment','#059669'],['📄','File Diff / Git','Longest Common Subsequence','#d97706'],['🪙','Coin Change','Fewest coins for an amount','#e11d48'],['🗣️','Speech Recognition','Viterbi algorithm on HMMs','#2563eb'],['🤖','Reinforcement Learning','Bellman equation, value iteration','#9333ea'],['🧮','Matrix Chain','Best order to multiply matrices','#0d9488']];
+        return `<div class="apps">${a.map(([e,t,d,c],i)=>`<div class="app-card" style="animation-delay:${i*.06}s"><div class="em" style="background:linear-gradient(135deg,${c},${c}55)">${e}</div><div><b>${t}</b><small>${d}</small></div></div>`).join('')}</div>`; } },
+    { chip:'DP vs Others', title:'DP vs Divide & Conquer vs Greedy 🥊',
+      text:'<b>Divide & Conquer</b> also splits problems, but its subproblems are <b>independent</b> (no reuse needed). <b>Greedy</b> makes the best-looking choice at each step and never looks back — fast, but not always optimal (it fails on 0/1 Knapsack!). <b>DP</b> considers all choices for each subproblem and remembers results, so it guarantees the optimum.',
+      formula:'0/1 Knapsack  → DP ✅\nFractional Knapsack → Greedy ✅\nMerge Sort → Divide & Conquer ✅', line:[],
+      html:()=>`<table class="cmp"><thead><tr><th></th><th class="th1">🧠 Dynamic Programming</th><th class="th2">✂️ Divide & Conquer</th><th class="th3">⚡ Greedy</th></tr></thead><tbody>
+        <tr><td>Subproblems</td><td>Overlapping</td><td>Independent</td><td>One choice at a time</td></tr>
+        <tr><td>Stores results?</td><td>Yes — table / memo</td><td>No</td><td>No</td></tr>
+        <tr><td>Optimal answer?</td><td>Always (with optimal substructure)</td><td>Yes, for its problems</td><td>Only for some problems</td></tr>
+        <tr><td>Speed</td><td>Polynomial</td><td>Often n log n</td><td>Usually fastest</td></tr>
+        <tr><td>Examples</td><td>0/1 Knapsack, LCS, Fibonacci</td><td>Merge sort, Quick sort</td><td>Huffman, Dijkstra, Fractional knapsack</td></tr></tbody></table>` }
+  ],
+  init(){
+    $('#toolbar').innerHTML = this.slides.map((s,i)=>`<button class="chip" data-i="${i}">${i+1}. ${s.chip}</button>`).join('') + `<span class="hint">Use <kbd>←</kbd> <kbd>→</kbd> or <kbd>Space</kbd></span>`;
+    $('#toolbar').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ stop(); App.idx=+c.dataset.i; show(); });
+    load(this.slides.map((s,i)=>({i})));
+  },
+  render(s){
+    const sl=this.slides[s.i];
+    $('#stage').innerHTML=`<div class="slide">${sl.html()}</div>`;
+    $('#toolbar').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',+c.dataset.i===s.i));
+    return sl;
+  },
+  code(){
+    return { title:'dp_overview.cpp', sub:'Both DP styles for Fibonacci', lines:[
+'#include <iostream>',
+'#include <vector>',
+'using namespace std;',
+'',
+'// ---------- Approach 1: Memoization (Top-Down) ----------',
+'vector<long long> memo(100, -1);              // -1 = not solved yet',
+'long long fibMemo(int n) {',
+'    if (n <= 1) return n;                       // base case',
+'    if (memo[n] != -1) return memo[n];          // reuse stored answer',
+'    return memo[n] = fibMemo(n - 1) + fibMemo(n - 2);  // solve once, store',
+'}',
+'',
+'// ---------- Approach 2: Tabulation (Bottom-Up) ----------',
+'long long fibTab(int n) {',
+'    vector<long long> dp(n + 2);',
+'    dp[0] = 0; dp[1] = 1;                       // base cases',
+'    for (int i = 2; i <= n; i++)',
+'        dp[i] = dp[i - 1] + dp[i - 2];          // recurrence',
+'    return dp[n];',
+'}',
+'',
+'int main() {',
+'    int n = 10;',
+'    cout << "Memo : " << fibMemo(n) << endl;',
+'    cout << "Table: " << fibTab(n) << endl;',
+'    return 0;',
+'}']};
+  }
+};
+
+/* =================== FIBONACCI =================== */
+const Fib = {
+  mode:'naive', n:5, tree:null,
+  init(){
+    $('#toolbar').innerHTML = `
+      <div class="seg" id="fibMode">
+        <button data-m="naive">🐢 Naive Recursion</button>
+        <button data-m="memo">🧠 Memoization (Top-Down)</button>
+        <button data-m="tab">📊 Tabulation (Bottom-Up)</button>
+      </div>
+      <label class="range">n = <b id="fibNv"></b><input type="range" id="fibN" min="2" max="7"></label>
+      <div class="legend" id="fibLegend"></div>`;
+    $('#fibMode').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      this.mode=b.dataset.m;
+      if(this.mode==='tab' && this.n<8) this.n=8;
+      this.sync(); this.build();
+    });
+    $('#fibN').oninput=e=>{ this.n=+e.target.value; $('#fibNv').textContent=this.n; this.build(); };
+    this.sync(); this.build();
+  },
+  sync(){
+    $('#fibMode').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===this.mode));
+    const mx=this.mode==='tab'?15:7; const s=$('#fibN'); s.max=mx;
+    if(this.n>mx) this.n=mx; s.value=this.n; $('#fibNv').textContent=this.n;
+    const L={
+      naive:[['#6d28d9','Waiting on stack'],['#047857','Solved (first time)'],['#c2410c','Repeated call ⚠️'],['#fbbf24','Return value']],
+      memo:[['#6d28d9','Waiting on stack'],['#047857','Solved & stored'],['#0e7490','Memo hit ⚡'],['#fbbf24','Return value']],
+      tab:[['#60a5fa','dp[i−1]'],['#f472b6','dp[i−2]'],['#f59e0b','Current dp[i]'],['#818cf8','Filled']]
+    }[this.mode];
+    $('#fibLegend').innerHTML=L.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
+  },
+  build(){
+    stop();
+    let steps;
+    if(this.mode==='tab'){
+      steps=[{t:'intro'},{t:'alloc'},{t:'base'}];
+      for(let i=2;i<=this.n;i++) steps.push({t:'fill',i});
+      steps.push({t:'answer'});
+    } else {
+      this.tree=simTree(this.n,this.mode==='memo');
+      steps=[{t:'intro'},...this.tree.steps,{t:'done'}];
+    }
+    load(steps);
+  },
+  render(s,idx){ return this.mode==='tab'? this.renderTab(s,idx) : this.renderTree(s,idx); },
+
+  renderTree(s,idx){
+    const T=this.tree, n=this.n, memoM=this.mode==='memo';
+    const status={}; let calls=0,rep=0,hits=0;
+    const cnt=Array(n+1).fill(0), memo=Array(n+1).fill(null);
+    for(let j=0;j<=idx;j++){
+      const st=App.steps[j]; if(st.id===undefined) continue;
+      const nd=T.nodes[st.id];
+      if(st.t==='call'||st.t==='base'){ status[st.id]= st.t==='call'?'active':'done'; calls++; cnt[st.k]++; if(nd.dup) rep++; }
+      else if(st.t==='ret'){ status[st.id]='done'; if(memoM) memo[st.k]=st.v; }
+      else if(st.t==='hit'){ status[st.id]='hit'; calls++; hits++; cnt[st.k]++; }
+    }
+    const svg=treeSVG(T, nd=>{
+      const stt=status[nd.id]||'ghost'; let cls=stt;
+      if(!memoM && nd.dup && stt!=='ghost') cls+=' dup';
+      return {cls, cur:nd.id===s.id, val:(stt==='done'||stt==='hit')?nd.val:null};
+    });
+    const total=T.nodes.length, naiveTotal=2*fibv(n+1)-1;
+    let side;
+    if(!memoM){
+      const fin=Array(n+1).fill(0); T.nodes.forEach(x=>fin[x.k]++); const mx=Math.max(...fin);
+      const bars=[...Array(n+1).keys()].map(k=>`<div class="bar"><em>${cnt[k]}</em><div class="b" style="height:${cnt[k]/mx*100}%"></div><span>F(${k})</span></div>`).join('');
+      side=`<div class="stats"><div class="stat s1"><span>Calls made</span><b>${calls}<small> / ${total}</small></b></div><div class="stat s2"><span>Repeated calls</span><b>${rep}</b></div></div>
+        <div class="panel"><h4>🔁 Times each F(k) was computed</h4><div class="bars">${bars}</div></div>
+        <div class="panel tip">💡 Only <b class="c-green">${n+1}</b> distinct subproblems exist (F(0)…F(${n})), yet naive recursion makes <b class="c-orange">${total}</b> calls. That gap grows exponentially!</div>`;
+    } else {
+      const cells=[...Array(n+1).keys()].map(k=>{
+        let cls='mcell', v;
+        if(k<=1){ cls+=' base'; v=k; }
+        else { v=memo[k]===null?'−1':memo[k]; if(memo[k]!==null) cls+=' set'; }
+        if(s.t==='ret'&&s.k===k) cls+=' just';
+        if(s.t==='hit'&&s.k===k) cls+=' read';
+        return `<div class="${cls}"><small>memo[${k}]</small><b>${v}</b></div>`;
+      }).join('');
+      side=`<div class="stats"><div class="stat s1"><span>Calls made</span><b>${calls}<small> / ${total}</small></b></div><div class="stat s3"><span>Memo hits ⚡</span><b>${hits}</b></div></div>
+        <div class="panel"><h4>💾 memo[ ] table (−1 = empty)</h4><div class="memo">${cells}</div></div>
+        <div class="panel tip">💡 Naive recursion needs <b class="c-orange">${naiveTotal}</b> calls for F(${n}); with memoization only <b class="c-cyan">${total}</b>. Each F(k) is computed exactly once.</div>`;
+    }
+    $('#stage').innerHTML=`<div class="fib-wrap"><div class="tree-box">${svg}</div><div class="side">${side}</div></div>`;
+    return this.explainTree(s,{calls,rep,hits,total});
+  },
+
+  explainTree(s,info){
+    const n=this.n, M=this.mode, memoM=M==='memo', v=fibv(n);
+    const L=(a,b)=>memoM?b:a;
+    switch(s.t){
+      case 'intro': return memoM ? {
+          title:'Memoization — recursion with a memory 🧠',
+          text:`Same recursion as before, but every answer is saved in a <b class="c-cyan">memo[ ]</b> array (−1 means "not solved yet"). Before computing F(k) we look in the memo first. The faded tree shows every call that will happen for F(${n}) — compare its size with the naive tree! Press <b>▶ Play</b> or <kbd>→</kbd>.`,
+          formula:'F(n) = F(n−1) + F(n−2)\nF(0) = 0 ,  F(1) = 1\nmemo[k] stores F(k) once solved', line:[6] } : {
+          title:'Fibonacci with naive recursion 🐢',
+          text:`The Fibonacci sequence <b>0, 1, 1, 2, 3, 5, 8, 13…</b> starts with 0 and 1, and each number is the sum of the two before it. It appears in sunflower spirals, pine cones, Fibonacci search and Fibonacci heaps. The faded tree shows <b>every call</b> the plain recursive program makes to compute F(${n}). Press <b>▶ Play</b> or <kbd>→</kbd> to watch it grow.`,
+          formula:'F(n) = F(n−1) + F(n−2)\nF(0) = 0 ,  F(1) = 1', line:[5,6,7,8] };
+      case 'call': { const d=!memoM && this.tree.nodes[s.id].dup;
+        return { title:`Call F(${s.k}) 📞`,
+          text:`F(${s.k}) is not a base case (${s.k} > 1), so it must be split into <b class="c-purple">F(${s.k-1})</b> and <b class="c-purple">F(${s.k-2})</b>. This call waits on the call stack (purple) until both answers come back.`
+            + (memoM?` memo[${s.k}] is still empty (−1), so we really have to compute it.`:'')
+            + (d?`<br><b class="c-orange">⚠️ F(${s.k}) has been called before! Naive recursion recomputes this whole subtree again.</b>`:''),
+          formula:`F(${s.k}) = F(${s.k-1}) + F(${s.k-2})\n        = ?  (wait for children)`, line:L([8],[10,11]) }; }
+      case 'base': { const d=!memoM && this.tree.nodes[s.id].dup;
+        return { title:`Base case F(${s.k}) = ${s.k} ✅`,
+          text:`F(${s.k}) is a <b class="c-green">base case</b> (n ≤ 1), so it returns <b>${s.k}</b> immediately without making any more calls.${d?' <span class="c-orange">(This exact base case was reached earlier too — repeated work.)</span>':''}`,
+          formula:`n ≤ 1  →  return n\nF(${s.k}) = ${s.k}`, line:L([6,7],[9]) }; }
+      case 'ret': return { title:`F(${s.k}) solved = ${s.v} 🎯`,
+          text:`Both sub-calls have returned: F(${s.k-1}) = <b>${s.a}</b> and F(${s.k-2}) = <b>${s.b}</b>. Add them to get <b class="c-amber">${s.v}</b> and pass it back to the caller.`
+            + (memoM?` The result is <b class="c-cyan">stored in memo[${s.k}]</b>, so F(${s.k}) will never be computed again.`:''),
+          formula:`F(${s.k}) = F(${s.k-1}) + F(${s.k-2})\n     = ${s.a} + ${s.b} = ${s.v}`+(memoM?`\nmemo[${s.k}] = ${s.v}`:''), line:L([8],[11,12]) };
+      case 'hit': return { title:`Memo hit ⚡ F(${s.k}) = ${s.v}`,
+          text:`memo[${s.k}] already holds <b>${s.v}</b>, so we return it <b>instantly</b>. The entire subtree below F(${s.k}) is <b class="c-cyan">skipped ✂️</b> — this reuse is exactly where Dynamic Programming saves time.`,
+          formula:`memo[${s.k}] != −1\n  → return memo[${s.k}] = ${s.v}`, line:[10] };
+      case 'done': return memoM ? {
+          title:`Done! F(${n}) = ${v} 🎉`,
+          text:`Memoization used only <b class="c-cyan">${info.total}</b> calls (${info.hits} were instant memo hits) versus <b class="c-orange">${2*fibv(n+1)-1}</b> for naive recursion. Each F(k) is solved once → <b>O(n) time</b> and <b>O(n) space</b>. Now try <b>📊 Tabulation</b> to remove recursion completely.`,
+          formula:`Time  : O(n)\nSpace : O(n)  (memo + call stack)\nF(${n}) = ${v}`, line:[17] } : {
+          title:`Done! F(${n}) = ${v} — but slowly 🐌`,
+          text:`Naive recursion made <b class="c-orange">${info.total}</b> calls and <b class="c-orange">${info.rep}</b> of them were repeated work. The number of calls grows about 1.6× for every +1 in n, i.e. <b>exponential time O(2ⁿ)</b>. F(50) would need over 40 billion calls! Switch to <b>🧠 Memoization</b> to fix this.`,
+          formula:`Time  : O(2ⁿ)  exponential ❌\nSpace : O(n)   call stack\nF(${n}) = ${v}`, line:[13] };
+    }
+  },
+
+  renderTab(s,idx){
+    const n=this.n; let alloc=false, upTo=-1;
+    for(let j=0;j<=idx;j++){ const st=App.steps[j]; if(st.t==='alloc') alloc=true; if(st.t==='base'){alloc=true;upTo=1;} if(st.t==='fill') upTo=st.i; }
+    const cells=[...Array(n+1).keys()].map(i=>{
+      let cls='cell '+(!alloc?'ghost':(i<=upTo?'f':''));
+      if(s.t==='fill'){ if(i===s.i) cls+=' cur'; else if(i===s.i-1) cls+=' src1'; else if(i===s.i-2) cls+=' src2'; }
+      if(s.t==='base' && i<=1) cls+=' cur';
+      if(s.t==='answer' && i===n) cls+=' ans';
+      return `<div class="${cls}"><small>dp[${i}]</small><b>${i<=upTo?fibv(i):''}</b></div>`;
+    }).join('');
+    let eq;
+    if(s.t==='intro') eq='F(n) = F(n−1) + F(n−2)';
+    else if(s.t==='alloc') eq=`vector&lt;long long&gt; dp(<span class="c-amber">${n+1}</span>);`;
+    else if(s.t==='base') eq='dp[0] = <b class="c-green">0</b> ,  dp[1] = <b class="c-green">1</b>';
+    else if(s.t==='fill'){ const i=s.i; eq=`dp[${i}] = <span class="c-blue">dp[${i-1}]</span> + <span class="c-pink">dp[${i-2}]</span> = <span class="c-blue">${fibv(i-1)}</span> + <span class="c-pink">${fibv(i-2)}</span> = <b class="c-amber">${fibv(i)}</b>`; }
+    else eq=`F(${n}) = dp[${n}] = <b class="c-amber">${fibv(n)}</b> 🎉`;
+    const nv=2*fibv(n+1)-1, mv=2*n-1, tv=n-1;
+    const bar=(lab,val,col)=>`<div class="crow"><span>${lab}</span><div class="ctrack"><div style="width:${Math.max(val/nv*100,1.5)}%;background:${col}"></div></div><b>${val.toLocaleString()}</b></div>`;
+    $('#stage').innerHTML=`<div class="tab-wrap">
+      <div class="tab-title">📊 dp[ ] table for F(${n}) — filled from left ➜ right</div>
+      <div class="cells">${cells}</div>
+      <div class="eqn">${eq}</div>
+      <div class="compare panel"><h4>⚔️ Work needed to compute F(${n})</h4>
+        ${bar('🐢 Naive calls',nv,'linear-gradient(90deg,#fb923c,#ef4444)')}
+        ${bar('🧠 Memo calls',mv,'linear-gradient(90deg,#22d3ee,#3b82f6)')}
+        ${bar('📊 Loop additions',tv,'linear-gradient(90deg,#34d399,#10b981)')}</div></div>`;
+    switch(s.t){
+      case 'intro': return { title:'Tabulation — build the answer bottom-up 📊',
+        text:`Instead of starting at F(${n}) and recursing down, we start from the <b>base cases</b> and fill a table <b>upward</b>. No recursion, no call stack — just one simple loop. Every value we need is already in the table when we need it.`,
+        formula:'Recipe:\n 1. state: dp[i] = F(i)\n 2. dp[i] = dp[i−1] + dp[i−2]\n 3. dp[0]=0, dp[1]=1\n 4. i = 2 → n   5. answer dp[n]', line:[6] };
+      case 'alloc': return { title:'Create the table 🗂️',
+        text:`Allocate an array <b>dp</b> with <b>${n+1}</b> cells (indices 0 … ${n}). Cell <b class="c-amber">dp[i]</b> will hold the value of F(i). Right now the cells are empty.`,
+        formula:`vector<long long> dp(${n} + 1);\n// dp[i] will store F(i)`, line:[8] };
+      case 'base': return { title:'Fill the base cases 🧱',
+        text:'The two smallest answers are known directly: <b class="c-green">dp[0] = 0</b> and <b class="c-green">dp[1] = 1</b>. Every other cell will be built from these two seeds.',
+        formula:'dp[0] = 0;\ndp[1] = 1;', line:[9,10] };
+      case 'fill': { const i=s.i; return { title:`Fill dp[${i}] = ${fibv(i)} ✏️`,
+        text:`Loop step <b>i = ${i}</b>: add the two cells just before it — <b class="c-blue">dp[${i-1}] = ${fibv(i-1)}</b> (blue) and <b class="c-pink">dp[${i-2}] = ${fibv(i-2)}</b> (pink). Both are already computed, so this takes constant time O(1).`,
+        formula:`dp[${i}] = dp[${i-1}] + dp[${i-2}]\n      = ${fibv(i-1)} + ${fibv(i-2)} = ${fibv(i)}`, line:[11,12] }; }
+      case 'answer': return { title:`Answer: F(${n}) = ${fibv(n)} 🏆`,
+        text:`The last cell <b>dp[${n}]</b> holds the answer. The loop ran only <b class="c-green">${n-1}</b> times → <b>O(n) time</b>, compared with <b class="c-orange">${nv.toLocaleString()}</b> calls for naive recursion. 💡 Bonus: since each step needs only the previous two values, we can keep just two variables → <b>O(1) space</b>.`,
+        formula:`return dp[${n}];   // = ${fibv(n)}\nTime  : O(n)\nSpace : O(n)  → O(1) optimised`, line:[13] };
+    }
+  },
+
+  code(){
+    const n=this.n;
+    if(this.mode==='naive') return { title:'fib_naive.cpp', sub:'Plain recursion · O(2ⁿ) time', lines:[
+'#include <iostream>',
+'using namespace std;',
+'',
+'// Naive recursion: O(2^n) time',
+'long long fib(int n) {',
+'    if (n <= 1)                        // base case',
+'        return n;',
+'    return fib(n - 1) + fib(n - 2);    // two recursive calls',
+'}',
+'',
+'int main() {',
+`    int n = ${n};`,
+'    cout << "fib(" << n << ") = " << fib(n) << endl;',
+'    return 0;',
+'}']};
+    if(this.mode==='memo') return { title:'fib_memo.cpp', sub:'Top-down DP · O(n) time, O(n) space', lines:[
+'#include <iostream>',
+'#include <vector>',
+'using namespace std;',
+'',
+'// Top-down DP (memoization): O(n) time, O(n) space',
+'vector<long long> memo(100, -1);       // -1 means "not solved yet"',
+'',
+'long long fib(int n) {',
+'    if (n <= 1) return n;                    // base case',
+'    if (memo[n] != -1) return memo[n];       // already solved -> reuse',
+'    memo[n] = fib(n - 1) + fib(n - 2);       // solve once & store',
+'    return memo[n];',
+'}',
+'',
+'int main() {',
+`    int n = ${n};`,
+'    cout << "fib(" << n << ") = " << fib(n) << endl;',
+'    return 0;',
+'}']};
+    return { title:'fib_tabulation.cpp', sub:'Bottom-up DP · O(n) time', lines:[
+'#include <iostream>',
+'#include <vector>',
+'using namespace std;',
+'',
+'// Bottom-up DP (tabulation): O(n) time',
+'long long fib(int n) {',
+'    if (n <= 1) return n;',
+'    vector<long long> dp(n + 1);         // table of answers',
+'    dp[0] = 0;                            // base case 1',
+'    dp[1] = 1;                            // base case 2',
+'    for (int i = 2; i <= n; i++)',
+'        dp[i] = dp[i - 1] + dp[i - 2];    // recurrence',
+'    return dp[n];                         // final answer',
+'}',
+'',
+'int main() {',
+`    int n = ${n};`,
+'    cout << "fib(" << n << ") = " << fib(n) << endl;',
+'    return 0;',
+'}']};
+  }
+};
+
+/* =================== KNAPSACK =================== */
+const DEFAULT_ITEMS=[{n:'Book',e:'📘',w:1,v:1},{n:'Camera',e:'📷',w:3,v:4},{n:'Laptop',e:'💻',w:4,v:5},{n:'Guitar',e:'🎸',w:5,v:7}];
+const POOL=[['Book','📘'],['Camera','📷'],['Laptop','💻'],['Guitar','🎸'],['Watch','⌚'],['Headphones','🎧'],['Jacket','🧥'],['Chocolate','🍫'],['Tablet','📱'],['Perfume','🧴']];
+const Knap = {
+  items:DEFAULT_ITEMS.map(o=>({...o})), W:7, dp:null, fill:{},
+  init(){
+    $('#toolbar').innerHTML = `
+      <label class="range">Capacity W = <b id="kwV">${this.W}</b> kg <input type="range" id="kw" min="3" max="10" value="${this.W}"></label>
+      <label class="range">Items <select id="kn">${[3,4,5].map(c=>`<option ${c===this.items.length?'selected':''}>${c}</option>`).join('')}</select></label>
+      <button class="btn" id="krand">🎲 Random items</button>
+      <button class="btn" id="kdef">↺ Default example</button>
+      <div class="legend"><span><i style="background:#60a5fa"></i>Skip (cell above)</span><span><i style="background:#f472b6"></i>Take (v + diagonal)</span><span><i style="background:#f59e0b"></i>Current</span><span><i style="background:#34d399"></i>Backtrack path</span></div>`;
+    $('#kw').oninput=e=>{ this.W=+e.target.value; $('#kwV').textContent=this.W; this.build(); };
+    $('#kn').onchange=e=>{ this.items=this.random(+e.target.value); this.build(); };
+    $('#krand').onclick=()=>{ this.items=this.random(this.items.length); this.build(); };
+    $('#kdef').onclick=()=>{ this.items=DEFAULT_ITEMS.map(o=>({...o})); this.W=7; $('#kw').value=7; $('#kwV').textContent=7; $('#kn').value=4; this.build(); };
+    this.build();
+  },
+  random(c){
+    const p=[...POOL].sort(()=>Math.random()-.5).slice(0,c);
+    return p.map(([n,e])=>{ const w=1+Math.floor(Math.random()*Math.min(6,this.W)); return {n,e,w,v:Math.max(1,w+Math.floor(Math.random()*5)-1)}; });
+  },
+  build(){
+    stop();
+    const it=this.items, n=it.length, W=this.W;
+    const dp=Array.from({length:n+1},()=>Array(W+1).fill(0));
+    const steps=[{t:'intro'},{t:'idea'},{t:'base'}]; const fill={};
+    for(let w=0;w<=W;w++) fill['0,'+w]=2;
+    for(let i=0;i<=n;i++) fill[i+',0']=2;
+    for(let i=1;i<=n;i++) for(let w=1;w<=W;w++){
+      const x=it[i-1];
+      if(x.w>w){ dp[i][w]=dp[i-1][w]; steps.push({t:'heavy',i,w,val:dp[i][w]}); }
+      else { const skip=dp[i-1][w], take=x.v+dp[i-1][w-x.w]; dp[i][w]=Math.max(skip,take); steps.push({t:'cell',i,w,skip,take,val:dp[i][w]}); }
+      fill[i+','+w]=steps.length-1;
+    }
+    let w=W; const chosen=[];
+    for(let i=n;i>=1;i--){ const taken=dp[i][w]!==dp[i-1][w]; steps.push({t:'bt',i,w,taken}); if(taken){ chosen.push(i); w-=it[i-1].w; } }
+    steps.push({t:'answer',chosen});
+    this.dp=dp; this.fill=fill;
+    load(steps);
+  },
+  render(s,idx){
+    const it=this.items, n=it.length, W=this.W, dp=this.dp, K=(i,w)=>i+','+w;
+    const decided={}, path=new Set();
+    for(let j=0;j<=idx;j++){ const st=App.steps[j]; if(st.t==='bt'){ path.add(K(st.i,st.w)); decided[st.i]=st.taken; } }
+    let cur=null, sk=null, tk=null, row=null;
+    if(s.t==='heavy'){ cur=K(s.i,s.w); sk=K(s.i-1,s.w); row=s.i; }
+    else if(s.t==='cell'){ cur=K(s.i,s.w); sk=K(s.i-1,s.w); tk=K(s.i-1,s.w-it[s.i-1].w); row=s.i; }
+    else if(s.t==='bt'){ cur=K(s.i,s.w); sk=K(s.i-1,s.w); row=s.i; }
+    const endPhase = s.t==='bt'||s.t==='answer';
+
+    let h=`<div class="kc hd corner">item ↓ · w →</div>`;
+    for(let w=0;w<=W;w++) h+=`<div class="kc hd">${w}</div>`;
+    for(let i=0;i<=n;i++){
+      h+= i===0 ? `<div class="kc rh"><span class="em">∅</span><span>No items<small>row 0</small></span></div>`
+                : `<div class="kc rh ${row===i?'on':''}"><span class="em">${it[i-1].e}</span><span>${it[i-1].n}<small>w ${it[i-1].w} · v ${it[i-1].v}</small></span></div>`;
+      for(let w=0;w<=W;w++){
+        const k=K(i,w), f=this.fill[k]<=idx, c=['kc'];
+        if(f) c.push((i===0||w===0)?'z':'f');
+        if(s.t==='base' && (i===0||w===0)) c.push('pulse');
+        if(path.has(k)) c.push('path');
+        if(k===sk) c.push('skip');
+        if(k===tk) c.push('take');
+        if(k===cur) c.push('cur');
+        if(endPhase && i===n && w===W && k!==cur) c.push('ans');
+        h+=`<div class="${c.join(' ')}">${f?dp[i][w]:''}</div>`;
+      }
+    }
+    let used=0, val=0;
+    Object.keys(decided).forEach(i=>{ if(decided[i]){ used+=it[i-1].w; val+=it[i-1].v; } });
+    const items=it.map((x,j)=>{ const i=j+1; let cls='item', tag='';
+      if(row===i) cls+=' cur';
+      if(decided[i]===true){ cls+=' taken'; tag='<span class="tag">IN BAG</span>'; }
+      else if(decided[i]===false){ cls+=' left'; tag='<span class="tag">LEFT</span>'; }
+      return `<div class="${cls}"><span class="em">${x.e}</span><div><b>${i}. ${x.n}</b><small>weight ${x.w} kg · value ${x.v}</small></div>${tag}</div>`; }).join('');
+    $('#stage').innerHTML=`<div class="kn-wrap">
+      <div class="kn-left"><h4>🛍️ Items available</h4>${items}
+        <div class="bag"><div class="bag-vis"><div class="bag-fill" style="height:${used/W*100}%"></div></div>
+        <div class="bag-txt">🎒 Used <b>${used} / ${W}</b> kg<br>💰 Value <b>${val}</b></div></div></div>
+      <div class="kn-right"><div class="kn-title">📋 DP table &nbsp;<span style="color:var(--muted);font-weight:500">dp[i][w] = best value using first i items with capacity w</span></div>
+        <div class="ktable" style="grid-template-columns:minmax(118px,1.7fr) repeat(${W+1},minmax(30px,1fr));grid-template-rows:auto repeat(${n+1},1fr)">${h}</div></div></div>`;
+    return this.explain(s);
+  },
+  explain(s){
+    const it=this.items, n=it.length, W=this.W, dp=this.dp;
+    switch(s.t){
+      case 'intro': return { title:'🎒 The 0/1 Knapsack Problem',
+        text:`A thief has a bag that can carry at most <b class="c-amber">${W} kg</b>. There are <b>${n}</b> items, each with a weight and a value. Each item is either taken <b>whole (1)</b> or left behind <b>(0)</b> — no fractions! <b>Goal:</b> maximise the total value without exceeding the capacity. Trying every subset means 2<sup>${n}</sup> = ${2**n} combinations — this explodes as n grows. Real uses: <b>budget planning, cargo loading, investment selection, cloud resource allocation</b>.`,
+        formula:'maximise   Σ vᵢ · xᵢ\nsubject to Σ wᵢ · xᵢ ≤ W\n           xᵢ ∈ {0, 1}', line:[7] };
+      case 'idea': return { title:'🧠 Define the DP state & recurrence',
+        text:`Let <b class="c-amber">dp[i][w]</b> = the best value using only the <b>first i items</b> with a bag of capacity <b>w</b>. For item i there are just two choices: <b class="c-blue">skip it</b> → value stays dp[i−1][w], or <b class="c-pink">take it</b> (only if it fits) → vᵢ + dp[i−1][w − wᵢ]. We pick the larger. The table has (${n}+1) × (${W}+1) = <b>${(n+1)*(W+1)}</b> cells.`,
+        formula:'if wᵢ > w :\n   dp[i][w] = dp[i−1][w]\nelse :\n   dp[i][w] = max( dp[i−1][w],\n              vᵢ + dp[i−1][w−wᵢ] )', line:[9,10] };
+      case 'base': return { title:'🧱 Base cases: row 0 and column 0',
+        text:'With <b>no items</b> (row 0) or <b>no capacity</b> (column 0), the best value is <b>0</b>. In C++, creating the vector filled with zeros sets these base cases automatically. Now we fill the rest of the table <b>row by row, left to right</b>.',
+        formula:'dp[0][w] = 0   for every w\ndp[i][0] = 0   for every i', line:[10] };
+      case 'heavy': { const x=it[s.i-1]; return { title:`dp[${s.i}][${s.w}] — ${x.e} ${x.n} is too heavy 🚫`,
+        text:`${x.n} weighs <b>${x.w} kg</b> but the capacity here is only <b>${s.w} kg</b>, so it cannot go in the bag. We simply copy the best value <b>without</b> it from the cell directly above (<b class="c-blue">blue</b>): <b class="c-amber">${s.val}</b>.`,
+        formula:`wᵢ = ${x.w} > w = ${s.w}  →  skip\ndp[${s.i}][${s.w}] = dp[${s.i-1}][${s.w}] = ${s.val}`, line:[14,15] }; }
+      case 'cell': { const x=it[s.i-1], d=s.w-x.w, verdict=s.take>s.skip?'<b class="c-pink">Take it ✅</b>':s.take<s.skip?'<b class="c-blue">Skip it</b>':'tie — both give the same value';
+        return { title:`dp[${s.i}][${s.w}] — should we take ${x.e} ${x.n}?`,
+        text:`${x.n} (w=${x.w}, v=${x.v}) fits in capacity <b>${s.w}</b>. Two options:<br>🔵 <b class="c-blue">Skip</b> → dp[${s.i-1}][${s.w}] = <b>${s.skip}</b> &nbsp;&nbsp; 🩷 <b class="c-pink">Take</b> → ${x.v} + dp[${s.i-1}][${d}] = ${x.v} + ${dp[s.i-1][d]} = <b>${s.take}</b><br>Choose the larger → <b class="c-amber">${s.val}</b> (${verdict}).`,
+        formula:`dp[${s.i}][${s.w}] = max( dp[${s.i-1}][${s.w}], ${x.v} + dp[${s.i-1}][${d}] )\n         = max( ${s.skip}, ${s.take} ) = ${s.val}`, line:[17,18] }; }
+      case 'bt': { const x=it[s.i-1];
+        return s.taken ? { title:`Backtrack: ${x.e} ${x.n} was TAKEN ✅`,
+          text:`To find <b>which</b> items give the best value, walk back from the bottom-right cell. dp[${s.i}][${s.w}] = <b>${dp[s.i][s.w]}</b> differs from the cell above dp[${s.i-1}][${s.w}] = <b>${dp[s.i-1][s.w]}</b>, so item ${s.i} must have been taken. Put it in the bag and move left by its weight: w = ${s.w} − ${x.w} = <b>${s.w-x.w}</b>.`,
+          formula:`dp[${s.i}][${s.w}] ≠ dp[${s.i-1}][${s.w}]  (${dp[s.i][s.w]} ≠ ${dp[s.i-1][s.w]})\n→ take item ${s.i};  w = ${s.w} − ${x.w} = ${s.w-x.w}`, line:[25,26,27] }
+        : { title:`Backtrack: ${x.e} ${x.n} was skipped`,
+          text:`dp[${s.i}][${s.w}] = <b>${dp[s.i][s.w]}</b> equals the cell above, dp[${s.i-1}][${s.w}]. The best answer did not need item ${s.i}, so we leave it out and move straight up to row ${s.i-1}.`,
+          formula:`dp[${s.i}][${s.w}] == dp[${s.i-1}][${s.w}]  (${dp[s.i][s.w]} = ${dp[s.i-1][s.w]})\n→ item ${s.i} not taken; w stays ${s.w}`, line:[25] }; }
+      case 'answer': { const ch=s.chosen.slice().reverse(), names=ch.map(i=>`${it[i-1].e} ${it[i-1].n}`).join(' + '), tw=ch.reduce((a,i)=>a+it[i-1].w,0);
+        return { title:`🏆 Maximum value = ${dp[n][W]}`,
+          text: ch.length ? `Best choice: <b class="c-green">${names}</b> — total weight <b>${tw}/${W} kg</b>, total value <b class="c-amber">${dp[n][W]}</b>. DP filled ${n}×${W} = ${n*W} cells: <b>O(n × W)</b> time and space, instead of checking all <b>2ⁿ</b> subsets. Change the capacity or click <b>🎲 Random items</b> and run it again!`
+                          : `No item fits in a bag of ${W} kg, so the best value is 0. Try a larger capacity!`,
+          formula:`Answer = dp[${n}][${W}] = ${dp[n][W]}\nTime  : O(n × W)\nSpace : O(n × W)`, line:[30] }; }
+    }
+  },
+  code(){
+    const it=this.items;
+    return { title:'knapsack_01.cpp', sub:'Bottom-up DP · O(n × W) time', lines:[
+'#include <iostream>',
+'#include <vector>',
+'#include <algorithm>',
+'using namespace std;',
+'',
+'// 0/1 Knapsack - bottom-up DP: O(n x W) time',
+'int knapsack(vector<int>& wt, vector<int>& val, int W) {',
+'    int n = wt.size();',
+'    // dp[i][w] = best value using first i items with capacity w',
+'    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));  // row 0, col 0 = 0',
+'',
+'    for (int i = 1; i <= n; i++) {',
+'        for (int w = 1; w <= W; w++) {',
+'            if (wt[i - 1] > w)                   // item too heavy',
+'                dp[i][w] = dp[i - 1][w];         // must skip it',
+'            else',
+'                dp[i][w] = max(dp[i - 1][w],                        // skip',
+'                               val[i - 1] + dp[i - 1][w - wt[i - 1]]); // take',
+'        }',
+'    }',
+'',
+'    // Backtrack to find which items were chosen',
+'    int w = W;',
+'    for (int i = n; i >= 1; i--) {',
+'        if (dp[i][w] != dp[i - 1][w]) {          // value changed -> item i taken',
+'            cout << "Take item " << i << endl;',
+'            w -= wt[i - 1];',
+'        }',
+'    }',
+'    return dp[n][W];                             // maximum value',
+'}',
+'',
+'int main() {',
+`    vector<int> wt  = {${it.map(x=>x.w).join(', ')}};   // ${it.map(x=>x.n).join(', ')}`,
+`    vector<int> val = {${it.map(x=>x.v).join(', ')}};`,
+`    int W = ${this.W};`,
+'    cout << "Maximum value = " << knapsack(wt, val, W) << endl;',
+'    return 0;',
+'}']};
+  }
+};
+
+/* =================== controller =================== */
+const modules={overview:Overview, fib:Fib, knap:Knap};
+
+function load(steps){ App.steps=steps; App.idx=0; show(); }
+
+function show(){
+  const s=App.steps[App.idx];
+  const ex=modules[App.tab].render(s,App.idx);
+  $('#exTitle').innerHTML=ex.title;
+  $('#exText').innerHTML=ex.text;
+  const f=$('#exFormula'); f.textContent=ex.formula||''; f.style.visibility=ex.formula?'visible':'hidden';
+  $('#stepBadge').textContent=`Step ${App.idx+1} / ${App.steps.length}`;
+  $('#progBar').style.width=((App.idx+1)/App.steps.length*100)+'%';
+  const L=$('#exLeft'); L.classList.remove('flash'); void L.offsetWidth; L.classList.add('flash'); L.scrollTop=0;
+  $('#bPrev').disabled=$('#bFirst').disabled=App.idx===0;
+  $('#bNext').disabled=$('#bLast').disabled=App.idx===App.steps.length-1;
+  App.line=ex.line||[];
+  if(App.codeOpen) renderCode();
+}
+function go(i){ App.idx=Math.max(0,Math.min(App.steps.length-1,i)); show(); }
+function stop(){ App.playing=false; clearInterval(App.timer); const b=$('#bPlay'); b.textContent='▶ Play'; b.classList.remove('pause'); }
+function play(){
+  if(App.idx>=App.steps.length-1) go(0);
+  App.playing=true; const b=$('#bPlay'); b.textContent='⏸ Pause'; b.classList.add('pause');
+  App.timer=setInterval(()=>{ if(App.idx>=App.steps.length-1){ stop(); return; } go(App.idx+1); }, 1700/App.speed);
+}
+function setTab(t){
+  stop(); App.tab=t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  modules[t].init();
+}
+
+/* code drawer */
+function renderCode(){
+  const c=modules[App.tab].code(), hl=new Set(App.line);
+  $('#drTitle').textContent='📄 '+c.title; $('#drSub').textContent=c.sub;
+  const box=$('#codeBox');
+  box.innerHTML=c.lines.map((l,i)=>`<div class="ln${hl.has(i+1)?' hl':''}"><span class="no">${i+1}</span><span class="tx">${hlLine(l)||' '}</span></div>`).join('');
+  const first=box.querySelector('.hl');
+  if(first) box.scrollTop=first.offsetTop-box.clientHeight/2+20;
+}
+function toggleCode(open){
+  App.codeOpen=open; document.body.classList.toggle('code-open',open); $('#codeBtn').classList.toggle('on',open);
+  if(open) renderCode();
+}
+$('#codeBtn').onclick=()=>toggleCode(!App.codeOpen);
+$('#drClose').onclick=()=>toggleCode(false);
+$('#cpBtn').onclick=()=>{
+  const txt=modules[App.tab].code().lines.join('\n');
+  const done=()=>{ $('#cpBtn').textContent='✅ Copied'; setTimeout(()=>$('#cpBtn').textContent='📋 Copy',1400); };
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done)); else fallbackCopy(txt,done);
+};
+function fallbackCopy(t,cb){ const a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select(); try{document.execCommand('copy');}catch(e){} a.remove(); cb(); }
+$('#dlBtn').onclick=()=>{
+  const c=modules[App.tab].code(); const url=URL.createObjectURL(new Blob([c.lines.join('\n')],{type:'text/plain'}));
+  const a=document.createElement('a'); a.href=url; a.download=c.title; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+
+/* controls */
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+$('#bFirst').onclick=()=>{ stop(); go(0); };
+$('#bPrev').onclick=()=>{ stop(); go(App.idx-1); };
+$('#bNext').onclick=()=>{ stop(); go(App.idx+1); };
+$('#bLast').onclick=()=>{ stop(); go(App.steps.length-1); };
+$('#bPlay').onclick=()=>App.playing?stop():play();
+$('#speed').oninput=e=>{ App.speed=+e.target.value; $('#speedV').textContent=App.speed+'×'; if(App.playing){ stop(); play(); } };
+document.addEventListener('keydown',e=>{
+  if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+  if(e.key==='ArrowRight'){ stop(); go(App.idx+1); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'){ stop(); go(App.idx-1); e.preventDefault(); }
+  else if(e.key===' '){ App.playing?stop():play(); e.preventDefault(); }
+  else if(e.key==='Escape' && App.codeOpen) toggleCode(false);
+});
+
+setTab('overview');
+</script>
+</body>
+</html>
