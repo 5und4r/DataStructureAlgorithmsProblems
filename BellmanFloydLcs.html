@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithm Visual Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f2f4fb;--card:#fff;--ink:#1d2140;--muted:#5f6787;--line:#e3e7f2;
+  --bf1:#7c3aed;--bf2:#db2777;--fw1:#0891b2;--fw2:#059669;--lc1:#f59e0b;--lc2:#e11d48;
+  --mono:'JetBrains Mono',Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:'Poppins','Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55;overflow:hidden}
+button{font-family:inherit}
+.app{display:flex;flex-direction:column;height:100vh}
+
+/* ---------- Header ---------- */
+.top{flex:none;display:flex;align-items:center;gap:16px;padding:10px 20px;background:linear-gradient(100deg,#1b1546 0%,#3b1d7a 48%,#0e5a6b 100%);color:#fff;box-shadow:0 4px 18px rgba(20,10,60,.25);z-index:5}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{flex:none;width:42px;height:42px;border-radius:12px;background:conic-gradient(from 200deg,#a78bfa,#f472b6,#fbbf24,#34d399,#22d3ee,#a78bfa);display:grid;place-items:center;font-weight:800;font-size:15px;color:#1b1546;box-shadow:inset 0 0 0 3px rgba(255,255,255,.4)}
+.brand h1{margin:0;font-size:18px;line-height:1.2;font-weight:700;white-space:nowrap}
+.brand p{margin:0;font-size:12px;opacity:.75;white-space:nowrap}
+.tabs{margin-left:auto;display:flex;gap:6px;overflow-x:auto;padding:2px}
+.tab{border:0;cursor:pointer;font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.1);color:#e9e6ff;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:.2s}
+.tab:hover{background:rgba(255,255,255,.2)}
+.tab .dot{width:10px;height:10px;border-radius:50%}
+.tab.active{background:#fff;color:#1b1546;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+
+main{flex:1;min-height:0;position:relative}
+.section{display:none;height:100%;flex-direction:column}
+.section.active{display:flex}
+.section[data-a=ov]{--a1:#6d28d9;--a2:#0891b2;--soft:#eef0ff}
+.section[data-a=bf]{--a1:var(--bf1);--a2:var(--bf2);--soft:#f4edff}
+.section[data-a=fw]{--a1:var(--fw1);--a2:var(--fw2);--soft:#e3f7f4}
+.section[data-a=lcs]{--a1:var(--lc1);--a2:var(--lc2);--soft:#fff2e3}
+
+.subbar{flex:none;display:flex;align-items:center;gap:8px;padding:9px 20px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.subbar .name{font-weight:800;margin-right:8px;font-size:18px;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{border:1.5px solid var(--line);background:#fff;color:var(--muted);font-weight:600;font-size:14px;padding:7px 16px;border-radius:999px;cursor:pointer;transition:.2s}
+.sub:hover{border-color:var(--a1);color:var(--a1)}
+.sub.active{background:linear-gradient(90deg,var(--a1),var(--a2));color:#fff;border-color:transparent;box-shadow:0 6px 16px -6px var(--a1)}
+.subbar .meta{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:600;padding:4px 11px;border-radius:999px;background:var(--soft);color:var(--a1);white-space:nowrap}
+
+.pane{display:none;flex:1;min-height:0;overflow:auto}
+.pane.active{display:block}
+.pane.demo.active{display:flex;flex-direction:column;gap:12px;padding:12px 16px;overflow:hidden}
+.card{background:var(--card);border-radius:16px;box-shadow:0 4px 18px rgba(30,34,80,.06);border:1px solid var(--line)}
+
+/* ---------- Theory ---------- */
+.theory{max-width:1240px;margin:0 auto;padding:22px 22px 44px}
+.hero{border-radius:22px;padding:28px 32px;color:#fff;background:linear-gradient(120deg,var(--a1),var(--a2));position:relative;overflow:hidden;box-shadow:0 14px 34px -14px var(--a1)}
+.hero::before,.hero::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.12)}
+.hero::before{right:-70px;top:-80px;width:280px;height:280px}
+.hero::after{right:140px;bottom:-110px;width:200px;height:200px;background:rgba(255,255,255,.08)}
+.hero h2{margin:0 0 6px;font-size:31px;line-height:1.2;position:relative}
+.hero p{margin:0 0 14px;max-width:780px;opacity:.96;font-size:16px;position:relative}
+.tags{position:relative}
+.tags span{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);padding:4px 12px;border-radius:999px;font-size:13px;margin:0 6px 6px 0}
+.go{position:relative;margin-top:8px;border:0;background:#fff;color:var(--a1);font-weight:700;font-size:15px;padding:10px 20px;border-radius:999px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:.2s}
+.go:hover{transform:translateY(-2px)}
+.grid{display:grid;gap:16px;margin-top:18px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.tcard{padding:18px 20px}
+.tcard h3{margin:0 0 10px;font-size:17px;display:flex;align-items:center;gap:10px}
+.tcard p{margin:0 0 8px}
+.ic{flex:none;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--soft);font-size:19px}
+.formula{font-family:var(--mono);background:linear-gradient(135deg,#1b1546,#2b2166);color:#f1edff;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.85;overflow-x:auto;white-space:pre}
+.formula .y{color:#fbbf24}.formula .g{color:#6ee7b7}.formula .p{color:#f9a8d4}.formula .c{color:#94a3b8}
+ol.stepsl{counter-reset:s;list-style:none;padding:0;margin:0}
+ol.stepsl li{counter-increment:s;position:relative;padding:5px 0 9px 46px}
+ol.stepsl li::before{content:counter(s);position:absolute;left:0;top:3px;width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.apps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.app-c{border-radius:14px;padding:14px;background:var(--soft);transition:.2s}
+.app-c:hover{transform:translateY(-3px);box-shadow:0 8px 18px -10px var(--a1)}
+.app-c .e{font-size:28px;line-height:1}
+.app-c b{display:block;margin:6px 0 2px}
+.app-c p{margin:0;font-size:13px;color:var(--muted)}
+.cx{display:flex;gap:10px;flex-wrap:wrap}
+.cx div{flex:1;min-width:110px;border-radius:12px;padding:12px;text-align:center;background:var(--soft);font-size:13px;color:var(--muted)}
+.cx b{display:block;font-size:20px;color:var(--a1);font-family:var(--mono)}
+table.nice{border-collapse:collapse;width:100%;font-size:14px}
+table.nice th,table.nice td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center}
+table.nice thead th{background:var(--soft);color:var(--a1);font-weight:700}
+table.nice td:first-child,table.nice th:first-child{text-align:left;font-weight:600}
+.minimx{border-collapse:separate;border-spacing:4px;font-family:var(--mono);font-size:14px;margin:auto}
+.minimx td{width:42px;height:34px;text-align:center;border-radius:8px;background:var(--soft)}
+.minimx th{color:var(--muted);font-weight:600;font-size:12px}
+.minimx td.new{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-weight:700}
+.relax-demo{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0 4px;flex-wrap:wrap;font-weight:600}
+.rnode{width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;display:grid;place-items:center;text-align:center;line-height:1.1;font-size:13px}
+.rnode b{font-size:18px}
+.rarrow{font-family:var(--mono);color:#dc2626;font-size:14px}
+.note{border-left:4px solid var(--a1);background:var(--soft);border-radius:0 12px 12px 0;padding:10px 14px;font-size:14px;margin-top:8px}
+.seq{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.seq span{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:700;background:#eef0f6;font-family:var(--mono)}
+.seq span.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
+
+/* ---------- Overview ---------- */
+.ovcards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:20px}
+.ovc{border-radius:20px;padding:22px;color:#fff;position:relative;overflow:hidden;cursor:pointer;transition:.25s}
+.ovc:hover{transform:translateY(-5px)}
+.ovc.bf{background:linear-gradient(135deg,var(--bf1),var(--bf2));box-shadow:0 14px 30px -14px var(--bf1)}
+.ovc.fw{background:linear-gradient(135deg,var(--fw1),var(--fw2));box-shadow:0 14px 30px -14px var(--fw1)}
+.ovc.lcs{background:linear-gradient(135deg,var(--lc1),var(--lc2));box-shadow:0 14px 30px -14px var(--lc2)}
+.ovc .big{font-size:40px;line-height:1}
+.ovc h3{margin:10px 0 4px;font-size:21px}
+.ovc p{margin:0 0 12px;opacity:.95;font-size:14px}
+.ovc .open{display:inline-block;background:rgba(255,255,255,.22);padding:6px 14px;border-radius:999px;font-weight:600;font-size:13px}
+.ovc::after{content:"";position:absolute;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.12);right:-50px;top:-50px}
+.howto{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.howto div{background:var(--soft);border-radius:14px;padding:14px;font-size:14px}
+.howto b{display:block;font-size:15px;margin-bottom:2px}
+kbd{font-family:var(--mono);background:#fff;border:1px solid #cfd5e6;border-bottom-width:3px;border-radius:6px;padding:0 6px;font-size:12px}
+
+/* ---------- Demo layout ---------- */
+.viz{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:12px}
+.vizbox{display:flex;flex-direction:column;min-height:0;padding:10px 14px 10px}
+.vhead{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.vhead b{color:var(--ink);font-size:15px}
+.stage{flex:1;min-height:0;position:relative}
+.stage>svg{position:absolute;inset:0;width:100%;height:100%}
+.legend{flex:none;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);justify-content:center}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:22px;height:5px;border-radius:3px}
+.legend i.sq{width:14px;height:14px;border-radius:4px}
+.side{overflow:auto;padding:14px 16px;min-height:0}
+.label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:12px 0 6px}
+.label:first-child{margin-top:0}
+.sidehead{display:flex;align-items:center;gap:8px}
+select,.inrow input{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink);outline:none}
+select{flex:1}
+select:focus,.inrow input:focus{border-color:var(--a1)}
+.passchips{display:flex;gap:6px;flex-wrap:wrap}
+.passchips span{padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:#eef0f6;color:var(--muted);transition:.25s}
+.passchips span.done{background:var(--soft);color:var(--a1)}
+.passchips span.on{background:linear-gradient(90deg,var(--a1),var(--a2));color:#fff;transform:scale(1.07);box-shadow:0 4px 10px -4px var(--a1)}
+table.dt{width:100%;border-collapse:separate;border-spacing:0 5px;font-size:14px}
+table.dt th{font-size:12px;color:var(--muted);font-weight:600;text-align:left;padding:0 8px}
+table.dt td{background:#f6f7fc;padding:6px 8px}
+table.dt td:first-child{border-radius:10px 0 0 10px;font-weight:700;color:var(--a1)}
+table.dt td:last-child{border-radius:0 10px 10px 0;font-size:12.5px;color:var(--muted)}
+table.dt td.num{font-family:var(--mono);font-weight:700;font-size:15px}
+table.dt tr.hot td{background:#d1fae5;animation:pop .5s}
+table.dt tr.tgt td{background:#fff7e6}
+table.dt tr.src td{background:#e8f0ff}
+.edgechips{display:flex;flex-wrap:wrap;gap:6px}
+.ec{font-size:12.5px;font-weight:600;padding:4px 9px;border-radius:9px;background:#f1f3f9;color:#475069;font-family:var(--mono);border:1.5px solid transparent;transition:.2s}
+.ec i{font-style:normal;color:#64748b}
+.ec i.n{color:#dc2626}
+.ec.cur{border-color:#3b82f6;background:#e8f0ff;transform:scale(1.08)}
+.ec.good{border-color:#10b981;background:#d1fae5}
+.ec.warn{border-color:#f59e0b;background:#fff3d6}
+.ec.bad{border-color:#ef4444;background:#fee2e2}
+.ec.muted{border-color:#94a3b8;background:#eef1f6}
+
+/* matrix */
+.mwrap{display:flex;justify-content:center}
+table.mx{border-collapse:separate;border-spacing:5px;font-family:var(--mono)}
+table.mx th{font-size:13px;color:var(--muted);font-weight:700;width:30px}
+table.mx th.kc{color:#b45309}
+table.mx td{width:54px;height:44px;text-align:center;border-radius:10px;background:#f2f4fa;font-weight:700;font-size:17px;border:2px solid transparent;transition:background .25s}
+table.mx td.dg{color:#a3abc2}
+table.mx td.mk{background:#fff6dd}
+table.mx td.ch{background:#d6f5e8}
+table.mx td.s1{border-color:#3b82f6;background:#e5eeff}
+table.mx td.s2{border-color:#8b5cf6;background:#efe8ff}
+table.mx td.tg{border-color:#f97316;background:#fff0e3}
+table.mx td.up{background:#10b981;color:#fff;border-color:#059669;animation:pop .55s}
+table.mx td.fin{background:linear-gradient(135deg,#d1fae5,#cffafe)}
+.calc{background:#f6f7fc;border-radius:12px;padding:10px 12px;font-family:var(--mono);font-size:13.5px;line-height:1.8;border:1px dashed #cdd3e5}
+.calc .b{color:#2563eb;font-weight:700}.calc .p{color:#7c3aed;font-weight:700}.calc .o{color:#ea580c;font-weight:700}.calc .g{color:#059669;font-weight:700}.calc .r{color:#dc2626;font-weight:700}
+
+/* LCS */
+.lcs-stage{display:flex;align-items:center;justify-content:center;overflow:auto}
+table.lt{border-collapse:separate;border-spacing:3px;--cs:44px}
+table.lt td,table.lt th{width:var(--cs);height:var(--cs);text-align:center;border-radius:9px;position:relative;font-size:calc(var(--cs)*.4);padding:0}
+table.lt th{color:#fff;background:linear-gradient(135deg,var(--lc1),var(--lc2));font-weight:700}
+table.lt th small{position:absolute;right:3px;bottom:1px;font-size:calc(var(--cs)*.2);opacity:.85;font-weight:600}
+table.lt th.blank{background:none}
+table.lt th.e{background:#cbd2e3}
+table.lt th.hit{background:#10b981;transform:scale(1.08)}
+table.lt th.miss{background:#ef4444;transform:scale(1.08)}
+table.lt td{background:#f1f3f9;font-family:var(--mono);font-weight:700;color:#334155}
+table.lt td.empty{background:#f8f9fc;color:transparent}
+table.lt td.z{color:#9aa3bb}
+table.lt td .ar{position:absolute;left:3px;top:0;font-size:calc(var(--cs)*.27);color:#94a3b8;font-weight:600}
+table.lt td.cur{background:#fff;outline:3px solid #3b82f6;color:#1d4ed8;animation:pop .45s}
+table.lt td.dep{background:#e0eaff;outline:2px dashed #3b82f6}
+table.lt td.path{background:#fde7ef;color:#be123c}
+table.lt td.take{background:linear-gradient(135deg,var(--lc1),var(--lc2));color:#fff}
+table.lt td.take .ar{color:#fff}
+table.lt td.cur.match{outline-color:#10b981;color:#047857}
+.inrow{display:grid;grid-template-columns:1fr 1fr auto;gap:6px}
+.inrow input{min-width:0;text-transform:uppercase;font-family:var(--mono);font-weight:600}
+.btn{border:0;cursor:pointer;font-weight:700;color:#fff;padding:7px 14px;border-radius:10px;background:linear-gradient(90deg,var(--a1),var(--a2))}
+.tiles{display:flex;gap:5px;flex-wrap:wrap}
+.tiles span{width:34px;height:38px;border-radius:9px;display:grid;place-items:center;font-weight:700;background:#f1f3f9;font-family:var(--mono);position:relative;font-size:16px;transition:.2s}
+.tiles span small{position:absolute;bottom:-1px;right:3px;font-size:9px;color:#94a3b8}
+.tiles span.now{background:#dbeafe;outline:2px solid #3b82f6}
+.tiles span.hit{background:#10b981;color:#fff;outline:none}
+.tiles span.miss{background:#fee2e2;outline:2px solid #ef4444}
+.tiles span.in{background:linear-gradient(135deg,var(--lc1),var(--lc2));color:#fff}
+.tiles span.in small{color:#fff}
+.tiles.result span{background:linear-gradient(135deg,var(--lc1),var(--lc2));color:#fff;animation:pop .45s}
+.tiles.result em{font-size:13px;color:var(--muted)}
+
+/* ---------- Explanation strip ---------- */
+.explain{flex:none;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) 250px;gap:12px;height:214px}
+.ex-text{padding:12px 18px;display:flex;flex-direction:column;min-height:0;border-left:6px solid var(--a1)}
+.ex-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ex-tag{font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;background:linear-gradient(90deg,var(--a1),var(--a2));color:#fff}
+.ex-count{font-size:12px;font-weight:600;color:var(--muted)}
+.ex-text h3{margin:6px 0 4px;font-size:18px;line-height:1.3}
+.ex-body{font-size:14.5px;overflow:auto;min-height:0;color:#333a5c}
+.ex-body b{color:var(--ink)}
+.ex-body code{font-family:var(--mono);background:var(--soft);padding:0 5px;border-radius:5px;font-size:13px}
+.ex-code{background:linear-gradient(160deg,#151b33,#1f1747);border-radius:16px;padding:10px 6px 10px 0;overflow:auto;position:relative;min-height:0}
+.ex-code .h{position:sticky;top:-10px;float:right;margin:-4px 10px 0 0;font-size:10.5px;color:#8b93b8;letter-spacing:.06em;text-transform:uppercase;background:#1a1940;padding:2px 6px;border-radius:6px}
+.pl{font-family:var(--mono);font-size:12.3px;line-height:1.6;color:#aab3d6;padding:0 10px 0 12px;white-space:pre;border-left:4px solid transparent;transition:.2s}
+.pl .n{display:inline-block;width:18px;color:#56608a;font-size:11px}
+.pl.on{background:linear-gradient(90deg,rgba(251,191,36,.25),rgba(251,191,36,0));border-left-color:#fbbf24;color:#fff;font-weight:600}
+.ex-ctrl{padding:12px 14px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.btnrow{display:flex;gap:6px;justify-content:space-between}
+.cb{flex:1;height:40px;border:0;border-radius:11px;background:#f0f2f9;cursor:pointer;display:grid;place-items:center;transition:.15s;color:#3d4566}
+.cb:hover{background:var(--soft);color:var(--a1)}
+.cb:disabled{opacity:.35;cursor:default}
+.cb svg{width:18px;height:18px;fill:currentColor}
+.cb.play{flex:1.5;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;box-shadow:0 6px 14px -6px var(--a1)}
+.cb.play:hover{color:#fff;filter:brightness(1.08)}
+input[type=range]{width:100%;accent-color:var(--a1);cursor:pointer}
+.speed{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.kbd{font-size:11.5px;color:var(--muted);text-align:center}
+
+/* ---------- Code pane ---------- */
+.codewrap{max-width:1300px;margin:0 auto;padding:18px 20px 40px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,1fr);gap:16px;align-items:start}
+.codebox{background:#12172b;border-radius:18px;overflow:hidden;box-shadow:0 16px 40px -18px rgba(10,10,40,.6)}
+.codebar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#0c1122;color:#c7cdee;font-size:13px}
+.codebar .dots{display:flex;gap:6px;margin-right:6px}
+.codebar .dots i{width:11px;height:11px;border-radius:50%;display:block}
+.codebar .fn{font-family:var(--mono);font-weight:600}
+.codebar button{margin-left:auto;border:0;border-radius:8px;padding:6px 12px;font-weight:600;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.1);color:#fff}
+.codebar button+button{margin-left:6px}
+.codebar button.pri{background:linear-gradient(90deg,var(--a1),var(--a2))}
+.code{padding:12px 0;overflow-x:auto;font-family:var(--mono);font-size:13.3px;line-height:1.65}
+.cl{display:flex;white-space:pre}
+.cl:hover{background:rgba(255,255,255,.04)}
+.ln{flex:none;width:44px;text-align:right;padding-right:14px;color:#4b5478;user-select:none}
+.lc{color:#e4e8ff;padding-right:16px}
+.k{color:#f472b6}.t{color:#a78bfa}.f{color:#22d3ee}.s{color:#fde68a}.c{color:#7c88ad;font-style:italic}.n{color:#fb923c}.pp{color:#34d399}
+.notes{padding:18px 20px}
+.notes h3{margin:0 0 10px;font-size:17px}
+.notes ul{margin:0;padding-left:18px}
+.notes li{margin-bottom:7px;font-size:14px}
+.out{font-family:var(--mono);background:#0f1426;color:#a7f3d0;border-radius:12px;padding:12px 14px;font-size:12.8px;white-space:pre;overflow-x:auto;line-height:1.6}
+.compile{font-family:var(--mono);font-size:12.5px;background:var(--soft);color:var(--a1);padding:8px 10px;border-radius:10px;overflow-x:auto;white-space:pre}
+
+/* ---------- SVG ---------- */
+.nl{font:700 19px Poppins,sans-serif;fill:#fff;pointer-events:none}
+.wt{font:700 14px Poppins,sans-serif;fill:#334155}
+.wt.neg{fill:#dc2626}
+.wt.w{fill:#fff}
+.bdg{font:700 14px 'JetBrains Mono',monospace;fill:#1d2140}
+.bdg.w{fill:#fff}
+.tagt{font:800 13px Poppins,sans-serif;fill:#fff}
+.flow{stroke-dasharray:12 7;animation:flow .7s linear infinite}
+.ring{animation:ring 1.2s ease-in-out infinite}
+.popg{animation:pop .5s;transform-box:fill-box;transform-origin:center}
+@keyframes flow{to{stroke-dashoffset:-19}}
+@keyframes ring{50%{opacity:.35}}
+@keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* ---------- Responsive ---------- */
+@media (max-height:760px){.explain{height:190px}.ex-text h3{font-size:16px}.ex-body{font-size:13.5px}.pl{font-size:11.5px;line-height:1.5}}
+@media (max-width:1100px){.apps{grid-template-columns:repeat(2,minmax(0,1fr))}.howto{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1000px){
+  body{overflow:auto}.app{height:auto;min-height:100vh}
+  .section{height:auto}.pane{overflow:visible}
+  .pane.demo.active{overflow:visible}
+  .viz{grid-template-columns:1fr}
+  .vizbox{height:62vh}
+  .explain{grid-template-columns:1fr;height:auto}
+  .ex-code{max-height:230px}
+  .g2,.g3,.ovcards,.codewrap{grid-template-columns:1fr}
+  .brand p{display:none}
+}
+@media (max-width:640px){.apps,.howto{grid-template-columns:1fr}.hero h2{font-size:24px}.top{flex-wrap:wrap}.tabs{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">AV</div>
+    <div><h1>Algorithm Visual Lab</h1><p>Shortest paths &amp; dynamic programming — learn by watching</p></div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-sec="ov"><span class="dot" style="background:linear-gradient(135deg,#a78bfa,#22d3ee)"></span>Overview</button>
+    <button class="tab" data-sec="bf"><span class="dot" style="background:linear-gradient(135deg,#7c3aed,#db2777)"></span>Bellman–Ford</button>
+    <button class="tab" data-sec="fw"><span class="dot" style="background:linear-gradient(135deg,#0891b2,#059669)"></span>Floyd–Warshall</button>
+    <button class="tab" data-sec="lcs"><span class="dot" style="background:linear-gradient(135deg,#f59e0b,#e11d48)"></span>LCS</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ======================= OVERVIEW ======================= -->
+<section class="section active" id="sec-ov" data-a="ov">
+ <div class="pane active">
+  <div class="theory">
+    <div class="hero">
+      <h2>Three classic algorithms, one visual lab</h2>
+      <p>Each algorithm has three views: <b>Theory</b> (the idea, the steps, real-world uses), a <b>Visual Demo</b> that animates every single step with the explanation right underneath, and the complete <b>C++ program</b> you can copy or download.</p>
+      <div class="tags"><span>🧭 Shortest paths</span><span>🧩 Dynamic programming</span><span>🎬 Step-by-step animation</span><span>💻 Ready-to-run C++</span></div>
+    </div>
+
+    <div class="ovcards">
+      <div class="ovc bf" data-open="bf"><div class="big">🧭</div><h3>Bellman–Ford</h3><p>Shortest distance from <b>one</b> source to every vertex — works even with negative edge weights, and catches negative cycles.</p><span class="open">Open →</span></div>
+      <div class="ovc fw" data-open="fw"><div class="big">🗺️</div><h3>Floyd–Warshall</h3><p>Shortest distance between <b>every pair</b> of vertices by trying each vertex as a stop-over, using a simple matrix.</p><span class="open">Open →</span></div>
+      <div class="ovc lcs" data-open="lcs"><div class="big">🧬</div><h3>Longest Common Subsequence</h3><p>The longest sequence of characters shared by two strings in the same order — the engine behind <i>diff</i> and DNA matching.</p><span class="open">Open →</span></div>
+    </div>
+
+    <div class="card tcard" style="margin-top:18px">
+      <h3><span class="ic">⚖️</span>At a glance</h3>
+      <div style="overflow-x:auto">
+      <table class="nice">
+        <thead><tr><th></th><th>Bellman–Ford</th><th>Floyd–Warshall</th><th>LCS</th></tr></thead>
+        <tbody>
+          <tr><td>Problem</td><td>Single-source shortest paths</td><td>All-pairs shortest paths</td><td>Longest common subsequence of two sequences</td></tr>
+          <tr><td>Technique</td><td>Repeated edge relaxation</td><td>DP over intermediate vertices</td><td>DP over prefixes (2-D table)</td></tr>
+          <tr><td>Negative weights</td><td>✅ yes, detects negative cycles</td><td>✅ yes, detects via diagonal</td><td>—</td></tr>
+          <tr><td>Time</td><td><b>O(V·E)</b></td><td><b>O(V³)</b></td><td><b>O(m·n)</b></td></tr>
+          <tr><td>Space</td><td>O(V)</td><td>O(V²)</td><td>O(m·n)</td></tr>
+          <tr><td>Famous use</td><td>RIP routing, currency arbitrage</td><td>Distance tables, transitive closure</td><td>git diff, DNA alignment, plagiarism checks</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="card tcard" style="margin-top:18px">
+      <h3><span class="ic">🎮</span>How to use the demos</h3>
+      <div class="howto">
+        <div><b>1 · Read the Theory</b>Get the big idea, the rule and an example first.</div>
+        <div><b>2 · Play the Demo</b>Press ▶ to animate, or step with <kbd>←</kbd> <kbd>→</kbd>. <kbd>Space</kbd> plays/pauses.</div>
+        <div><b>3 · Watch the bottom strip</b>It explains the current step and lights up the matching pseudocode line.</div>
+        <div><b>4 · Study the code</b>Copy or download the C++ program and run it.</div>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ======================= BELLMAN-FORD ======================= -->
+<section class="section" id="sec-bf" data-a="bf">
+  <div class="subbar">
+    <span class="name">Bellman–Ford</span>
+    <button class="sub active" data-pane="theory">📘 Theory</button>
+    <button class="sub" data-pane="demo">🎬 Visual Demo</button>
+    <button class="sub" data-pane="code">💻 C++ Code</button>
+    <div class="meta"><span class="chip">Single-source</span><span class="chip">Negative weights OK</span><span class="chip">O(V·E)</span></div>
+  </div>
+
+  <div class="pane theory active" data-pane="theory">
+   <div class="theory">
+    <div class="hero">
+      <h2>Bellman–Ford Algorithm 🧭</h2>
+      <p>Finds the shortest distance from <b>one source vertex</b> to <b>every other vertex</b> in a weighted directed graph — even when some edges have <b>negative</b> weights — and tells you if a <b>negative cycle</b> makes "shortest" meaningless.</p>
+      <div class="tags"><span>Single-source shortest paths</span><span>Negative edges allowed</span><span>Negative-cycle detection</span><span>Dynamic programming flavour</span></div>
+      <button class="go" data-goto="demo">▶ Watch it step-by-step</button>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">💡</span>The big idea</h3>
+        <p>Imagine you stand in city <b>S</b> and want the cheapest fare to every other city. Some routes even give you <b>cashback</b> (negative cost), so greedy shortcuts don't work.</p>
+        <p>Bellman–Ford is <b>patient</b>: it checks <i>every</i> road, again and again. In each round, good news travels <b>one more road</b> away from S. A shortest route never needs more than <b>V − 1</b> roads, so <b>V − 1 rounds are always enough</b>.</p>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🔧</span>The key move: relaxation</h3>
+        <div class="formula"><span class="y">if</span> d[u] + w(u,v) &lt; d[v] :
+    d[v] ← d[u] + w(u,v)   <span class="c">// found a cheaper way</span>
+    π[v] ← u               <span class="c">// remember we came from u</span></div>
+        <div class="relax-demo">
+          <div class="rnode"><div>u<br><b>3</b></div></div>
+          <div class="rarrow">── w = −2 ──▶</div>
+          <div class="rnode"><div>v<br><b>5 → 1</b></div></div>
+        </div>
+        <p style="text-align:center;font-size:13px;color:var(--muted);margin:0">3 + (−2) = 1 &lt; 5, so v's distance improves from 5 to 1.</p>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">🪜</span>Step by step</h3>
+        <ol class="stepsl">
+          <li><b>Initialise:</b> d[source] = 0, every other d[v] = ∞, parents π empty.</li>
+          <li><b>Repeat V − 1 times:</b> go through <i>all</i> edges (u, v, w) and relax each one.</li>
+          <li><b>Early stop (optional):</b> if a full pass changes nothing, the answer is already final.</li>
+          <li><b>Check:</b> scan all edges once more. If any edge can still be relaxed → <b>negative cycle</b>.</li>
+          <li><b>Read the answer:</b> d[v] is the shortest distance; follow π[v] backwards to get the path.</li>
+        </ol>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🤔</span>Why V − 1 passes? Why the extra check?</h3>
+        <p>A shortest path visits each vertex at most once, so it has at most <b>V − 1 edges</b>. After pass <i>k</i>, every shortest path that uses ≤ <i>k</i> edges is correct. So after V − 1 passes, all are correct.</p>
+        <p>If a cycle has a <b>negative total weight</b> (e.g. T → X → T = 5 + (−8) = −3), you could loop forever and the cost keeps falling. That's why one extra pass that still finds an improvement proves a negative cycle exists.</p>
+        <div class="cx"><div><b>O(V·E)</b>Time</div><div><b>O(V)</b>Space</div><div><b>O(E)</b>Best case (early stop)</div></div>
+      </div>
+    </div>
+
+    <div class="card tcard" style="margin-top:16px">
+      <h3><span class="ic">🌍</span>Where is it used?</h3>
+      <div class="apps">
+        <div class="app-c"><div class="e">📡</div><b>Network routing (RIP)</b><p>Distance-vector routers share tables with neighbours — that is Bellman–Ford running across the internet.</p></div>
+        <div class="app-c"><div class="e">💱</div><b>Currency arbitrage</b><p>Use −log(exchange rate) as weights. A negative cycle = a sequence of trades that makes money.</p></div>
+        <div class="app-c"><div class="e">🗓️</div><b>Scheduling constraints</b><p>Systems like "task B starts ≤ 3 h after A" become graphs; Bellman–Ford finds a valid timetable.</p></div>
+        <div class="app-c"><div class="e">⚡</div><b>Johnson's algorithm</b><p>Uses Bellman–Ford once to re-weight edges so Dijkstra can run on graphs with negative edges.</p></div>
+        <div class="app-c"><div class="e">🎮</div><b>Games &amp; economies</b><p>Paths with rewards (negative costs), and detecting infinite-reward loops in game design.</p></div>
+        <div class="app-c"><div class="e">🚚</div><b>Logistics with rebates</b><p>Delivery routes where some legs earn credits or subsidies, giving negative costs.</p></div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">📝</span>Worked example (the demo graph)</h3>
+        <p style="font-size:14px;color:var(--muted)">Source S. Edges: S→T 6, S→Y 7, T→X 5, T→Y 8, T→Z −4, X→T −2, Y→X −3, Y→Z 9, Z→X 7, Z→S 2.</p>
+        <table class="nice">
+          <thead><tr><th>After</th><th>S</th><th>T</th><th>X</th><th>Y</th><th>Z</th></tr></thead>
+          <tbody>
+            <tr><td>Start</td><td>0</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td></tr>
+            <tr><td>Pass 1</td><td>0</td><td>6</td><td>∞</td><td>7</td><td>∞</td></tr>
+            <tr><td>Pass 2</td><td>0</td><td>6</td><td>4</td><td>7</td><td>2</td></tr>
+            <tr><td>Pass 3</td><td>0</td><td><b>2</b></td><td>4</td><td>7</td><td>2</td></tr>
+            <tr><td>Pass 4</td><td>0</td><td>2</td><td>4</td><td>7</td><td><b>−2</b></td></tr>
+          </tbody>
+        </table>
+        <div class="note">Final path to Z: S → Y → X → T → Z = 7 − 3 − 2 − 4 = <b>−2</b>.</div>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🆚</span>Bellman–Ford vs Dijkstra</h3>
+        <table class="nice">
+          <thead><tr><th></th><th>Bellman–Ford</th><th>Dijkstra</th></tr></thead>
+          <tbody>
+            <tr><td>Negative edges</td><td>✅ Yes</td><td>❌ No</td></tr>
+            <tr><td>Negative cycles</td><td>✅ Detects</td><td>❌ No</td></tr>
+            <tr><td>Time</td><td>O(V·E)</td><td>O((V+E) log V)</td></tr>
+            <tr><td>Strategy</td><td>Relax all edges, many times</td><td>Greedy: closest vertex first</td></tr>
+            <tr><td>Distributed?</td><td>Easy (routers)</td><td>Needs global view</td></tr>
+          </tbody>
+        </table>
+        <div class="note">Rule of thumb: use Dijkstra when all weights are ≥ 0; use Bellman–Ford when negative weights may appear.</div>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <div class="pane demo" data-pane="demo">
+    <div class="viz">
+      <div class="vizbox card">
+        <div class="vhead"><b>Directed weighted graph</b><span>Source = S · red weights are negative · badge = current d[v]</span></div>
+        <div class="stage"><svg id="bf-svg" viewBox="0 0 560 400" preserveAspectRatio="xMidYMid meet"></svg></div>
+        <div class="legend">
+          <span><i style="background:#3b82f6"></i>Edge being checked</span>
+          <span><i style="background:#10b981"></i>Relaxed (improved)</span>
+          <span><i style="background:#f59e0b"></i>No improvement</span>
+          <span><i style="background:#94a3b8"></i>Skipped (u = ∞)</span>
+          <span><i style="background:#7c3aed"></i>Shortest-path tree</span>
+          <span><i style="background:#ef4444"></i>Negative cycle</span>
+        </div>
+      </div>
+      <div class="side card">
+        <div class="label">Example graph</div>
+        <div class="sidehead"><select id="bf-preset"><option value="classic">Classic graph (no negative cycle)</option><option value="neg">Graph with a negative cycle (X→T = −8)</option></select></div>
+        <div class="label">Progress</div>
+        <div class="passchips" id="bf-passes"></div>
+        <div class="label">Distance table d[v] and parent π[v]</div>
+        <table class="dt"><thead><tr><th>v</th><th>d[v]</th><th>π[v]</th><th>Path from S</th></tr></thead><tbody id="bf-tbody"></tbody></table>
+        <div class="label">Edges — relaxed in this order every pass</div>
+        <div class="edgechips" id="bf-edges"></div>
+      </div>
+    </div>
+    <div class="explain" data-px="bf"></div>
+  </div>
+
+  <div class="pane" data-pane="code"><div class="codewrap" data-px="bf"></div></div>
+</section>
+
+<!-- ======================= FLOYD-WARSHALL ======================= -->
+<section class="section" id="sec-fw" data-a="fw">
+  <div class="subbar">
+    <span class="name">Floyd–Warshall</span>
+    <button class="sub active" data-pane="theory">📘 Theory</button>
+    <button class="sub" data-pane="demo">🎬 Visual Demo</button>
+    <button class="sub" data-pane="code">💻 C++ Code</button>
+    <div class="meta"><span class="chip">All-pairs</span><span class="chip">Dynamic programming</span><span class="chip">O(V³)</span></div>
+  </div>
+
+  <div class="pane theory active" data-pane="theory">
+   <div class="theory">
+    <div class="hero">
+      <h2>Floyd–Warshall Algorithm 🗺️</h2>
+      <p>Computes the shortest distance between <b>every pair</b> of vertices at once. The whole algorithm is three nested loops over a distance matrix — short to code and easy to picture.</p>
+      <div class="tags"><span>All-pairs shortest paths</span><span>Dynamic programming</span><span>Works with negative edges</span><span>Matrix based</span></div>
+      <button class="go" data-goto="demo">▶ Watch it step-by-step</button>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">💡</span>The big idea</h3>
+        <p>Think of an airline building a fare chart between all airports. First it only knows <b>direct flights</b>. Then it asks airport 1: <i>"Would any trip i → j be cheaper with a stop-over at you?"</i> Then airport 2, airport 3, …</p>
+        <p>After every airport has been tried as a stop-over, every entry in the chart is the <b>cheapest possible</b> trip. Each round only needs the table from the previous round — classic <b>dynamic programming</b>.</p>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🧮</span>The recurrence</h3>
+        <div class="formula">D<sup>(k)</sup>[i][j] = <span class="y">min</span>( D<sup>(k-1)</sup>[i][j] ,
+                    D<sup>(k-1)</sup>[i][k] + D<sup>(k-1)</sup>[k][j] )
+<span class="c">// best i→j using only stops {1..k}</span>
+<span class="c">// either skip k, or go i → k → j</span></div>
+        <div class="note">D<sup>(0)</sup> is the adjacency matrix: 0 on the diagonal, the edge weight if an edge exists, ∞ otherwise.</div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">🪜</span>Step by step</h3>
+        <ol class="stepsl">
+          <li><b>Build D:</b> D[i][i] = 0, D[i][j] = w(i, j) if an edge exists, otherwise ∞.</li>
+          <li><b>For k = 1 … n</b> (the allowed stop-over vertex):</li>
+          <li><b>For every pair (i, j):</b> if D[i][k] + D[k][j] &lt; D[i][j], replace D[i][j] with it.</li>
+          <li><b>Negative cycle?</b> If any D[i][i] &lt; 0 after the loops, a negative cycle exists.</li>
+          <li><b>Paths:</b> keep a <code>next[i][j]</code> table to rebuild the actual route.</li>
+        </ol>
+        <div class="note">⚠ The <b>k loop must be the outermost</b>. Rows and columns of k never change during round k, so one matrix can be updated in place.</div>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">📝</span>Worked example (the demo graph)</h3>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:10px">Edges: 1→2 (3), 1→4 (7), 2→1 (8), 2→3 (2), 3→1 (5), 3→4 (1), 4→1 (2).</p>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:center">
+          <div><div style="text-align:center;font-weight:700;margin-bottom:4px">D<sup>(0)</sup> (direct)</div>
+            <table class="minimx"><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+            <tr><th>1</th><td>0</td><td>3</td><td>∞</td><td>7</td></tr>
+            <tr><th>2</th><td>8</td><td>0</td><td>2</td><td>∞</td></tr>
+            <tr><th>3</th><td>5</td><td>∞</td><td>0</td><td>1</td></tr>
+            <tr><th>4</th><td>2</td><td>∞</td><td>∞</td><td>0</td></tr></table></div>
+          <div style="font-size:26px;color:var(--a1)">➜</div>
+          <div><div style="text-align:center;font-weight:700;margin-bottom:4px">D<sup>(4)</sup> (final)</div>
+            <table class="minimx"><tr><th></th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+            <tr><th>1</th><td>0</td><td>3</td><td class="new">5</td><td class="new">6</td></tr>
+            <tr><th>2</th><td class="new">5</td><td>0</td><td>2</td><td class="new">3</td></tr>
+            <tr><th>3</th><td class="new">3</td><td class="new">6</td><td>0</td><td>1</td></tr>
+            <tr><th>4</th><td>2</td><td class="new">5</td><td class="new">7</td><td>0</td></tr></table></div>
+        </div>
+        <div class="note">Example: 4 → 3 costs <b>7</b> via 4 → 1 → 2 → 3 (2 + 3 + 2).</div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">⏱️</span>Complexity</h3>
+        <div class="cx"><div><b>O(V³)</b>Time</div><div><b>O(V²)</b>Space</div><div><b>3 loops</b>Code size</div></div>
+        <p style="margin-top:12px">Best for <b>dense</b> or <b>small/medium</b> graphs (a few hundred vertices). For sparse graphs, running Dijkstra from every vertex can be faster.</p>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🆚</span>Compared with Bellman–Ford</h3>
+        <p>Bellman–Ford answers "from <b>one</b> source". Floyd–Warshall answers "from <b>every</b> source" in one go. Running Bellman–Ford V times would cost O(V²·E), which is O(V⁴) on dense graphs — Floyd–Warshall's O(V³) is better.</p>
+      </div>
+    </div>
+
+    <div class="card tcard" style="margin-top:16px">
+      <h3><span class="ic">🌍</span>Where is it used?</h3>
+      <div class="apps">
+        <div class="app-c"><div class="e">🚗</div><b>City distance tables</b><p>The "distance between cities" chart in road atlases and logistics planners.</p></div>
+        <div class="app-c"><div class="e">🔗</div><b>Transitive closure</b><p>Warshall's version answers "can i reach j at all?" — used in databases and compilers.</p></div>
+        <div class="app-c"><div class="e">🏥</div><b>Facility location</b><p>Find the graph centre: the best spot for a hospital, fire station or warehouse.</p></div>
+        <div class="app-c"><div class="e">👥</div><b>Social networks</b><p>Degrees of separation and closeness between all pairs of people.</p></div>
+        <div class="app-c"><div class="e">🌐</div><b>Network analysis</b><p>Network diameter, latency tables and routing in small networks.</p></div>
+        <div class="app-c"><div class="e">💱</div><b>Arbitrage detection</b><p>A negative value on the diagonal reveals a profitable trading loop.</p></div>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <div class="pane demo" data-pane="demo">
+    <div class="viz">
+      <div class="vizbox card">
+        <div class="vhead"><b>Directed weighted graph</b><span>Gold ring = stop-over k · dashed arrows = routes being compared</span></div>
+        <div class="stage"><svg id="fw-svg" viewBox="0 0 520 390" preserveAspectRatio="xMidYMid meet"></svg></div>
+        <div class="legend">
+          <span><i style="background:#3b82f6"></i>i → k  (D[i][k])</span>
+          <span><i style="background:#8b5cf6"></i>k → j  (D[k][j])</span>
+          <span><i style="background:#f97316"></i>Current best i → j</span>
+          <span><i style="background:#10b981"></i>Improved!</span>
+          <span><i class="sq" style="background:#f59e0b"></i>Stop-over k</span>
+        </div>
+      </div>
+      <div class="side card">
+        <div class="label">Round (stop-over vertex k)</div>
+        <div class="passchips" id="fw-ks"></div>
+        <div class="label" id="fw-mlabel">Distance matrix</div>
+        <div class="mwrap"><table class="mx" id="fw-mx"></table></div>
+        <div class="label">Calculation</div>
+        <div class="calc" id="fw-calc"></div>
+        <div class="legend" style="justify-content:flex-start;margin-top:10px">
+          <span><i class="sq" style="background:#e5eeff;border:2px solid #3b82f6"></i>D[i][k]</span>
+          <span><i class="sq" style="background:#efe8ff;border:2px solid #8b5cf6"></i>D[k][j]</span>
+          <span><i class="sq" style="background:#fff0e3;border:2px solid #f97316"></i>D[i][j]</span>
+          <span><i class="sq" style="background:#fff6dd"></i>Row/col k</span>
+          <span><i class="sq" style="background:#d6f5e8"></i>Changed this round</span>
+        </div>
+      </div>
+    </div>
+    <div class="explain" data-px="fw"></div>
+  </div>
+
+  <div class="pane" data-pane="code"><div class="codewrap" data-px="fw"></div></div>
+</section>
+
+<!-- ======================= LCS ======================= -->
+<section class="section" id="sec-lcs" data-a="lcs">
+  <div class="subbar">
+    <span class="name">Longest Common Subsequence</span>
+    <button class="sub active" data-pane="theory">📘 Theory</button>
+    <button class="sub" data-pane="demo">🎬 Visual Demo</button>
+    <button class="sub" data-pane="code">💻 C++ Code</button>
+    <div class="meta"><span class="chip">Dynamic programming</span><span class="chip">2-D table</span><span class="chip">O(m·n)</span></div>
+  </div>
+
+  <div class="pane theory active" data-pane="theory">
+   <div class="theory">
+    <div class="hero">
+      <h2>Longest Common Subsequence 🧬</h2>
+      <p>Given two sequences, find the <b>longest sequence of characters that appears in both, in the same order</b> — the characters do not have to be next to each other.</p>
+      <div class="tags"><span>Dynamic programming</span><span>Optimal substructure</span><span>Overlapping subproblems</span><span>Traceback</span></div>
+      <button class="go" data-goto="demo">▶ Watch it step-by-step</button>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">🔤</span>Subsequence vs substring</h3>
+        <p>From <b>ABCDE</b>, keep the order but you may <b>skip</b> letters:</p>
+        <div class="seq"><span class="on">A</span><span>B</span><span class="on">C</span><span>D</span><span class="on">E</span></div>
+        <p><b>ACE</b> is a <b>subsequence</b> (gaps allowed). <b>BCD</b> is a <b>substring</b> (must be contiguous). Every substring is a subsequence, but not the other way round.</p>
+        <div class="note">For X = <b>ABCBDAB</b> and Y = <b>BDCABA</b>, one LCS is <b>BCBA</b> (length 4). BDAB and BCAB are also valid — an LCS need not be unique.</div>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">💡</span>The big idea</h3>
+        <p>Look at the <b>last characters</b> of both strings:</p>
+        <p>✅ <b>They match</b> → that character is in the LCS. Remove it from both and solve the smaller problem.</p>
+        <p>❌ <b>They differ</b> → at least one of them is not in the LCS. Try dropping the last char of X, then of Y, and keep the better answer.</p>
+        <p>Brute force checks all 2<sup>m</sup> subsequences. DP stores each sub-answer once in a table, so the work is just <b>m × n</b>.</p>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">🧮</span>The recurrence</h3>
+        <div class="formula">L[i][j] = length of LCS of X[1..i] and Y[1..j]
+
+L[i][j] = <span class="g">0</span>                              <span class="c">if i = 0 or j = 0</span>
+        = L[i-1][j-1] + <span class="g">1</span>   <span class="y">↖</span>          <span class="c">if X[i] = Y[j]</span>
+        = <span class="p">max</span>(L[i-1][j], L[i][j-1]) <span class="y">↑ ←</span>  <span class="c">otherwise</span></div>
+        <div class="note">Each cell needs only three neighbours: top-left ↖, top ↑ and left ←. So we fill the table row by row.</div>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🪜</span>Step by step</h3>
+        <ol class="stepsl">
+          <li><b>Make a table</b> of size (m+1) × (n+1). Row 0 and column 0 are all 0.</li>
+          <li><b>Fill row by row</b> using the rule: match → diagonal + 1; else max(top, left).</li>
+          <li><b>Read the length</b> in the bottom-right cell L[m][n].</li>
+          <li><b>Trace back</b> from L[m][n]: on ↖ take the character and go diagonally; otherwise move ↑ or ←.</li>
+          <li><b>Reverse</b> the collected characters — that is the LCS.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card tcard">
+        <h3><span class="ic">⏱️</span>Complexity</h3>
+        <div class="cx"><div><b>O(m·n)</b>Time</div><div><b>O(m·n)</b>Space (with traceback)</div><div><b>O(min(m,n))</b>Space (length only)</div></div>
+        <p style="margin-top:12px">If you only need the <i>length</i>, keep just two rows of the table.</p>
+      </div>
+      <div class="card tcard">
+        <h3><span class="ic">🧩</span>Why is it DP?</h3>
+        <p><b>Optimal substructure:</b> the LCS of two strings is built from the LCS of their prefixes.</p>
+        <p><b>Overlapping subproblems:</b> the same prefix pair (i, j) is needed again and again — the table computes each once.</p>
+      </div>
+    </div>
+
+    <div class="card tcard" style="margin-top:16px">
+      <h3><span class="ic">🌍</span>Where is it used?</h3>
+      <div class="apps">
+        <div class="app-c"><div class="e">📄</div><b>diff &amp; git</b><p>Shows which lines changed between two file versions — the unchanged lines are the LCS.</p></div>
+        <div class="app-c"><div class="e">🧬</div><b>Bioinformatics</b><p>Compares DNA and protein sequences to measure similarity between genes and species.</p></div>
+        <div class="app-c"><div class="e">🕵️</div><b>Plagiarism detection</b><p>Long common subsequences of words or code tokens signal copied work.</p></div>
+        <div class="app-c"><div class="e">✍️</div><b>Spell check</b><p>Suggests the dictionary word sharing the most structure with the typo.</p></div>
+        <div class="app-c"><div class="e">🔄</div><b>File sync &amp; merge</b><p>Sync tools and merge editors align two versions before merging.</p></div>
+        <div class="app-c"><div class="e">🎙️</div><b>Speech &amp; handwriting</b><p>Matches a recognised sequence against expected words.</p></div>
+      </div>
+    </div>
+   </div>
+  </div>
+
+  <div class="pane demo" data-pane="demo">
+    <div class="viz">
+      <div class="vizbox card">
+        <div class="vhead"><b>DP table L[i][j]</b><span>Rows = X · Columns = Y · small arrow shows where each value came from</span></div>
+        <div class="stage lcs-stage" id="lcs-stage"><table class="lt" id="lcs-table"></table></div>
+        <div class="legend">
+          <span><i class="sq" style="background:#fff;border:3px solid #3b82f6"></i>Current cell</span>
+          <span><i class="sq" style="background:#e0eaff;border:2px dashed #3b82f6"></i>Cells it reads</span>
+          <span><i class="sq" style="background:#10b981"></i>Characters match</span>
+          <span><i class="sq" style="background:#ef4444"></i>No match</span>
+          <span><i class="sq" style="background:#fde7ef"></i>Traceback path</span>
+          <span><i class="sq" style="background:linear-gradient(135deg,#f59e0b,#e11d48)"></i>LCS letter</span>
+        </div>
+      </div>
+      <div class="side card">
+        <div class="label">Try your own strings (max 10 chars)</div>
+        <div class="inrow"><input id="lcs-x" maxlength="10" value="ABCBDAB" aria-label="String X"><input id="lcs-y" maxlength="10" value="BDCABA" aria-label="String Y"><button class="btn" id="lcs-go">Run</button></div>
+        <div class="label">String X (rows)</div><div class="tiles" id="lcs-xt"></div>
+        <div class="label">String Y (columns)</div><div class="tiles" id="lcs-yt"></div>
+        <div class="label">Rule being applied</div><div class="calc" id="lcs-calc"></div>
+        <div class="label">LCS built so far</div><div class="tiles result" id="lcs-res"></div>
+      </div>
+    </div>
+    <div class="explain" data-px="lcs"></div>
+  </div>
+
+  <div class="pane" data-pane="code"><div class="codewrap" data-px="lcs"></div></div>
+</section>
+
+</main>
+</div>
+
+<script>
+/* =========================================================
+   Shared helpers
+   ========================================================= */
+const INF = Infinity;
+const fmt = x => x === INF ? '∞' : x;
+const $ = id => document.getElementById(id);
+const wfmt = w => w < 0 ? '(' + w + ')' : w;
+const COL = {base:'#c3cad9',good:'#10b981',warn:'#f59e0b',muted:'#94a3b8',bad:'#ef4444',act:'#3b82f6',i:'#3b82f6',k:'#8b5cf6',o:'#f97316'};
+
+function defs(px, tree, g1, g2){
+  const c = Object.assign({}, COL, {tree});
+  let s = '<defs>';
+  for (const k in c) s += `<marker id="${px}-m-${k}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${c[k]}"/></marker>`;
+  s += `<radialGradient id="${px}-ng" cx="35%" cy="30%" r="80%"><stop offset="0%" stop-color="${g1}"/><stop offset="100%" stop-color="${g2}"/></radialGradient>`;
+  s += `<filter id="${px}-sh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1e1b4b" flood-opacity=".25"/></filter>`;
+  return s + '</defs>';
+}
+function towards(p, c, r){ const dx=c.x-p.x, dy=c.y-p.y, L=Math.hypot(dx,dy)||1; return {x:p.x+dx/L*r, y:p.y+dy/L*r}; }
+function geom(p1, p2, off, r, t){
+  t = t ?? 0.42;
+  const dx=p2.x-p1.x, dy=p2.y-p1.y, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+  const c = {x:(p1.x+p2.x)/2+nx*off, y:(p1.y+p2.y)/2+ny*off};
+  const a = towards(p1,c,r), b = towards(p2,c,r+5);
+  const q=(1-t)*(1-t), m=2*(1-t)*t, z=t*t;
+  return {d:`M${a.x.toFixed(1)},${a.y.toFixed(1)} Q${c.x.toFixed(1)},${c.y.toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`,
+          lx:q*a.x+m*c.x+z*b.x, ly:q*a.y+m*c.y+z*b.y};
+}
+function pathSVG(px, g, kind, color, width, o){
+  o = o || {};
+  return `<path d="${g.d}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linecap="round" ${o.dash?`stroke-dasharray="${o.dash}"`:''} class="${o.cls||''}" opacity="${o.op ?? 1}" marker-end="url(#${px}-m-${kind})"/>`;
+}
+function labelSVG(x, y, txt, stroke, cls, fill){
+  const w = Math.max(30, String(txt).length*9 + 14);
+  return `<g><rect x="${(x-w/2).toFixed(1)}" y="${(y-12).toFixed(1)}" width="${w}" height="24" rx="8" fill="${fill||'#fff'}" stroke="${stroke}" stroke-width="1.6"/><text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle" class="${cls}">${txt}</text></g>`;
+}
+function nodeSVG(px, p, label, ring){
+  let s = '';
+  if (ring) s += `<circle cx="${p.x}" cy="${p.y}" r="35" fill="none" stroke="${ring}" stroke-width="5" class="ring"/>`;
+  s += `<circle cx="${p.x}" cy="${p.y}" r="26" fill="url(#${px}-ng)" filter="url(#${px}-sh)" stroke="#fff" stroke-width="3"/>`;
+  s += `<text x="${p.x}" y="${p.y+7}" text-anchor="middle" class="nl">${label}</text>`;
+  return s;
+}
+function chipsHTML(list, active, doneBelow){
+  return list.map((t,i)=>`<span class="${i===active?'on':(i<doneBelow?'done':'')}">${t}</span>`).join('');
+}
+
+/* =========================================================
+   Explanation strip + Player
+   ========================================================= */
+const ICONS = {
+  first:'<svg viewBox="0 0 24 24"><path d="M4 5h2.5v14H4zM20 5v14l-7-7zM13 5v14l-7-7z"/></svg>',
+  prev:'<svg viewBox="0 0 24 24"><path d="M5 5h2.5v14H5zM19 5v14L9 12z"/></svg>',
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
+  pause:'<svg viewBox="0 0 24 24"><path d="M6 5h4.5v14H6zm7.5 0H18v14h-4.5z"/></svg>',
+  next:'<svg viewBox="0 0 24 24"><path d="M5 5v14l10-7zM16.5 5H19v14h-2.5z"/></svg>',
+  last:'<svg viewBox="0 0 24 24"><path d="M4 5v14l7-7zM11 5v14l7-7zM17.5 5H20v14h-2.5z"/></svg>'
+};
+function buildExplain(px){
+  const el = document.querySelector(`.explain[data-px="${px}"]`);
+  el.innerHTML = `
+  <div class="ex-text card">
+    <div class="ex-head"><span class="ex-tag" id="${px}-tag"></span><span class="ex-count" id="${px}-count"></span></div>
+    <h3 id="${px}-title"></h3>
+    <div class="ex-body" id="${px}-text"></div>
+  </div>
+  <div class="ex-code" id="${px}-pseudo"></div>
+  <div class="ex-ctrl card">
+    <div class="btnrow">
+      <button class="cb" id="${px}-first" title="Restart">${ICONS.first}</button>
+      <button class="cb" id="${px}-prev" title="Previous step (←)">${ICONS.prev}</button>
+      <button class="cb play" id="${px}-play" title="Play / Pause (Space)">${ICONS.play}</button>
+      <button class="cb" id="${px}-next" title="Next step (→)">${ICONS.next}</button>
+      <button class="cb" id="${px}-last" title="Jump to the end">${ICONS.last}</button>
+    </div>
+    <input type="range" id="${px}-range" min="0" value="0" title="Drag to any step">
+    <label class="speed">🐢<input type="range" id="${px}-speed" min="200" max="2000" step="100" value="1100" title="Animation speed">🐇</label>
+    <div class="kbd"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>Space</kbd> play / pause</div>
+  </div>`;
+}
+function buildPseudo(px, lines){
+  $(px+'-pseudo').innerHTML = '<div class="h">Pseudocode</div>' +
+    lines.map((l,i)=>`<div class="pl" data-l="${i}"><span class="n">${i+1}</span>${l}</div>`).join('');
+}
+
+class Player{
+  constructor(px, build, render){
+    this.px=px; this.build=build; this.render=render; this.steps=[]; this.i=0; this.timer=null;
+    const g = s => $(px+'-'+s);
+    g('first').onclick=()=>{this.stop();this.go(0);};
+    g('prev').onclick =()=>{this.stop();this.go(this.i-1);};
+    g('next').onclick =()=>{this.stop();this.go(this.i+1);};
+    g('last').onclick =()=>{this.stop();this.go(this.steps.length-1);};
+    g('play').onclick =()=>this.toggle();
+    g('range').oninput=e=>{this.stop();this.go(+e.target.value);};
+    g('speed').oninput=()=>{ if(this.timer){ this.stop(); this.toggle(); } };
+  }
+  load(){ this.stop(); this.steps=this.build(); $(this.px+'-range').max=this.steps.length-1; this.go(0); }
+  go(n){
+    n = Math.max(0, Math.min(this.steps.length-1, n)); this.i=n;
+    const s = this.steps[n], px=this.px;
+    this.render(s);
+    $(px+'-tag').textContent = s.tag || '';
+    $(px+'-title').innerHTML = s.title || '';
+    $(px+'-text').innerHTML = s.text || '';
+    $(px+'-count').textContent = `Step ${n+1} / ${this.steps.length}`;
+    $(px+'-range').value = n;
+    $(px+'-prev').disabled = $(px+'-first').disabled = n===0;
+    $(px+'-next').disabled = $(px+'-last').disabled = n===this.steps.length-1;
+    const box = $(px+'-pseudo');
+    box.querySelectorAll('.pl').forEach(el=>el.classList.toggle('on', +el.dataset.l===s.line));
+    const on = box.querySelector('.pl.on');
+    if (on){ const top = on.offsetTop - box.clientHeight/2 + on.offsetHeight/2; box.scrollTop = Math.max(0, top); }
+  }
+  delay(){ return 2300 - (+$(this.px+'-speed').value); }
+  toggle(){
+    if (this.timer){ this.stop(); return; }
+    if (this.i >= this.steps.length-1) this.go(0);
+    $(this.px+'-play').innerHTML = ICONS.pause;
+    this.timer = setInterval(()=>{
+      if (this.i >= this.steps.length-1){ this.stop(); return; }
+      this.go(this.i+1);
+    }, this.delay());
+  }
+  stop(){ if (this.timer){ clearInterval(this.timer); this.timer=null; } $(this.px+'-play').innerHTML = ICONS.play; }
+}
+
+/* =========================================================
+   BELLMAN-FORD
+   ========================================================= */
+const BF = {
+  names:['S','T','X','Y','Z'],
+  pos:[{x:80,y:200},{x:250,y:85},{x:470,y:85},{x:250,y:315},{x:470,y:315}],
+  presets:{ classic:[[1,2,5],[1,3,8],[1,4,-4],[2,1,-2],[3,2,-3],[3,4,9],[4,2,7],[4,0,2,-25,0.3],[0,1,6],[0,3,7]] }
+};
+BF.presets.neg = BF.presets.classic.map(e => (e[0]===2 && e[1]===1) ? [2,1,-8] : e.slice());
+let bfPreset = 'classic';
+
+function bfPathStr(p, v){
+  const seq=[v]; let c=v, g=0;
+  while (p[c] !== -1 && g < 7){ c = p[c]; seq.unshift(c); g++; }
+  if (g >= 7) return '… (loops)';
+  return seq.map(x=>BF.names[x]).join(' → ');
+}
+
+function bfBuild(){
+  const E = BF.presets[bfPreset], N = 5, nm = BF.names;
+  const d = Array(N).fill(INF), p = Array(N).fill(-1); d[0] = 0;
+  const S = [];
+  const snap = o => S.push(Object.assign({d:d.slice(), p:p.slice(), E, edge:-1, status:null, changed:-1}, o));
+  const distList = () => nm.map((n,i)=>`${n}=${fmt(d[i])}`).join(', ');
+
+  snap({phase:'init', pass:0, line:1, tag:'Initialise', title:'Set up the distance table',
+        text:`The source <b>S</b> gets distance <b>0</b>. Every other vertex starts at <b>∞</b> because we haven't reached it yet. Parents π are empty. The graph has V = 5 vertices, so we'll do <b>V − 1 = 4 passes</b>.`});
+
+  for (let pass=1; pass<=N-1; pass++){
+    snap({phase:'pass', pass, line:2, tag:`Pass ${pass} of ${N-1}`, title:`Pass ${pass} begins`,
+          text:`Now we <b>relax all ${E.length} edges</b> one by one, in the fixed order listed on the right. Each pass lets shortest-path information travel <b>one more edge</b> away from S.`});
+    let changed = 0;
+    E.forEach((e, idx) => {
+      const [u, v, w] = e, lab = `${nm[u]} → ${nm[v]}`;
+      const o = {phase:'relax', pass, edge:idx, line:4, tag:`Pass ${pass} · edge ${idx+1}/${E.length}`};
+      if (d[u] === INF){
+        o.status='skip'; o.title=`Edge ${lab} (w = ${w}) — skip`;
+        o.text=`d[${nm[u]}] is still <b>∞</b>: ${nm[u]} hasn't been reached yet, so it cannot offer a better route to ${nm[v]}. Nothing to do.`;
+      } else {
+        const c = d[u] + w;
+        if (c < d[v]){
+          const old = d[v]; d[v] = c; p[v] = u; changed++;
+          o.status='relaxed'; o.changed=v; o.line=5; o.title=`Edge ${lab} — relaxed ✅`;
+          o.text=`d[${nm[u]}] + w = ${d[u]} + ${wfmt(w)} = <b>${c}</b>, which is smaller than the old d[${nm[v]}] = ${fmt(old)}. So we update <b>d[${nm[v]}] = ${c}</b> and set <b>π[${nm[v]}] = ${nm[u]}</b> (we reach ${nm[v]} via ${nm[u]}).`;
+        } else {
+          o.status='noimp'; o.title=`Edge ${lab} — no improvement`;
+          o.text=`d[${nm[u]}] + w = ${d[u]} + ${wfmt(w)} = ${c}, which is <b>not smaller</b> than d[${nm[v]}] = ${d[v]}. The route we already have is at least as good, so we keep it.`;
+        }
+      }
+      snap(o);
+    });
+    if (changed === 0){
+      snap({phase:'passend', pass, line:2, tag:`Pass ${pass} done`, title:'Nothing changed → stop early',
+            text:`No distance improved in pass ${pass}, so no later pass can improve anything either. We can stop early — the C++ program does this with its <code>changed</code> flag.`});
+      break;
+    }
+    snap({phase:'passend', pass, line:2, tag:`Pass ${pass} done`, title:`End of pass ${pass}: ${changed} update${changed>1?'s':''}`,
+          text:`Distances now: <b>${distList()}</b>. ${pass < N-1 ? 'On to the next pass — improvements found now can spread one edge further.' : 'That was the last of the V − 1 = 4 passes. Every shortest path (if no negative cycle exists) is now final.'}`});
+  }
+
+  snap({phase:'checkstart', line:6, tag:'Negative-cycle check', title:'One extra pass to detect negative cycles',
+        text:`After V − 1 passes all shortest paths are final — <i>unless</i> there is a negative cycle. We scan every edge one more time: if <b>any</b> edge can still be relaxed, distances could shrink forever.`});
+  for (let idx=0; idx<E.length; idx++){
+    const [u, v, w] = E[idx], lab = `${nm[u]} → ${nm[v]}`;
+    if (d[u] !== INF && d[u] + w < d[v]){
+      snap({phase:'check', status:'neg', edge:idx, line:8, tag:'Check', title:`⚠ Edge ${lab} can still be relaxed!`,
+            text:`${d[u]} + ${wfmt(w)} = ${d[u]+w} is smaller than d[${nm[v]}] = ${d[v]}. A real shortest path can't keep shrinking, so the graph has a <b>negative-weight cycle</b> reachable from S.`});
+      snap({phase:'done', neg:true, status:'neg', edge:idx, line:8, tag:'Result', title:'Negative cycle detected — no valid answer ⚠',
+            text:`The cycle <b>T → X → T</b> has total weight 5 + (−8) = <b>−3</b>. Going round it again and again lowers the cost without limit, so "shortest distance" is undefined. Bellman–Ford reports this instead of wrong numbers.`});
+      return S;
+    }
+    snap({phase:'check', status:'ok', edge:idx, line:7, tag:'Check', title:`Edge ${lab} — OK ✔`,
+          text: d[u]===INF ? `${nm[u]} is unreachable, so this edge can't change anything.` :
+                `${d[u]} + ${wfmt(w)} = ${d[u]+w} is not smaller than d[${nm[v]}] = ${d[v]}. No further improvement possible.`});
+  }
+  const lines = [1,2,3,4].map(v=>`<b>${nm[v]} = ${d[v]}</b> (${bfPathStr(p,v)})`).join(' · ');
+  snap({phase:'done', line:9, tag:'Finished 🎉', title:'Shortest paths found — no negative cycle',
+        text:`${lines}. The purple edges form the <b>shortest-path tree</b>: follow π back from any vertex to S.`});
+  return S;
+}
+
+function bfRender(s){
+  const nm=BF.names, pos=BF.pos, E=s.E;
+  const accent='#7c3aed';
+  let h = defs('bf', accent, '#a78bfa', '#7c3aed');
+  let labels = '';
+  E.forEach((e, idx) => {
+    const [u, v, w, off0, lt] = e;
+    const rev = E.some(f => f[0]===v && f[1]===u);
+    const off = off0 !== undefined ? off0 : (rev ? 24 : 0);
+    const g = geom(pos[u], pos[v], off, 27, lt);
+    let kind='base', width=2.5, cls='';
+    if (s.p[v]===u && s.d[v]!==INF && !s.neg) { kind='tree'; width=4.5; }
+    if (idx===s.edge){
+      kind = {relaxed:'good', noimp:'warn', skip:'muted', neg:'bad', ok:'act'}[s.status] || 'act';
+      width = 5.5; cls='flow';
+    }
+    const color = kind==='tree' ? accent : COL[kind];
+    h += pathSVG('bf', g, kind, color, width, {cls});
+    labels += labelSVG(g.lx, g.ly, w, idx===s.edge ? color : (kind==='tree'?accent:'#d5dbe8'), 'wt' + (w<0?' neg':''));
+  });
+  h += labels;
+  let ru=-1, rv=-1, rcol=null;
+  if (s.edge >= 0){ ru = E[s.edge][0]; rv = E[s.edge][1]; rcol = {relaxed:'#10b981',noimp:'#f59e0b',skip:'#94a3b8',neg:'#ef4444',ok:'#3b82f6'}[s.status]; }
+  pos.forEach((p, v) => {
+    h += nodeSVG('bf', p, nm[v], v===ru ? '#3b82f6' : (v===rv ? rcol : null));
+    const below = p.y > 250, by = below ? p.y+36 : p.y-58;
+    const hot = s.changed === v;
+    const txt = fmt(s.d[v]);
+    const bw = Math.max(44, String(txt).length*10+18);
+    h += `<g class="${hot?'popg':''}"><rect x="${p.x-bw/2}" y="${by}" width="${bw}" height="22" rx="11" fill="${hot?'#10b981':'#fff'}" stroke="${hot?'#059669':'#c9b8f5'}" stroke-width="2"/><text x="${p.x}" y="${by+16}" text-anchor="middle" class="bdg${hot?' w':''}">${txt}</text></g>`;
+  });
+  $('bf-svg').innerHTML = h;
+
+  // progress chips
+  const labs = ['Pass 1','Pass 2','Pass 3','Pass 4','Check','Done'];
+  let act = -1, doneB = 0;
+  if (['pass','relax','passend'].includes(s.phase)){ act = s.pass-1; doneB = s.pass-1; }
+  else if (['checkstart','check'].includes(s.phase)){ act = 4; doneB = 4; }
+  else if (s.phase==='done'){ act = 5; doneB = 5; }
+  $('bf-passes').innerHTML = chipsHTML(labs, act, doneB);
+
+  // distance table
+  $('bf-tbody').innerHTML = nm.map((n, v) => {
+    const cls = s.changed===v ? 'hot' : (v===rv ? 'tgt' : (v===ru ? 'src' : ''));
+    const path = s.d[v]===INF ? '—' : (s.neg ? '—' : bfPathStr(s.p, v));
+    return `<tr class="${cls}"><td>${n}</td><td class="num">${fmt(s.d[v])}</td><td>${s.p[v]===-1?'–':nm[s.p[v]]}</td><td>${path}</td></tr>`;
+  }).join('');
+
+  // edge chips
+  $('bf-edges').innerHTML = E.map((e, idx) => {
+    let c = '';
+    if (idx===s.edge) c = 'cur ' + ({relaxed:'good',noimp:'warn',skip:'muted',neg:'bad',ok:''}[s.status]||'');
+    return `<span class="ec ${c}">${nm[e[0]]}→${nm[e[1]]} <i class="${e[2]<0?'n':''}">${e[2]}</i></span>`;
+  }).join('');
+}
+
+/* =========================================================
+   FLOYD-WARSHALL
+   ========================================================= */
+const FW = {
+  n:4,
+  pos:[{x:110,y:85},{x:410,y:85},{x:410,y:305},{x:110,y:305}],
+  E:[[0,1,3],[0,3,7],[1,0,8],[1,2,2],[2,0,5],[2,3,1],[3,0,2]]
+};
+function fwBuild(){
+  const n = FW.n;
+  const D = Array.from({length:n}, (_, i) => Array.from({length:n}, (_, j) => i===j ? 0 : INF));
+  FW.E.forEach(([u,v,w]) => D[u][v] = w);
+  const S = [];
+  const snap = o => S.push(Object.assign({D:D.map(r=>r.slice()), k:-1, i:-1, j:-1, changed:[]}, o));
+
+  snap({phase:'init', line:1, tag:'Initialise', title:'Start: D<sup>(0)</sup> = the adjacency matrix',
+        text:`D[i][j] is the weight of the <b>direct edge</b> i → j, <b>0</b> on the diagonal, and <b>∞</b> where there is no edge. This is the answer if <b>no stop-overs</b> are allowed. Now we allow stop-overs one vertex at a time.`});
+
+  for (let k=0; k<n; k++){
+    const changed = [];
+    snap({phase:'k', k, line:2, changed:[], tag:`Round k = ${k+1}`, title:`Allow vertex ${k+1} as a stop-over`,
+          text:`For every pair (i, j) we ask: <i>"Is i → ${k+1} → j cheaper than the best route known so far?"</i> We only read <b>row ${k+1}</b> and <b>column ${k+1}</b> (shaded). Pairs where i or j is ${k+1}, and the diagonal, can't change — so we skip them.`});
+    for (let i=0; i<n; i++) for (let j=0; j<n; j++){
+      if (i===j || i===k || j===k) continue;
+      const a = D[i][k], b = D[k][j], c = D[i][j];
+      const o = {phase:'cmp', k, i, j, a, b, old:c, line:5, tag:`k = ${k+1} · i = ${i+1}, j = ${j+1}`,
+                 title:`Can ${i+1} → ${j+1} be shorter via ${k+1}?`};
+      if (a===INF || b===INF){
+        o.status='none';
+        o.text=`D[${i+1}][${k+1}] = ${fmt(a)} and D[${k+1}][${j+1}] = ${fmt(b)}. ${a===INF?`${i+1} can't reach ${k+1}`:`${k+1} can't reach ${j+1}`} yet, so there is no route through ${k+1}. Keep D[${i+1}][${j+1}] = ${fmt(c)}.`;
+      } else if (a + b < c){
+        D[i][j] = a + b; changed.push(i*n+j);
+        o.status='upd'; o.line=6; o.nw=a+b; o.title=`${i+1} → ${j+1} via ${k+1} is shorter ✅`;
+        o.text=`D[${i+1}][${k+1}] + D[${k+1}][${j+1}] = ${a} + ${b} = <b>${a+b}</b>, which beats the current ${fmt(c)}. Update <b>D[${i+1}][${j+1}] = ${a+b}</b>.`;
+      } else {
+        o.status='keep';
+        o.text=`D[${i+1}][${k+1}] + D[${k+1}][${j+1}] = ${a} + ${b} = ${a+b}, which is <b>not better</b> than the current ${c}. Keep D[${i+1}][${j+1}] = ${c}.`;
+      }
+      o.changed = changed.slice();
+      snap(o);
+    }
+    const list = changed.map(x => `D[${Math.floor(x/n)+1}][${x%n+1}] = ${D[Math.floor(x/n)][x%n]}`).join(', ');
+    snap({phase:'kend', k, changed:changed.slice(), line:2, tag:`Round k = ${k+1} done`,
+          title:`D<sup>(${k+1})</sup> complete — ${changed.length} update${changed.length===1?'':'s'}`,
+          text: changed.length ? `Improved using vertex ${k+1} as a stop-over: <b>${list}</b>.` : `No pair got shorter by passing through vertex ${k+1}. The matrix stays the same.`});
+  }
+  snap({phase:'done', k:n, line:7, tag:'Finished 🎉', title:'All-pairs shortest distances are ready',
+        text:`Every cell D[i][j] now holds the shortest distance from i to j. Example: <b>4 → 3 = 7</b> via 4 → 1 → 2 → 3. The diagonal is all 0, so there is <b>no negative cycle</b>.`});
+  return S;
+}
+
+function fwRender(s){
+  const {n, pos, E} = FW, cmp = s.phase==='cmp';
+  const accent = '#0d9488';
+  let h = defs('fw', accent, '#5eead4', '#0e7490');
+  let labels = '';
+  E.forEach(([u, v, w]) => {
+    const rev = E.some(f => f[0]===v && f[1]===u);
+    const g = geom(pos[u], pos[v], rev ? 24 : 0, 27);
+    const op = cmp ? .3 : 1;
+    h += pathSVG('fw', g, 'base', COL.base, 2.5, {op});
+    labels += `<g opacity="${cmp ? .45 : 1}">` + labelSVG(g.lx, g.ly, w, '#d5dbe8', 'wt' + (w<0?' neg':'')) + '</g>';
+  });
+  h += labels;
+  if (cmp){
+    const {i, k, j} = s;
+    const ov = (u, v, kind, val, off, fill) => {
+      const g = geom(pos[u], pos[v], off, 30, 0.5);
+      return pathSVG('fw', g, kind, COL[kind], 4, {dash:'9 6', cls:'flow'}) + labelSVG(g.lx, g.ly, val, COL[kind], 'wt w', fill || COL[kind]);
+    };
+    h += ov(i, k, 'i', fmt(s.a), 56);
+    h += ov(k, j, 'k', fmt(s.b), 56);
+    if (s.status==='upd') h += ov(i, j, 'good', `${fmt(s.old)} → ${s.nw}`, -56);
+    else h += ov(i, j, 'o', fmt(s.old), -56);
+  }
+  pos.forEach((p, v) => {
+    let ring = null;
+    if (s.k === v && s.phase !== 'done') ring = '#f59e0b';
+    else if (cmp && v===s.i) ring = '#3b82f6';
+    else if (cmp && v===s.j) ring = '#f97316';
+    h += nodeSVG('fw', p, v+1, ring);
+    let tag = null, tc = null;
+    if (s.k === v && s.phase !== 'done'){ tag='k'; tc='#f59e0b'; }
+    else if (cmp && v===s.i){ tag='i'; tc='#3b82f6'; }
+    else if (cmp && v===s.j){ tag='j'; tc='#f97316'; }
+    if (tag){
+      const tx = p.x + (p.x < 260 ? -38 : 38), ty = p.y + (p.y < 200 ? -30 : 30);
+      h += `<circle cx="${tx}" cy="${ty}" r="13" fill="${tc}"/><text x="${tx}" y="${ty+5}" text-anchor="middle" class="tagt">${tag}</text>`;
+    }
+  });
+  $('fw-svg').innerHTML = h;
+
+  // k chips
+  let act=-1, doneB=0;
+  if (['k','cmp','kend'].includes(s.phase)){ act = s.k; doneB = s.k; }
+  else if (s.phase==='done'){ act = 4; doneB = 4; }
+  $('fw-ks').innerHTML = chipsHTML(['k = 1','k = 2','k = 3','k = 4','Done'], act, doneB);
+
+  // matrix label
+  const ml = s.phase==='init' ? 'Matrix D<sup>(0)</sup> — direct edges only'
+           : s.phase==='done' ? 'Final matrix D<sup>(4)</sup> — all shortest distances'
+           : `Building D<sup>(${s.k+1})</sup> — stop-overs allowed: {${Array.from({length:s.k+1},(_,x)=>x+1).join(', ')}}`;
+  $('fw-mlabel').innerHTML = ml;
+
+  // matrix
+  const inK = ['k','cmp','kend'].includes(s.phase);
+  let t = '<tr><th></th>' + Array.from({length:n}, (_, c) => `<th class="${inK&&c===s.k?'kc':''}">${c+1}</th>`).join('') + '</tr>';
+  for (let r=0; r<n; r++){
+    t += `<tr><th class="${inK&&r===s.k?'kc':''}">${r+1}</th>`;
+    for (let c=0; c<n; c++){
+      const cl = [];
+      if (r===c) cl.push('dg');
+      if (inK && (r===s.k || c===s.k)) cl.push('mk');
+      if (s.changed.includes(r*n+c)) cl.push('ch');
+      if (cmp){
+        if (r===s.i && c===s.k) cl.push('s1');
+        if (r===s.k && c===s.j) cl.push('s2');
+        if (r===s.i && c===s.j) cl.push(s.status==='upd' ? 'up' : 'tg');
+      }
+      if (s.phase==='done' && r!==c) cl.push('fin');
+      t += `<td class="${cl.join(' ')}">${fmt(s.D[r][c])}</td>`;
+    }
+    t += '</tr>';
+  }
+  $('fw-mx').innerHTML = t;
+
+  // calculation box
+  let calc;
+  if (cmp){
+    const I=s.i+1, K=s.k+1, J=s.j+1;
+    const sum = (s.a===INF||s.b===INF) ? '∞' : s.a+s.b;
+    const res = s.status==='upd' ? `<span class="g">${s.nw}</span> ✅ updated` : `<span class="o">${fmt(s.old)}</span> (kept)`;
+    calc = `D[${I}][${J}] = min( D[${I}][${J}], D[${I}][${K}] + D[${K}][${J}] )<br>= min( <span class="o">${fmt(s.old)}</span>, <span class="b">${fmt(s.a)}</span> + <span class="p">${fmt(s.b)}</span> )<br>= min( ${fmt(s.old)}, ${sum} ) = ${res}`;
+  } else if (s.phase==='done'){
+    calc = `All 4 rounds done. Total work: n³ = 4 × 4 × 4 = 64 checks.<br>Diagonal all 0 → <span class="g">no negative cycle</span>.`;
+  } else if (s.phase==='init'){
+    calc = `D[i][j] = w(i, j) if edge exists<br>D[i][i] = 0, otherwise ∞`;
+  } else {
+    calc = `D[i][j] = min( D[i][j], D[i][${s.k+1}] + D[${s.k+1}][j] )`;
+  }
+  $('fw-calc').innerHTML = calc;
+}
+
+/* =========================================================
+   LCS
+   ========================================================= */
+let lcsX = 'ABCBDAB', lcsY = 'BDCABA';
+function lcsBuild(){
+  const X = lcsX, Y = lcsY, m = X.length, n = Y.length;
+  const L = Array.from({length:m+1}, () => Array(n+1).fill(null));
+  const dir = Array.from({length:m+1}, () => Array(n+1).fill(null));
+  for (let i=0; i<=m; i++) L[i][0] = 0;
+  for (let j=0; j<=n; j++) L[0][j] = 0;
+  const S = [];
+  const snap = o => S.push(Object.assign({L:L.map(r=>r.slice()), dir:dir.map(r=>r.slice()), X, Y, i:-1, j:-1, deps:[], path:[], lcs:''}, o));
+
+  snap({phase:'init', line:1, tag:'Base case', title:'Row 0 and column 0 are all 0',
+        text:`The LCS of any string with an <b>empty</b> string is empty, so its length is 0. We now fill the table <b>row by row, left to right</b>. Cell L[i][j] = LCS length of the first i letters of X and the first j letters of Y.`});
+
+  for (let i=1; i<=m; i++) for (let j=1; j<=n; j++){
+    const a = X[i-1], b = Y[j-1];
+    const o = {phase:'fill', i, j, tag:`Row ${i} · Col ${j}`};
+    if (a === b){
+      L[i][j] = L[i-1][j-1] + 1; dir[i][j] = 'd';
+      Object.assign(o, {match:true, deps:[[i-1,j-1]], line:5,
+        title:`X[${i}] = '${a}' and Y[${j}] = '${b}' — match! ✅`,
+        text:`The characters are equal, so they can extend the LCS. Take the <b>diagonal</b> value and add 1: L[${i}][${j}] = L[${i-1}][${j-1}] + 1 = ${L[i-1][j-1]} + 1 = <b>${L[i][j]}</b>. Arrow ↖.`});
+    } else {
+      const up = L[i-1][j], left = L[i][j-1];
+      L[i][j] = Math.max(up, left); dir[i][j] = up >= left ? 'u' : 'l';
+      Object.assign(o, {match:false, deps:[[i-1,j],[i,j-1]], line:6, up, left,
+        title:`X[${i}] = '${a}' ≠ Y[${j}] = '${b}' — no match`,
+        text:`Different characters, so one of them is not used here. Take the <b>larger</b> of top L[${i-1}][${j}] = ${up} and left L[${i}][${j-1}] = ${left} → L[${i}][${j}] = <b>${L[i][j]}</b>. Arrow ${dir[i][j]==='u'?'↑ (top wins or tie)':'← (left is larger)'}.`});
+    }
+    snap(o);
+  }
+
+  let i = m, j = n, got = '';
+  const path = [{i, j, take:false}];
+  snap({phase:'tstart', i, j, path:path.map(x=>({...x})), line:7, tag:'Traceback', title:`Length of the LCS = L[${m}][${n}] = ${L[m][n]}`,
+        text:`The bottom-right cell holds the answer's length. To find the actual letters, we <b>walk back</b> from here following the arrows. Every ↖ step gives us one LCS letter.`});
+  while (i > 0 && j > 0){
+    const d = dir[i][j]; let text, title;
+    if (d === 'd'){
+      got = X[i-1] + got; path[path.length-1].take = true;
+      title = `↖ '${X[i-1]}' is part of the LCS`;
+      text = `At L[${i}][${j}] the letters match (X[${i}] = Y[${j}] = '${X[i-1]}'). Add it to the LCS and move <b>diagonally</b> to (${i-1}, ${j-1}). LCS so far (read right-to-left): <b>${got}</b>.`;
+      i--; j--;
+    } else if (d === 'u'){
+      title = `↑ Move up`;
+      text = `At L[${i}][${j}] the letters differ ('${X[i-1]}' ≠ '${Y[j-1]}') and the value came from <b>above</b>. Move up to (${i-1}, ${j}) — '${X[i-1]}' is not used here.`;
+      i--;
+    } else {
+      title = `← Move left`;
+      text = `At L[${i}][${j}] the letters differ ('${X[i-1]}' ≠ '${Y[j-1]}') and the value came from the <b>left</b>. Move left to (${i}, ${j-1}) — '${Y[j-1]}' is not used here.`;
+      j--;
+    }
+    path.push({i, j, take:false});
+    snap({phase:'trace', i, j, path:path.map(x=>({...x})), lcs:got, line:8, tag:'Traceback', title, text});
+  }
+  snap({phase:'done', i, j, path:path.map(x=>({...x})), lcs:got, line:9, tag:'Finished 🎉',
+        title: got ? `LCS = "${got}" (length ${got.length})` : 'No common characters — LCS is empty',
+        text: got ? `We reached row 0 / column 0. The highlighted ↖ cells, read from top-left to bottom-right, spell <b>${got}</b>. Its letters appear in both <b>${X}</b> and <b>${Y}</b> in the same order.` : `The strings share no character, so the LCS length is 0.`});
+  return S;
+}
+
+function lcsFit(){
+  const st = $('lcs-stage'), tb = $('lcs-table');
+  const m = lcsX.length, n = lcsY.length;
+  const W = st.clientWidth, H = st.clientHeight;
+  if (!W || !H) return;
+  let cs = Math.floor(Math.min((W-20)/(n+2), (H-20)/(m+2)) - 3);
+  cs = Math.max(24, Math.min(cs, 58));
+  tb.style.setProperty('--cs', cs + 'px');
+}
+
+function lcsRender(s){
+  const {X, Y, L, dir} = s, m = X.length, n = Y.length;
+  const isDep = (r,c) => s.deps.some(d => d[0]===r && d[1]===c);
+  const pathCell = (r,c) => s.path.find(p => p.i===r && p.j===c);
+  const ARR = {d:'↖', u:'↑', l:'←'};
+  let t = '<tr><th class="blank"></th><th class="e">∅</th>';
+  for (let c=1; c<=n; c++){
+    let cl = '';
+    if (s.phase==='fill' && c===s.j) cl = s.match ? 'hit' : 'miss';
+    t += `<th class="${cl}">${Y[c-1]}<small>${c}</small></th>`;
+  }
+  t += '</tr>';
+  for (let r=0; r<=m; r++){
+    let cl = r===0 ? 'e' : '';
+    if (s.phase==='fill' && r===s.i) cl = s.match ? 'hit' : 'miss';
+    t += `<tr><th class="${cl}">${r===0?'∅':X[r-1]}${r?`<small>${r}</small>`:''}</th>`;
+    for (let c=0; c<=n; c++){
+      const v = L[r][c], cls = [];
+      if (v === null) cls.push('empty');
+      else if (r===0 || c===0) cls.push('z');
+      if (s.phase==='fill'){
+        if (r===s.i && c===s.j){ cls.push('cur'); if (s.match) cls.push('match'); }
+        else if (isDep(r,c)) cls.push('dep');
+      }
+      const pc = pathCell(r,c);
+      if (pc) cls.push(pc.take ? 'take' : 'path');
+      if (['trace','tstart'].includes(s.phase) && r===s.i && c===s.j && !pc?.take) cls.push('cur');
+      const ar = dir[r][c] ? `<span class="ar">${ARR[dir[r][c]]}</span>` : '';
+      t += `<td class="${cls.join(' ')}">${ar}${v===null?'':v}</td>`;
+    }
+    t += '</tr>';
+  }
+  $('lcs-table').innerHTML = t;
+  lcsFit();
+
+  // tiles
+  const takenX = new Set(), takenY = new Set();
+  s.path.forEach(p => { if (p.take){ takenX.add(p.i-1); takenY.add(p.j-1); } });
+  $('lcs-xt').innerHTML = [...X].map((ch, k) => {
+    let c = '';
+    if (s.phase==='fill' && k===s.i-1) c = s.match ? 'hit' : 'miss';
+    else if (takenX.has(k)) c = 'in';
+    return `<span class="${c}">${ch}<small>${k+1}</small></span>`;
+  }).join('');
+  $('lcs-yt').innerHTML = [...Y].map((ch, k) => {
+    let c = '';
+    if (s.phase==='fill' && k===s.j-1) c = s.match ? 'hit' : 'miss';
+    else if (takenY.has(k)) c = 'in';
+    return `<span class="${c}">${ch}<small>${k+1}</small></span>`;
+  }).join('');
+
+  // calc
+  let calc;
+  if (s.phase==='fill'){
+    const i=s.i, j=s.j;
+    calc = s.match
+      ? `X[${i}] = Y[${j}] = '${X[i-1]}' <span class="g">✔ match</span><br>L[${i}][${j}] = L[${i-1}][${j-1}] + 1<br>= <span class="b">${L[i-1][j-1]}</span> + 1 = <span class="g">${L[i][j]}</span>`
+      : `X[${i}] = '${X[i-1]}' ≠ Y[${j}] = '${Y[j-1]}' <span class="r">✘</span><br>L[${i}][${j}] = max( L[${i-1}][${j}], L[${i}][${j-1}] )<br>= max( <span class="b">${s.up}</span>, <span class="b">${s.left}</span> ) = <span class="g">${L[i][j]}</span>`;
+  } else if (s.phase==='init'){
+    calc = `L[i][0] = 0 and L[0][j] = 0<br>(empty prefix ⇒ empty LCS)`;
+  } else {
+    calc = `↖ match → take letter, go to (i−1, j−1)<br>↑ → go to (i−1, j) · ← → go to (i, j−1)`;
+  }
+  $('lcs-calc').innerHTML = calc;
+  $('lcs-res').innerHTML = s.lcs ? [...s.lcs].map(ch => `<span>${ch}</span>`).join('') : '<em>(appears during traceback)</em>';
+}
+
+/* =========================================================
+   C++ source code + notes
+   ========================================================= */
+const CODES = {
+bf:{file:'bellman_ford.cpp', title:'Bellman–Ford in C++',
+src:String.raw`// Bellman-Ford Algorithm: Single-Source Shortest Paths
+// Works with negative edge weights and detects negative cycles.
+#include <iostream>
+#include <vector>
+#include <string>
+#include <climits>
+using namespace std;
+
+struct Edge {
+    int u, v, w;            // directed edge u -> v with weight w
+};
+
+// Print the path from the source to v using the parent array
+void printPath(const vector<int>& parent, int v, const string& name) {
+    if (parent[v] == -1) { cout << name[v]; return; }
+    printPath(parent, parent[v], name);
+    cout << " -> " << name[v];
+}
+
+int main() {
+    const int V = 5;
+    string name = "STXYZ";   // 0=S, 1=T, 2=X, 3=Y, 4=Z
+    vector<Edge> edges = {
+        {1, 2, 5}, {1, 3, 8}, {1, 4, -4}, {2, 1, -2}, {3, 2, -3},
+        {3, 4, 9}, {4, 2, 7}, {4, 0, 2},  {0, 1, 6},  {0, 3, 7}
+    };
+    int src = 0;
+
+    // Step 1: initialise distances
+    vector<long long> dist(V, LLONG_MAX);   // LLONG_MAX means "infinity"
+    vector<int> parent(V, -1);
+    dist[src] = 0;
+
+    // Step 2: relax every edge (V - 1) times
+    for (int pass = 1; pass <= V - 1; pass++) {
+        bool changed = false;
+        for (const Edge& e : edges) {
+            if (dist[e.u] != LLONG_MAX && dist[e.u] + e.w < dist[e.v]) {
+                dist[e.v] = dist[e.u] + e.w;
+                parent[e.v] = e.u;
+                changed = true;
+            }
+        }
+        if (!changed) break;     // nothing improved: answer is final
+    }
+
+    // Step 3: one more pass to detect a negative-weight cycle
+    for (const Edge& e : edges) {
+        if (dist[e.u] != LLONG_MAX && dist[e.u] + e.w < dist[e.v]) {
+            cout << "Graph contains a negative-weight cycle!" << endl;
+            return 0;
+        }
+    }
+
+    // Step 4: print the result
+    cout << "Vertex  Distance  Path" << endl;
+    for (int v = 0; v < V; v++) {
+        cout << "  " << name[v] << "\t";
+        if (dist[v] == LLONG_MAX) { cout << "INF" << endl; continue; }
+        cout << dist[v] << "\t  ";
+        printPath(parent, v, name);
+        cout << endl;
+    }
+    return 0;
+}`,
+notes:`<ul>
+<li><b>struct Edge</b> stores each directed edge as (u, v, w) — Bellman–Ford only needs an edge list.</li>
+<li><b>dist[]</b> starts at <code>LLONG_MAX</code> (∞); only the source is 0. <b>parent[]</b> remembers where each best route came from.</li>
+<li>The <b>outer loop</b> runs V − 1 passes; the <b>inner loop</b> relaxes every edge.</li>
+<li>The check <code>dist[e.u] != LLONG_MAX</code> avoids overflow when u is unreached.</li>
+<li>The <b>changed</b> flag stops early when a pass improves nothing.</li>
+<li>The <b>extra pass</b> detects a negative cycle: if anything still improves, report it.</li>
+<li><b>printPath</b> follows parents recursively from v back to the source.</li>
+</ul>`,
+out:`Vertex  Distance  Path
+  S     0         S
+  T     2         S -> Y -> X -> T
+  X     4         S -> Y -> X
+  Y     7         S -> Y
+  Z     -2        S -> Y -> X -> T -> Z`},
+
+fw:{file:'floyd_warshall.cpp', title:'Floyd–Warshall in C++',
+src:String.raw`// Floyd-Warshall Algorithm: All-Pairs Shortest Paths
+#include <iostream>
+#include <iomanip>
+#include <vector>
+using namespace std;
+
+const int INF = 1000000000;   // "infinity" = no edge
+
+// Rebuild the path i -> j using the nxt[][] table
+void printPath(int i, int j, const vector<vector<int>>& nxt) {
+    if (nxt[i][j] == -1) { cout << "no path"; return; }
+    cout << i + 1;
+    while (i != j) {
+        i = nxt[i][j];
+        cout << " -> " << i + 1;
+    }
+}
+
+int main() {
+    const int V = 4;
+    vector<vector<int>> dist = {
+        {0,   3,   INF, 7  },
+        {8,   0,   2,   INF},
+        {5,   INF, 0,   1  },
+        {2,   INF, INF, 0  }
+    };
+
+    // nxt[i][j] = the vertex that comes right after i on the path to j
+    vector<vector<int>> nxt(V, vector<int>(V, -1));
+    for (int i = 0; i < V; i++)
+        for (int j = 0; j < V; j++)
+            if (dist[i][j] != INF) nxt[i][j] = j;
+
+    // Core: try every vertex k as a stop-over (k MUST be the outer loop)
+    for (int k = 0; k < V; k++)
+        for (int i = 0; i < V; i++)
+            for (int j = 0; j < V; j++)
+                if (dist[i][k] != INF && dist[k][j] != INF &&
+                    dist[i][k] + dist[k][j] < dist[i][j]) {
+                    dist[i][j] = dist[i][k] + dist[k][j];
+                    nxt[i][j]  = nxt[i][k];
+                }
+
+    // Negative cycle: some vertex can reach itself with negative cost
+    for (int i = 0; i < V; i++)
+        if (dist[i][i] < 0) {
+            cout << "Negative cycle detected!" << endl;
+            return 0;
+        }
+
+    cout << "Shortest distance matrix:" << endl;
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            if (dist[i][j] == INF) cout << setw(5) << "INF";
+            else                   cout << setw(5) << dist[i][j];
+        }
+        cout << endl;
+    }
+
+    cout << "\nExample path 4 -> 3: ";
+    printPath(3, 2, nxt);
+    cout << "  (cost " << dist[3][2] << ")" << endl;
+    return 0;
+}`,
+notes:`<ul>
+<li><b>dist</b> starts as the adjacency matrix: 0 on the diagonal, weight for an edge, <code>INF</code> otherwise.</li>
+<li><b>nxt[i][j]</b> stores the next hop so we can print the real route, not just its cost.</li>
+<li>The <b>triple loop</b> is the whole algorithm. <code>k</code> outside means: "allow stop-overs among vertices 0..k".</li>
+<li>The <code>!= INF</code> checks avoid adding two "infinities" and overflowing.</li>
+<li>When a shorter route via k is found, the next hop becomes <code>nxt[i][k]</code> — head towards k first.</li>
+<li>A <b>negative diagonal</b> value means a negative cycle.</li>
+</ul>`,
+out:`Shortest distance matrix:
+    0    3    5    6
+    5    0    2    3
+    3    6    0    1
+    2    5    7    0
+
+Example path 4 -> 3: 4 -> 1 -> 2 -> 3  (cost 7)`},
+
+lcs:{file:'lcs.cpp', title:'Longest Common Subsequence in C++',
+src:String.raw`// Longest Common Subsequence (LCS) using Dynamic Programming
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    string X = "ABCBDAB";
+    string Y = "BDCABA";
+    int m = X.size(), n = Y.size();
+
+    // L[i][j] = length of LCS of X[0..i-1] and Y[0..j-1]
+    vector<vector<int>> L(m + 1, vector<int>(n + 1, 0));
+
+    // Step 1: fill the table row by row
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (X[i - 1] == Y[j - 1])
+                L[i][j] = L[i - 1][j - 1] + 1;           // match: diagonal + 1
+            else
+                L[i][j] = max(L[i - 1][j], L[i][j - 1]);  // best of top / left
+        }
+    }
+
+    // Step 2: trace back from L[m][n] to build the LCS
+    string lcs = "";
+    int i = m, j = n;
+    while (i > 0 && j > 0) {
+        if (X[i - 1] == Y[j - 1]) {            // came diagonally
+            lcs += X[i - 1];
+            i--; j--;
+        } else if (L[i - 1][j] >= L[i][j - 1]) {
+            i--;                                // came from the top
+        } else {
+            j--;                                // came from the left
+        }
+    }
+    reverse(lcs.begin(), lcs.end());
+
+    // Print the DP table
+    cout << "DP table:" << endl << "    ";
+    for (char c : Y) cout << c << " ";
+    cout << endl;
+    for (int r = 0; r <= m; r++) {
+        cout << (r == 0 ? ' ' : X[r - 1]) << " ";
+        for (int c = 0; c <= n; c++) cout << L[r][c] << " ";
+        cout << endl;
+    }
+
+    cout << "\nLength of LCS = " << L[m][n] << endl;
+    cout << "LCS = " << lcs << endl;
+    return 0;
+}`,
+notes:`<ul>
+<li><b>L</b> has one extra row and column for the empty prefix, all initialised to 0.</li>
+<li>String indices are shifted by one: table cell <code>L[i][j]</code> compares <code>X[i-1]</code> with <code>Y[j-1]</code>.</li>
+<li><b>Match</b> → diagonal + 1. <b>No match</b> → max of top and left.</li>
+<li>The <b>traceback</b> starts at <code>L[m][n]</code> and walks back; letters are collected in reverse order.</li>
+<li>Ties go <b>up</b> (<code>&gt;=</code>), the same rule the demo uses — that is why we get <b>BCBA</b>.</li>
+<li><code>reverse</code> turns the collected letters into the final LCS.</li>
+</ul>`,
+out:`DP table:
+    B D C A B A
+  0 0 0 0 0 0 0
+A 0 0 0 0 1 1 1
+B 0 1 1 1 1 2 2
+C 0 1 1 2 2 2 2
+B 0 1 1 2 2 3 3
+D 0 1 2 2 2 3 3
+A 0 1 2 2 3 3 4
+B 0 1 2 2 3 4 4
+
+Length of LCS = 4
+LCS = BCBA`}
+};
+
+const PSEUDO = {
+  bf:['BELLMAN-FORD(G, w, s)',
+      '  for each v:  d[v] ← ∞,  π[v] ← NIL;   d[s] ← 0',
+      '  for i ← 1 to |V| − 1',
+      '    for each edge (u, v) ∈ E',
+      '      if d[u] + w(u,v) &lt; d[v]',
+      '        d[v] ← d[u] + w(u,v);   π[v] ← u',
+      '  for each edge (u, v) ∈ E',
+      '    if d[u] + w(u,v) &lt; d[v]',
+      '      return "NEGATIVE CYCLE"',
+      '  return d, π'],
+  fw:['FLOYD-WARSHALL(W, n)',
+      '  D ← W      // 0 on diagonal, ∞ = no edge',
+      '  for k ← 1 to n',
+      '    for i ← 1 to n',
+      '      for j ← 1 to n',
+      '        if D[i][k] + D[k][j] &lt; D[i][j]',
+      '          D[i][j] ← D[i][k] + D[k][j]',
+      '  return D'],
+  lcs:['LCS(X, Y)',
+       '  L[i][0] ← 0,  L[0][j] ← 0',
+       '  for i ← 1 to m',
+       '    for j ← 1 to n',
+       '      if X[i] = Y[j]',
+       '        L[i][j] ← L[i−1][j−1] + 1        ↖',
+       '      else L[i][j] ← max(L[i−1][j], L[i][j−1])  ↑ ←',
+       '  i ← m, j ← n   // trace back',
+       '  while i &gt; 0 and j &gt; 0: follow arrows, collect ↖',
+       '  return reverse(collected)']
+};
+
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const RX = /(\/\/.*$)|("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(^\s*#.*$)|\b(\d+)\b|\b(int|long|bool|void|char|string|vector|auto|struct|const)\b|\b(return|for|while|if|else|break|using|namespace|continue)\b|\b(cout|endl|max|min|reverse|setw|main|printPath|begin|end|size)\b/g;
+function hl(line){
+  return esc(line).replace(RX, (m, c, s1, s2, pp, n, t, k, f) => {
+    if (c) return `<span class="c">${c}</span>`;
+    if (s1 || s2) return `<span class="s">${s1||s2}</span>`;
+    if (pp) return `<span class="pp">${pp}</span>`;
+    if (n) return `<span class="n">${n}</span>`;
+    if (t) return `<span class="t">${t}</span>`;
+    if (k) return `<span class="k">${k}</span>`;
+    if (f) return `<span class="f">${f}</span>`;
+    return m;
+  });
+}
+function buildCode(px){
+  const C = CODES[px];
+  const el = document.querySelector(`.codewrap[data-px="${px}"]`);
+  const lines = C.src.split('\n').map((l,i)=>`<div class="cl"><span class="ln">${i+1}</span><span class="lc">${hl(l)||' '}</span></div>`).join('');
+  el.innerHTML = `
+    <div class="codebox">
+      <div class="codebar"><div class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+        <span class="fn">${C.file}</span>
+        <button data-copy="${px}">📋 Copy</button><button class="pri" data-dl="${px}">⬇ Download .cpp</button></div>
+      <div class="code">${lines}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card notes"><h3>🔍 How the code works</h3>${C.notes}</div>
+      <div class="card notes"><h3>▶ Compile &amp; run</h3><div class="compile">g++ -std=c++17 ${C.file} -o prog
+./prog</div><h3 style="margin-top:14px">🖥 Expected output</h3><div class="out">${esc(C.out)}</div></div>
+    </div>`;
+}
+function copyText(txt, btn){
+  const done = () => { const o = btn.textContent; btn.textContent = '✅ Copied'; setTimeout(()=>btn.textContent = o, 1500); };
+  if (navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback());
+  } else fallback();
+  function fallback(){
+    const ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){} ta.remove();
+  }
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-copy]');
+  if (c){ copyText(CODES[c.dataset.copy].src, c); return; }
+  const d = e.target.closest('[data-dl]');
+  if (d){
+    const C = CODES[d.dataset.dl];
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([C.src], {type:'text/plain'}));
+    a.download = C.file; document.body.appendChild(a); a.click(); a.remove();
+  }
+});
+
+/* =========================================================
+   Navigation
+   ========================================================= */
+const players = {};
+function showSection(id){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.sec===id));
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id==='sec-'+id));
+  Object.values(players).forEach(p => p.stop());
+  if (id==='lcs') requestAnimationFrame(()=>players.lcs.go(players.lcs.i));
+}
+function showPane(sec, pane){
+  sec.querySelectorAll('.sub').forEach(b => b.classList.toggle('active', b.dataset.pane===pane));
+  sec.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.dataset.pane===pane));
+  const pl = players[sec.dataset.a];
+  if (pl){ if (pane!=='demo') pl.stop(); else requestAnimationFrame(()=>pl.go(pl.i)); }
+  const p = sec.querySelector('.pane.active'); if (p) p.scrollTop = 0;
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => showSection(t.dataset.sec));
+document.querySelectorAll('.sub').forEach(b => b.onclick = () => showPane(b.closest('.section'), b.dataset.pane));
+document.querySelectorAll('[data-goto]').forEach(b => b.onclick = () => showPane(b.closest('.section'), b.dataset.goto));
+document.querySelectorAll('[data-open]').forEach(c => c.onclick = () => showSection(c.dataset.open));
+
+document.addEventListener('keydown', e => {
+  const ae = document.activeElement, tag = ae && ae.tagName;
+  if (tag==='INPUT' || tag==='SELECT' || tag==='TEXTAREA') return;
+  if (tag==='BUTTON' && e.key===' ') return;
+  const sec = document.querySelector('.section.active');
+  if (!sec || !sec.querySelector('.pane.demo.active')) return;
+  const pl = players[sec.dataset.a]; if (!pl) return;
+  if (e.key==='ArrowRight'){ pl.stop(); pl.go(pl.i+1); e.preventDefault(); }
+  else if (e.key==='ArrowLeft'){ pl.stop(); pl.go(pl.i-1); e.preventDefault(); }
+  else if (e.key===' '){ pl.toggle(); e.preventDefault(); }
+});
+
+/* =========================================================
+   Init
+   ========================================================= */
+['bf','fw','lcs'].forEach(px => { buildExplain(px); buildPseudo(px, PSEUDO[px]); buildCode(px); });
+players.bf  = new Player('bf',  bfBuild,  bfRender);
+players.fw  = new Player('fw',  fwBuild,  fwRender);
+players.lcs = new Player('lcs', lcsBuild, lcsRender);
+Object.values(players).forEach(p => p.load());
+
+$('bf-preset').onchange = e => { bfPreset = e.target.value; players.bf.load(); };
+function runLCS(){
+  const clean = v => v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10);
+  const x = clean($('lcs-x').value), y = clean($('lcs-y').value);
+  if (!x || !y){ alert('Please enter two non-empty strings (letters or digits).'); return; }
+  $('lcs-x').value = x; $('lcs-y').value = y;
+  lcsX = x; lcsY = y; players.lcs.load();
+}
+$('lcs-go').onclick = runLCS;
+['lcs-x','lcs-y'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key==='Enter') runLCS(); }));
+window.addEventListener('resize', () => { if ($('sec-lcs').classList.contains('active')) lcsFit(); });
+</script>
+</body>
+</html>
