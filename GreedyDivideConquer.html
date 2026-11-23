@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greedy &amp; Divide-and-Conquer — Graph Algorithms Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b1a; --panel:rgba(16,23,48,.78); --panel2:rgba(255,255,255,.045); --line:rgba(255,255,255,.09);
+  --text:#e8ecff; --muted:#9aa5c8;
+  --idle:#1d2745; --frontier:#f59e0b; --current:#ec4899; --target:#38bdf8; --done:#10b981; --reject:#ef4444;
+  --c1:#22d3ee; --c2:#6366f1;
+  --mono:'JetBrains Mono',Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Poppins',system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden;
+  background-image:radial-gradient(900px 520px at 8% -12%,rgba(99,102,241,.28),transparent 60%),
+  radial-gradient(800px 500px at 108% 6%,rgba(236,72,153,.2),transparent 60%),
+  radial-gradient(900px 600px at 50% 125%,rgba(34,211,238,.16),transparent 60%);background-attachment:fixed}
+button{font-family:inherit}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:18px;padding:10px 18px;border-bottom:1px solid var(--line);background:rgba(7,11,26,.65);backdrop-filter:blur(12px);flex-wrap:wrap;position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:13px;background:conic-gradient(from 200deg,#22d3ee,#6366f1,#ec4899,#f59e0b,#22d3ee);display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;box-shadow:0 6px 24px rgba(99,102,241,.55)}
+.brand h1{font-size:17px;font-weight:700;line-height:1.15}
+.brand p{font-size:11.5px;color:var(--muted)}
+.tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;transition:.25s;display:flex;align-items:center;gap:7px}
+.tabs button i{width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.tabs button:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+.tabs button.active{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border-color:transparent;box-shadow:0 6px 20px -6px var(--c2)}
+.tabs button.active i{background:#fff}
+
+/* ---------- views ---------- */
+main{flex:1;min-height:0;position:relative}
+.view{display:none;height:100%;flex-direction:column;padding:12px 16px 14px;gap:10px}
+.view.active{display:flex;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px -18px rgba(0,0,0,.8)}
+
+.subbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.algo-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.algo-title h2{font-size:21px;font-weight:800;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.pill{font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);color:var(--muted)}
+.pill.cx{font-family:var(--mono);color:#fff;border-color:var(--c1)}
+.seg{margin-left:auto;display:flex;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:none;background:none;color:var(--muted);padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;transition:.2s}
+.seg button.on{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff}
+.mode{display:none;flex:1;min-height:0}
+.mode.demo.on{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:10px}
+.mode.theory.on,.mode.code.on{display:block;overflow:auto;padding-right:4px}
+
+/* ---------- demo stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:10px;min-height:0}
+.graph-card{display:flex;flex-direction:column;min-height:0;padding:10px 12px 6px}
+.graph-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.legend{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
+.lg{display:flex;align-items:center;gap:5px}
+.lg i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.lg b{width:20px;height:4px;border-radius:3px;display:inline-block}
+.srcbox{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+.srcbox select{background:#0d1430;color:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:inherit;font-weight:600}
+svg.graph{flex:1;min-height:0;width:100%;display:block}
+
+.state-card{padding:12px 12px 10px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.sec-h{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+.sec-h:before{content:"";width:8px;height:8px;border-radius:2px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+table.st{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:13px}
+table.st th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:0 8px;font-weight:600}
+table.st td{background:var(--panel2);padding:6px 8px;font-family:var(--mono);transition:background .3s}
+table.st td:first-child{border-radius:8px 0 0 8px;font-family:'Poppins';font-weight:700}
+table.st td:last-child{border-radius:0 8px 8px 0}
+table.st tr.hl td{background:rgba(236,72,153,.22)}
+table.st tr.ok td:last-child{color:#34d399;font-weight:700}
+table.st tr.bad td:last-child{color:#f87171;font-weight:700}
+table.st tr.dim td{opacity:.4}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:12.5px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line);animation:pop .3s}
+@keyframes pop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+.chip.top{background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;font-weight:700;border-color:transparent}
+.chip.stale{text-decoration:line-through;opacity:.42}
+.chip.popped{background:rgba(236,72,153,.22);border-color:#ec4899;color:#fff}
+.chip.min{background:rgba(236,72,153,.28);border-color:#ec4899;font-weight:700;color:#fff}
+.chip.path{border-radius:10px;width:100%;font-size:12px}
+.empty{font-size:12px;color:var(--muted)}
+.result{padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(16,185,129,.22),rgba(34,211,238,.14));border:1px solid rgba(16,185,129,.55);font-weight:600;font-size:13.5px;animation:pop .4s}
+
+/* ---------- explanation bar ---------- */
+.explain{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 20px;padding:12px 18px 12px 22px;position:relative;overflow:hidden;min-height:132px}
+.explain:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,var(--c1),var(--c2))}
+.ex-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stepno{font-size:12px;color:var(--muted);font-weight:600}
+.phase{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 10px;border-radius:999px}
+.ex-title{font-size:18px;font-weight:700;margin:4px 0 2px}
+.ex-desc{font-size:14px;color:#cdd5f3;line-height:1.55}
+.ex-desc b{color:#fff}
+.pseudo{display:inline-block;margin-top:7px;font-family:var(--mono);font-size:12.5px;background:#0a1124;border:1px solid var(--line);border-radius:8px;padding:4px 10px;color:#7dd3fc}
+.controls{display:flex;flex-direction:column;align-items:flex-end;gap:9px;justify-content:center}
+.btns{display:flex;gap:6px}
+.btn{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font-size:15px;cursor:pointer;transition:.2s}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.13);transform:translateY(-1px)}
+.btn:disabled{opacity:.3;cursor:default}
+.btn.play{width:60px;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border:none;font-size:17px;box-shadow:0 6px 18px -6px var(--c2)}
+.speed{font-size:11.5px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.speed input{accent-color:var(--c1);width:110px}
+.hint{font-size:10.5px;color:#6f7aa3}
+.progress{grid-column:1/-1;height:6px;background:rgba(255,255,255,.07);border-radius:9px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c1),var(--c2));transition:width .35s}
+
+/* ---------- SVG graph ---------- */
+.edge line{stroke:#3a4767;stroke-width:3.5;transition:stroke .35s,stroke-width .35s,opacity .35s;stroke-linecap:round}
+.edge .wl circle{fill:#0d1430;stroke:#3a4767;stroke-width:2;transition:.35s}
+.edge .wl text{fill:#cbd5f5;font:600 13px Poppins,sans-serif;text-anchor:middle;dominant-baseline:central}
+.edge.cand line{stroke:var(--frontier);stroke-width:5}
+.edge.cand .wl circle{stroke:var(--frontier)}
+.edge.check line{stroke:var(--current);stroke-width:7;stroke-dasharray:12 8;animation:dash .7s linear infinite}
+.edge.check .wl circle{stroke:var(--current);fill:#3b0d2a}
+.edge.check .wl text{fill:#fff}
+.edge.tree line{stroke:var(--done);stroke-width:8;filter:url(#glow)}
+.edge.tree .wl circle{stroke:var(--done);fill:#06281f}
+.edge.tree .wl text{fill:#a7f3d0}
+.edge.reject line{stroke:var(--reject);stroke-dasharray:6 7;stroke-width:4;opacity:.85}
+.edge.reject .wl circle{stroke:var(--reject);fill:#2a0d12}
+.edge.noimp line{stroke:#94a3b8;stroke-dasharray:4 8;stroke-width:4}
+.edge.noimp .wl circle{stroke:#94a3b8}
+.edge.skip{opacity:.28}
+@keyframes dash{to{stroke-dashoffset:-20}}
+.node .body{fill:var(--idle);stroke:#5b6a92;stroke-width:3;transition:fill .35s,stroke .35s}
+.node .halo{fill:none;stroke:transparent;stroke-width:4;transform-box:fill-box;transform-origin:center}
+.node .lbl{fill:#fff;font:700 21px Poppins,sans-serif;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node.frontier .body{fill:var(--frontier);stroke:#fde68a}
+.node.current .body{fill:var(--current);stroke:#fbcfe8}
+.node.current .halo{stroke:var(--current);animation:pulse 1.2s ease-out infinite}
+.node.target .body{fill:var(--target);stroke:#e0f2fe}
+.node.done .body{fill:var(--done);stroke:#a7f3d0}
+.node.comp .body{stroke:#fff}
+.node.ring .halo{stroke:#fff;stroke-dasharray:5 5;animation:spin 4s linear infinite}
+.node.frontier .lbl,.node.target .lbl,.node.done .lbl,.node.comp .lbl{fill:#081020}
+@keyframes pulse{from{transform:scale(1);opacity:1}to{transform:scale(1.45);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.badge rect{fill:#0b1226;stroke:rgba(255,255,255,.18);stroke-width:1.5;transition:.35s}
+.badge text{fill:#fff;font:600 13px 'JetBrains Mono',monospace;text-anchor:middle;dominant-baseline:central}
+.node.done .badge rect{stroke:var(--done)}
+.node.frontier .badge rect,.node.target .badge rect{stroke:var(--frontier)}
+.node.current .badge rect{stroke:var(--current)}
+
+/* ---------- theory ---------- */
+.tgrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;padding-bottom:10px}
+.tcard{padding:18px 20px}
+.tcard h3{font-size:16px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.tcard h3 .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.tcard p,.tcard li{font-size:14px;line-height:1.65;color:#cdd5f3}
+.tcard p+p{margin-top:8px}
+.tcard b{color:#fff}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s6{grid-column:span 6}.s5{grid-column:span 5}.s4{grid-column:span 4}
+.hero-t{padding:22px 24px;background:linear-gradient(135deg,color-mix(in srgb,var(--c1) 22%,transparent),color-mix(in srgb,var(--c2) 22%,transparent));border-color:rgba(255,255,255,.14)}
+.hero-t h3{font-size:22px}
+.hero-t p{font-size:15px}
+ol.steps{list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:9px}
+ol.steps li{counter-increment:s;position:relative;padding-left:42px}
+ol.steps li:before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.app{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}
+.app .e{font-size:24px}
+.app h4{font-size:13.5px;margin:4px 0 2px}
+.app p{font-size:12.5px;line-height:1.45;color:var(--muted)}
+table.cxt{width:100%;border-collapse:collapse;font-size:13.5px}
+table.cxt th,table.cxt td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.cxt th{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+table.cxt td code,.ic-code{font-family:var(--mono);color:#7dd3fc}
+.warn{border-color:rgba(245,158,11,.45);background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(239,68,68,.08))}
+
+/* ---------- code ---------- */
+.code-wrap{display:grid;grid-template-columns:330px minmax(0,1fr);gap:12px;height:100%}
+.code-info{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.code-info h4{font-size:14px}
+.code-info p,.code-info li{font-size:13px;color:#cdd5f3;line-height:1.55}
+.code-info ul{padding-left:18px}
+.term{font-family:var(--mono);font-size:12px;background:#050914;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:#a7f3d0;white-space:pre;overflow:auto}
+.code-main{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.code-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.dots i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px}
+.code-bar .fname{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-right:auto}
+.cbtn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:#fff;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+.cbtn.g{background:linear-gradient(135deg,var(--c1),var(--c2));border:none}
+pre.code{flex:1;overflow:auto;padding:14px 10px;font-family:var(--mono);font-size:13px;line-height:1.6;counter-reset:l;background:#060a18;color:#d6deff}
+pre.code .ln{display:block;padding-left:3.4em;position:relative;white-space:pre}
+pre.code .ln:before{content:counter(l);counter-increment:l;position:absolute;left:0;width:2.4em;text-align:right;color:#3d4770}
+pre.code .ln:hover{background:rgba(255,255,255,.04)}
+.t-k{color:#c792ea}.t-s{color:#c3e88d}.t-c{color:#6b7aa6;font-style:italic}.t-p{color:#f78c6c}.t-n{color:#ffcb6b}
+
+/* ---------- concepts ---------- */
+#concepts{overflow:auto}
+.chero{padding:26px 28px;text-align:center;background:linear-gradient(135deg,rgba(34,211,238,.14),rgba(99,102,241,.18),rgba(236,72,153,.14))}
+.chero h2{font-size:30px;font-weight:800;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chero p{color:#cdd5f3;font-size:15px;max-width:860px;margin:8px auto 0;line-height:1.6}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ccard{padding:20px 22px;position:relative;overflow:hidden}
+.ccard:after{content:"";position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(var(--glow),transparent 70%);opacity:.35}
+.ccard h3{font-size:20px;font-weight:800;margin-bottom:6px}
+.ccard .sub{font-size:13px;color:var(--muted);margin-bottom:12px}
+.ccard p,.ccard li{font-size:14px;line-height:1.6;color:#cdd5f3}
+.ccard b{color:#fff}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kv div{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.kv .e{font-size:22px}
+.kv h5{font-size:13px;margin:2px 0}
+.kv p{font-size:11.5px;line-height:1.4;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tags span{font-size:12px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
+.demo-box{margin-top:14px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:14px;padding:14px}
+.demo-box h4{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row input,.row select{background:#0d1430;color:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-family:inherit;font-weight:600}
+.row input{width:90px}
+.coins{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;min-height:44px}
+.coin{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#3b2500;background:radial-gradient(circle at 35% 30%,#fff3c4,#fbbf24 55%,#b45309);box-shadow:0 3px 10px rgba(251,191,36,.35);animation:drop .4s backwards}
+.coin.opt{background:radial-gradient(circle at 35% 30%,#d1fae5,#34d399 55%,#047857);color:#022c1d}
+@keyframes drop{from{transform:translateY(-14px) scale(.6);opacity:0}}
+.cmsg{font-size:13px;margin-top:8px;color:#cdd5f3}
+.ms{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+.ms-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;transition:opacity .4s}
+.ms-row.off{opacity:.07}
+.ms-row.cur .ms-grp{box-shadow:0 0 0 2px var(--rc)}
+.ms-grp{display:flex;gap:3px;padding:3px;border-radius:9px;border:1px dashed rgba(255,255,255,.2)}
+.ms-cell{width:31px;height:28px;display:grid;place-items:center;border-radius:7px;font:600 12.5px var(--mono);color:#081020;background:var(--rc)}
+.ms-text{margin-top:10px;font-size:13.5px;color:#cdd5f3;min-height:42px}
+.ms-text b{color:#fff}
+.algocards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.acard{padding:16px;cursor:pointer;transition:.25s;border-top:4px solid var(--c1)}
+.acard:hover{transform:translateY(-4px);box-shadow:0 16px 30px -16px var(--c2)}
+.acard h4{font-size:15px;margin:6px 0 4px}
+.acard p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.acard .go{margin-top:10px;font-size:12px;font-weight:700;background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sec-title{font-size:18px;font-weight:800;margin:6px 0 2px;display:flex;align-items:center;gap:10px}
+
+@media (max-width:1100px){.algocards{grid-template-columns:repeat(2,1fr)}.cgrid{grid-template-columns:1fr}}
+@media (max-width:980px){
+  html,body{height:auto}
+  body{overflow:auto}
+  main{flex:none}
+  .view{height:auto}
+  .stage{grid-template-columns:1fr}
+  svg.graph{height:50vh;flex:none}
+  .mode.demo.on{grid-template-rows:auto auto}
+  .code-wrap{grid-template-columns:1fr;height:auto}
+  pre.code{max-height:70vh}
+  .explain{grid-template-columns:1fr}
+  .controls{align-items:flex-start}
+  .s8,.s7,.s6,.s5,.s4{grid-column:span 12}
+  .tabs{margin-left:0}
+}
+@media (max-width:600px){.algocards{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.seg{margin-left:0}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <div class="logo">G</div>
+    <div><h1>Greedy &amp; Divide-and-Conquer</h1><p>Interactive Graph Algorithms Studio · Dijkstra · Prim · Kruskal</p></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-tab="concepts" class="active" style="--c1:#22d3ee;--c2:#ec4899"><i></i>Concepts</button>
+    <button data-tab="dsimple" style="--c1:#22d3ee;--c2:#3b82f6"><i></i>Dijkstra · Simple</button>
+    <button data-tab="dpq" style="--c1:#a78bfa;--c2:#ec4899"><i></i>Dijkstra · Priority Queue</button>
+    <button data-tab="prim" style="--c1:#34d399;--c2:#0ea5e9"><i></i>Prim's MST</button>
+    <button data-tab="kruskal" style="--c1:#fb923c;--c2:#f43f5e"><i></i>Kruskal's MST</button>
+  </nav>
+</header>
+
+<main>
+<!-- ===================== CONCEPTS ===================== -->
+<section id="concepts" class="view active" style="--c1:#22d3ee;--c2:#ec4899">
+  <div class="card chero">
+    <h2>Two Big Ideas for Designing Algorithms</h2>
+    <p>Most efficient algorithms follow a <b>strategy</b>. <b style="color:#fbbf24">Greedy</b> algorithms grab the best-looking option at every step and never look back. <b style="color:#22d3ee">Divide &amp; Conquer</b> algorithms break a big problem into smaller copies of itself, solve them, and combine the answers. Dijkstra, Prim and Kruskal are all <b>greedy</b> — and Kruskal leans on sorting, a classic divide-and-conquer task.</p>
+  </div>
+
+  <div class="cgrid">
+    <!-- Greedy -->
+    <div class="card ccard" style="--glow:#fbbf24">
+      <h3>🪙 Greedy Method</h3>
+      <div class="sub">“Take the best choice <i>right now</i> and commit to it.”</div>
+      <p>A greedy algorithm builds a solution <b>piece by piece</b>. At each step it picks the option that looks best <b>locally</b>, hoping this leads to the best <b>global</b> answer. It never undoes a choice, which makes it fast and simple.</p>
+      <div class="kv">
+        <div><div class="e">🎯</div><h5>Greedy-choice property</h5><p>A locally best choice is part of some optimal solution.</p></div>
+        <div><div class="e">🧩</div><h5>Optimal substructure</h5><p>The optimal answer contains optimal answers to sub-problems.</p></div>
+        <div><div class="e">⚡</div><h5>No backtracking</h5><p>Each decision is final → usually very fast.</p></div>
+      </div>
+      <p><b>Template:</b> <span class="ic-code">while (not done) { pick best candidate; if (feasible) add it; }</span></p>
+      <div class="tags"><span>Dijkstra</span><span>Prim</span><span>Kruskal</span><span>Huffman coding</span><span>Activity selection</span><span>Fractional knapsack</span><span>Coin change</span></div>
+
+      <div class="demo-box">
+        <h4>🧪 Try it: Greedy coin change</h4>
+        <div class="row">
+          <label>Amount</label><input id="coinAmt" type="number" min="1" max="200" value="18">
+          <select id="coinSet">
+            <option value="10,5,2,1">₹ coins: 10, 5, 2, 1</option>
+            <option value="25,10,5,1">US coins: 25, 10, 5, 1</option>
+            <option value="4,3,1">Tricky coins: 4, 3, 1</option>
+          </select>
+          <button class="cbtn g" id="coinGo">Make change ▶</button>
+        </div>
+        <div class="coins" id="coinOut"></div>
+        <div class="cmsg" id="coinMsg"></div>
+      </div>
+    </div>
+
+    <!-- D&C -->
+    <div class="card ccard" style="--glow:#22d3ee">
+      <h3>✂️ Divide &amp; Conquer</h3>
+      <div class="sub">“Split it, solve the small pieces, glue the answers.”</div>
+      <p>The problem is split into <b>smaller sub-problems of the same type</b>, each solved <b>recursively</b>, and their results are <b>combined</b>. Running time is described by a recurrence such as <span class="ic-code">T(n) = 2T(n/2) + O(n)</span>.</p>
+      <div class="kv">
+        <div><div class="e">🔪</div><h5>Divide</h5><p>Break the problem into smaller sub-problems.</p></div>
+        <div><div class="e">🧠</div><h5>Conquer</h5><p>Solve each recursively (tiny ones directly).</p></div>
+        <div><div class="e">🧷</div><h5>Combine</h5><p>Merge sub-answers into the final answer.</p></div>
+      </div>
+      <div class="tags"><span>Merge sort</span><span>Quick sort</span><span>Binary search</span><span>Strassen matrix multiply</span><span>Closest pair of points</span><span>Karatsuba multiplication</span></div>
+
+      <div class="demo-box" style="--rc:#22d3ee">
+        <h4>🧪 Watch it: Merge Sort</h4>
+        <div class="ms" id="ms"></div>
+        <div class="ms-text" id="msText"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="cbtn" id="msPrev">◀ Prev</button>
+          <button class="cbtn g" id="msPlay">▶ Play</button>
+          <button class="cbtn" id="msNext">Next ▶</button>
+          <span class="hint" id="msStep"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card tcard">
+    <h3><span class="ic">⚖️</span>Greedy vs Divide &amp; Conquer at a glance</h3>
+    <table class="cxt">
+      <thead><tr><th>Aspect</th><th style="color:#fbbf24">Greedy</th><th style="color:#22d3ee">Divide &amp; Conquer</th></tr></thead>
+      <tbody>
+        <tr><td><b>Idea</b></td><td>Make the best local choice each step</td><td>Split → solve recursively → combine</td></tr>
+        <tr><td><b>Decisions</b></td><td>One choice at a time, never reversed</td><td>Independent sub-problems solved separately</td></tr>
+        <tr><td><b>Structure</b></td><td>Usually iterative, often uses a heap or sorting</td><td>Usually recursive</td></tr>
+        <tr><td><b>Correctness</b></td><td>Needs a proof (greedy-choice property); not always optimal</td><td>Correct if the combine step is correct</td></tr>
+        <tr><td><b>Typical cost</b></td><td><code>O(E log V)</code>, <code>O(n log n)</code></td><td><code>O(n log n)</code>, <code>O(log n)</code> — via Master Theorem</td></tr>
+        <tr><td><b>Examples</b></td><td>Dijkstra, Prim, Kruskal, Huffman</td><td>Merge sort, Quick sort, Binary search</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec-title">🚀 Explore the algorithms</div>
+  <div class="algocards">
+    <div class="card acard" data-go="dsimple" style="--c1:#22d3ee;--c2:#3b82f6"><div style="font-size:26px">📍</div><h4>Dijkstra — Simple</h4><p>Shortest paths from one source using a plain array scan. <b>O(V²)</b>, ideal for dense graphs.</p><div class="go">Open demo →</div></div>
+    <div class="card acard" data-go="dpq" style="--c1:#a78bfa;--c2:#ec4899"><div style="font-size:26px">🚀</div><h4>Dijkstra — Priority Queue</h4><p>Same greedy idea with a min-heap. <b>O((V+E) log V)</b>, ideal for sparse graphs.</p><div class="go">Open demo →</div></div>
+    <div class="card acard" data-go="prim" style="--c1:#34d399;--c2:#0ea5e9"><div style="font-size:26px">🌱</div><h4>Prim's MST</h4><p>Grows one tree outward, always adding the cheapest edge to a new vertex.</p><div class="go">Open demo →</div></div>
+    <div class="card acard" data-go="kruskal" style="--c1:#fb923c;--c2:#f43f5e"><div style="font-size:26px">🔗</div><h4>Kruskal's MST</h4><p>Sorts all edges and adds the cheapest ones that don't form a cycle (Union-Find).</p><div class="go">Open demo →</div></div>
+  </div>
+  <div class="card tcard">
+    <h3><span class="ic">🧭</span>Shortest Path vs Minimum Spanning Tree</h3>
+    <p><b>Shortest path (Dijkstra)</b> answers: <i>“What is the cheapest route from my source to every other place?”</i> The result is a tree of routes rooted at the source.</p>
+    <p><b>Minimum Spanning Tree (Prim, Kruskal)</b> answers: <i>“What is the cheapest set of edges that connects every vertex?”</i> It has exactly <b>V − 1</b> edges, no cycles, and minimum <b>total</b> weight — there is no source. All three demos use the same 6-vertex graph so you can compare the results directly.</p>
+  </div>
+</section>
+
+<section id="dsimple" class="view algo"></section>
+<section id="dpq" class="view algo"></section>
+<section id="prim" class="view algo"></section>
+<section id="kruskal" class="view algo"></section>
+</main>
+
+<!-- ===================== C++ PROGRAMS ===================== -->
+<script type="text/plain" id="code-dsimple">
+// Dijkstra's Algorithm - SIMPLE version (adjacency matrix + linear scan)
+// Time: O(V^2)   Space: O(V)   Best for dense graphs
+// Greedy idea: repeatedly finalise the unvisited vertex with the smallest distance.
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <climits>
+using namespace std;
+
+const int V = 6;                                   // vertices A..F  ->  0..5
+const char NAME[V] = {'A', 'B', 'C', 'D', 'E', 'F'};
+
+// Linear scan: return the unvisited vertex with the minimum distance  -> O(V)
+int minDistance(const vector<int>& dist, const vector<bool>& visited) {
+    int minVal = INT_MAX, minIdx = -1;
+    for (int v = 0; v < V; v++)
+        if (!visited[v] && dist[v] < minVal) {
+            minVal = dist[v];
+            minIdx = v;
+        }
+    return minIdx;
+}
+
+// Print the path source -> v by following parent[] backwards (recursively)
+void printPath(const vector<int>& parent, int v) {
+    if (parent[v] == -1) { cout << NAME[v]; return; }
+    printPath(parent, parent[v]);
+    cout << " -> " << NAME[v];
+}
+
+void dijkstra(int graph[V][V], int src) {
+    vector<int>  dist(V, INT_MAX);     // shortest distance found so far
+    vector<int>  parent(V, -1);        // previous vertex on the best path
+    vector<bool> visited(V, false);    // true = distance is final
+
+    dist[src] = 0;
+
+    for (int count = 0; count < V; count++) {
+        int u = minDistance(dist, visited);    // 1. GREEDY choice
+        if (u == -1) break;                    //    rest are unreachable
+        visited[u] = true;                     // 2. finalise u
+
+        for (int v = 0; v < V; v++)            // 3. relax every edge u -> v
+            if (graph[u][v] != 0 && !visited[v] &&
+                dist[u] + graph[u][v] < dist[v]) {
+                dist[v]   = dist[u] + graph[u][v];
+                parent[v] = u;
+            }
+    }
+
+    cout << left << setw(8) << "Vertex" << setw(10) << "Distance" << "Path" << endl;
+    for (int v = 0; v < V; v++) {
+        cout << setw(8) << NAME[v] << setw(10) << dist[v];
+        printPath(parent, v);
+        cout << endl;
+    }
+}
+
+int main() {
+    //                  A   B   C   D   E   F
+    int graph[V][V] = { { 0,  4,  2,  0,  0,  0 },   // A
+                        { 4,  0,  1,  5,  0,  0 },   // B
+                        { 2,  1,  0,  8, 10,  0 },   // C
+                        { 0,  5,  8,  0,  2,  6 },   // D
+                        { 0,  0, 10,  2,  0,  2 },   // E
+                        { 0,  0,  0,  6,  2,  0 } }; // F
+
+    dijkstra(graph, 0);    // source = A
+    return 0;
+}
+</script>
+
+<script type="text/plain" id="code-dpq">
+// Dijkstra's Algorithm - PRIORITY QUEUE version (adjacency list + min-heap)
+// Time: O((V + E) log V)   Space: O(V + E)   Best for sparse graphs
+#include <iostream>
+#include <iomanip>
+#include <vector>
+#include <queue>
+#include <climits>
+using namespace std;
+
+typedef pair<int, int> pii;                        // (distance, vertex)
+const char NAME[] = {'A', 'B', 'C', 'D', 'E', 'F'};
+
+struct Graph {
+    int V;
+    vector<vector<pii>> adj;                       // adj[u] = list of (v, weight)
+    Graph(int n) : V(n), adj(n) {}
+    void addEdge(int u, int v, int w) {
+        adj[u].push_back({v, w});
+        adj[v].push_back({u, w});                  // undirected graph
+    }
+};
+
+void printPath(const vector<int>& parent, int v) {
+    if (parent[v] == -1) { cout << NAME[v]; return; }
+    printPath(parent, parent[v]);
+    cout << " -> " << NAME[v];
+}
+
+void dijkstra(const Graph& g, int src) {
+    vector<int> dist(g.V, INT_MAX), parent(g.V, -1);
+
+    // min-heap: the smallest distance is always on top
+    priority_queue<pii, vector<pii>, greater<pii>> pq;
+
+    dist[src] = 0;
+    pq.push({0, src});
+
+    while (!pq.empty()) {
+        int d = pq.top().first;                    // 1. GREEDY: closest vertex
+        int u = pq.top().second;
+        pq.pop();
+
+        if (d > dist[u]) continue;                 // 2. stale entry -> skip (lazy deletion)
+
+        for (const auto& edge : g.adj[u]) {        // 3. relax all neighbours
+            int v = edge.first, w = edge.second;
+            if (dist[u] + w < dist[v]) {
+                dist[v]   = dist[u] + w;
+                parent[v] = u;
+                pq.push({dist[v], v});             //    push the improved distance
+            }
+        }
+    }
+
+    cout << left << setw(8) << "Vertex" << setw(10) << "Distance" << "Path" << endl;
+    for (int v = 0; v < g.V; v++) {
+        cout << setw(8) << NAME[v] << setw(10) << dist[v];
+        printPath(parent, v);
+        cout << endl;
+    }
+}
+
+int main() {
+    Graph g(6);                 // A=0 B=1 C=2 D=3 E=4 F=5
+    g.addEdge(0, 1, 4);         // A-B
+    g.addEdge(0, 2, 2);         // A-C
+    g.addEdge(1, 2, 1);         // B-C
+    g.addEdge(1, 3, 5);         // B-D
+    g.addEdge(2, 3, 8);         // C-D
+    g.addEdge(2, 4, 10);        // C-E
+    g.addEdge(3, 4, 2);         // D-E
+    g.addEdge(3, 5, 6);         // D-F
+    g.addEdge(4, 5, 2);         // E-F
+
+    dijkstra(g, 0);             // source = A
+    return 0;
+}
+</script>
+
+<script type="text/plain" id="code-prim">
+// Prim's Minimum Spanning Tree (adjacency list + min-heap)
+// Time: O(E log V)   Space: O(V + E)
+// Greedy idea: grow ONE tree; always attach the cheapest edge to a new vertex.
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+using namespace std;
+
+typedef pair<int, int> pii;                        // (key, vertex)  or  (vertex, weight)
+const char NAME[] = {'A', 'B', 'C', 'D', 'E', 'F'};
+
+void primMST(const vector<vector<pii>>& adj, int src) {
+    int V = adj.size();
+    vector<int>  key(V, INT_MAX);      // cheapest edge weight connecting v to the tree
+    vector<int>  parent(V, -1);        // the tree vertex at the other end of that edge
+    vector<bool> inMST(V, false);
+
+    priority_queue<pii, vector<pii>, greater<pii>> pq;
+    key[src] = 0;
+    pq.push({0, src});
+
+    while (!pq.empty()) {
+        int u = pq.top().second;                   // 1. GREEDY: vertex with smallest key
+        pq.pop();
+        if (inMST[u]) continue;                    //    stale entry -> skip
+        inMST[u] = true;                           // 2. add u (and edge parent[u]-u)
+
+        for (const auto& e : adj[u]) {             // 3. update keys of neighbours
+            int v = e.first, w = e.second;
+            if (!inMST[v] && w < key[v]) {
+                key[v]    = w;
+                parent[v] = u;
+                pq.push({key[v], v});
+            }
+        }
+    }
+
+    int total = 0;
+    cout << "Edge    Weight" << endl;
+    for (int v = 0; v < V; v++)
+        if (parent[v] != -1) {
+            cout << NAME[parent[v]] << " - " << NAME[v] << "   " << key[v] << endl;
+            total += key[v];
+        }
+    cout << "Total MST weight = " << total << endl;
+}
+
+int main() {
+    int V = 6;                                     // A=0 B=1 C=2 D=3 E=4 F=5
+    vector<vector<pii>> adj(V);
+    auto addEdge = [&](int u, int v, int w) {
+        adj[u].push_back({v, w});
+        adj[v].push_back({u, w});
+    };
+    addEdge(0, 1, 4);  addEdge(0, 2, 2);  addEdge(1, 2, 1);
+    addEdge(1, 3, 5);  addEdge(2, 3, 8);  addEdge(2, 4, 10);
+    addEdge(3, 4, 2);  addEdge(3, 5, 6);  addEdge(4, 5, 2);
+
+    primMST(adj, 0);                               // start from A
+    return 0;
+}
+</script>
+
+<script type="text/plain" id="code-kruskal">
+// Kruskal's Minimum Spanning Tree (sort edges + Disjoint Set Union)
+// Time: O(E log E)   Space: O(V + E)
+// Greedy idea: take edges from cheapest to costliest, skip any that forms a cycle.
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Edge { int u, v, w; };
+const char NAME[] = {'A', 'B', 'C', 'D', 'E', 'F'};
+
+// Disjoint Set Union (Union-Find) with path compression + union by rank
+struct DSU {
+    vector<int> parent, rnk;
+    DSU(int n) : parent(n), rnk(n, 0) {
+        for (int i = 0; i < n; i++) parent[i] = i;          // each vertex is its own set
+    }
+    int find(int x) {                                        // leader of x's set
+        if (parent[x] != x) parent[x] = find(parent[x]);     // path compression
+        return parent[x];
+    }
+    bool unite(int a, int b) {                               // false if already same set
+        a = find(a); b = find(b);
+        if (a == b) return false;                            // -> would form a cycle
+        if (rnk[a] < rnk[b]) swap(a, b);
+        parent[b] = a;
+        if (rnk[a] == rnk[b]) rnk[a]++;
+        return true;
+    }
+};
+
+void kruskalMST(int V, vector<Edge> edges) {
+    // 1. sort edges by weight (stable_sort keeps equal weights in input order)
+    stable_sort(edges.begin(), edges.end(),
+                [](const Edge& a, const Edge& b) { return a.w < b.w; });
+
+    DSU dsu(V);
+    int total = 0, count = 0;
+    cout << "Edge    Weight" << endl;
+
+    for (const Edge& e : edges) {
+        if (count == V - 1) break;                           // MST has V-1 edges
+        if (dsu.unite(e.u, e.v)) {                           // 2. GREEDY: cheapest safe edge
+            cout << NAME[e.u] << " - " << NAME[e.v] << "   " << e.w << endl;
+            total += e.w;
+            count++;
+        }                                                    // 3. else: cycle -> reject
+    }
+    cout << "Total MST weight = " << total << endl;
+}
+
+int main() {
+    int V = 6;                                               // A=0 B=1 C=2 D=3 E=4 F=5
+    vector<Edge> edges = {
+        {0, 1, 4}, {0, 2, 2}, {1, 2, 1}, {1, 3, 5}, {2, 3, 8},
+        {2, 4, 10}, {3, 4, 2}, {3, 5, 6}, {4, 5, 2}
+    };
+    kruskalMST(V, edges);
+    return 0;
+}
+</script>
+
+<script>
+/* =========================================================
+   GRAPH DATA (same graph for every algorithm)
+   ========================================================= */
+const NODES=[{id:'A',x:100,y:230},{id:'B',x:285,y:85},{id:'C',x:285,y:375},{id:'D',x:515,y:85},{id:'E',x:515,y:375},{id:'F',x:700,y:230}];
+const EDGES=[[0,1,4],[0,2,2],[1,2,1],[1,3,5],[2,3,8],[2,4,10],[3,4,2],[3,5,6],[4,5,2]];
+const N=NODES.length, INF=Infinity;
+const L=i=>NODES[i].id, f=d=>d===INF?'∞':d;
+const ADJ=NODES.map(()=>[]);
+EDGES.forEach(([u,v,w],e)=>{ADJ[u].push({v,w,e});ADJ[v].push({v:u,w,e});});
+const eid=(u,v)=>EDGES.findIndex(([a,b])=>(a===u&&b===v)||(a===v&&b===u));
+const PAL=['#f472b6','#60a5fa','#facc15','#34d399','#c084fc','#fb923c'];
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+/* =========================================================
+   STEP GENERATORS
+   ========================================================= */
+function genDijkstraSimple(src){
+  const dist=Array(N).fill(INF),prev=Array(N).fill(-1),vis=Array(N).fill(false),S=[];
+  const path=v=>{const p=[];for(let x=v;x>=0;x=prev[x])p.unshift(L(x));return p.join(' → ');};
+  const push=o=>{
+    const ns=NODES.map((_,i)=>vis[i]?'done':dist[i]<INF?'frontier':'idle');
+    (o.targets||[]).forEach(i=>{if(!vis[i])ns[i]='target'});
+    if(o.cur!=null)ns[o.cur]='current';
+    const es=EDGES.map(()=>'idle');
+    prev.forEach((p,v)=>{if(p>=0)es[eid(p,v)]=vis[v]?'tree':'cand'});
+    if(o.edge!=null)es[o.edge]=o.ecls;
+    let list=o.list;
+    if(!list){
+      const un=NODES.map((_,i)=>i).filter(i=>!vis[i]||i===o.minPick);
+      list={title:'Linear scan over unvisited vertices',items:un.map(i=>({t:`${L(i)}: ${f(dist[i])}`,c:i===o.minPick?'min':''}))};
+    }
+    S.push({ns,es,badges:dist.map(d=>'d:'+f(d)),phase:o.phase,title:o.title,desc:o.desc,code:o.code,
+      table:{title:'Distance table',head:['Vertex','dist[ ]','prev','Final'],rows:NODES.map((n,i)=>[n.id,f(dist[i]),prev[i]>=0?L(prev[i]):'–',vis[i]?'✔':'']),hl:o.cur},
+      list,result:o.result});
+  };
+  dist[src]=0;
+  push({phase:'init',title:'Initialise distances',desc:`Set <b>dist[${L(src)}] = 0</b> (the source) and every other distance to <b>∞</b> (unknown). No vertex is final yet.`,code:'dist[src] = 0;   dist[others] = INT_MAX;'});
+  for(let k=0;k<N;k++){
+    let u=-1;for(let i=0;i<N;i++)if(!vis[i]&&dist[i]<INF&&(u<0||dist[i]<dist[u]))u=i;
+    if(u<0)break;
+    push({phase:'pick',cur:u,minPick:u,title:`Scan all unvisited → pick ${L(u)} (dist ${dist[u]})`,
+      desc:`We check <b>every</b> unvisited vertex one by one (O(V) work) and choose the smallest distance: <b>${L(u)} = ${dist[u]}</b>. Greedy choice — since all weights are ≥ 0, no other route can ever reach ${L(u)} more cheaply, so it becomes final.`,
+      code:'int u = minDistance(dist, visited);  visited[u] = true;'});
+    vis[u]=true;
+    for(const {v,w,e} of ADJ[u]){
+      if(vis[v])continue;
+      const nd=dist[u]+w,old=dist[v];
+      if(nd<old){dist[v]=nd;prev[v]=u;
+        push({phase:'relax',cur:u,targets:[v],edge:e,ecls:'check',title:`Relax edge ${L(u)} → ${L(v)}: improved!`,
+          desc:`Going through ${L(u)}: dist[${L(u)}] + w = ${dist[u]} + ${w} = <b>${nd}</b>, which beats the old value <b>${f(old)}</b>. Update dist[${L(v)}] = ${nd} and remember prev[${L(v)}] = ${L(u)}.`,
+          code:'if (dist[u] + w < dist[v]) { dist[v] = dist[u] + w; parent[v] = u; }'});
+      }else{
+        push({phase:'noimp',cur:u,targets:[v],edge:e,ecls:'noimp',title:`Relax edge ${L(u)} → ${L(v)}: no improvement`,
+          desc:`dist[${L(u)}] + w = ${dist[u]} + ${w} = ${nd}, which is <b>not smaller</b> than the current dist[${L(v)}] = ${old}. Keep the old value.`,
+          code:'dist[u] + w >= dist[v]  →  do nothing'});
+      }
+    }
+  }
+  const tot=NODES.map((_,v)=>v);
+  push({phase:'done',title:'Done! Every shortest distance is final',
+    desc:`All vertices are finalised. The <b style="color:#34d399">green edges</b> form the <b>shortest-path tree</b> from ${L(src)}. Follow prev[ ] backwards from any vertex to read its route.`,
+    code:'printPath(parent, v);',
+    list:{title:`Shortest paths from ${L(src)}`,items:tot.map(v=>({t:`${L(v)} = ${f(dist[v])} : ${path(v)}`,c:'path'}))},
+    result:`✅ Shortest-path tree built in ${N} greedy picks — each pick needed an O(V) scan → O(V²).`});
+  return S;
+}
+
+function genDijkstraPQ(src){
+  const dist=Array(N).fill(INF),prev=Array(N).fill(-1),vis=Array(N).fill(false),pq=[],S=[];let c=0;
+  const path=v=>{const p=[];for(let x=v;x>=0;x=prev[x])p.unshift(L(x));return p.join(' → ');};
+  const push=o=>{
+    const ns=NODES.map((_,i)=>vis[i]?'done':dist[i]<INF?'frontier':'idle');
+    (o.targets||[]).forEach(i=>{if(!vis[i])ns[i]='target'});
+    if(o.cur!=null)ns[o.cur]='current';
+    const es=EDGES.map(()=>'idle');
+    prev.forEach((p,v)=>{if(p>=0)es[eid(p,v)]=vis[v]?'tree':'cand'});
+    if(o.edge!=null)es[o.edge]=o.ecls;
+    const sorted=[...pq].sort((a,b)=>a.d-b.d||a.id-b.id);
+    const items=sorted.map((q,k)=>({t:`(${q.d}, ${L(q.v)})`,c:(vis[q.v]||q.d>dist[q.v])?'stale':(k===0?'top':'')}));
+    if(o.popped)items.unshift({t:`⬆ popped (${o.popped.d}, ${L(o.popped.v)})`,c:'popped'});
+    S.push({ns,es,badges:dist.map(d=>'d:'+f(d)),phase:o.phase,title:o.title,desc:o.desc,code:o.code,
+      table:{title:'Distance table',head:['Vertex','dist[ ]','prev','Final'],rows:NODES.map((n,i)=>[n.id,f(dist[i]),prev[i]>=0?L(prev[i]):'–',vis[i]?'✔':'']),hl:o.cur},
+      list:o.list||{title:'Min-heap  (distance, vertex)',items},result:o.result});
+  };
+  dist[src]=0;pq.push({d:0,v:src,id:c++});
+  push({phase:'init',title:`Initialise and push (0, ${L(src)})`,desc:`dist[${L(src)}] = 0, all others ∞. Put the pair <b>(0, ${L(src)})</b> into the <b>min-heap</b>. The heap always keeps the smallest distance on top.`,code:'dist[src] = 0;  pq.push({0, src});'});
+  while(pq.length){
+    pq.sort((a,b)=>a.d-b.d||a.id-b.id);
+    const top=pq.shift();
+    if(vis[top.v]||top.d>dist[top.v]){
+      push({phase:'stale',popped:top,title:`Pop (${top.d}, ${L(top.v)}) → stale, discard`,
+        desc:`${L(top.v)} is already final with distance <b>${dist[top.v]}</b>. This older, larger entry is <b>out of date</b> (C++ priority_queue cannot decrease a key, so we use <b>lazy deletion</b>) — just skip it.`,
+        code:'if (d > dist[u]) continue;   // stale entry'});
+      continue;
+    }
+    const u=top.v;vis[u]=true;
+    push({phase:'pick',cur:u,popped:top,title:`Pop (${top.d}, ${L(u)}) → finalise ${L(u)}`,
+      desc:`The heap instantly gives us the closest vertex in <b>O(log V)</b> — no scanning needed. Greedy choice: ${L(u)} is now final with distance <b>${dist[u]}</b>.`,
+      code:'int d = pq.top().first, u = pq.top().second;  pq.pop();'});
+    for(const {v,w,e} of ADJ[u]){
+      if(vis[v])continue;
+      const nd=dist[u]+w,old=dist[v];
+      if(nd<old){dist[v]=nd;prev[v]=u;pq.push({d:nd,v,id:c++});
+        push({phase:'relax',cur:u,targets:[v],edge:e,ecls:'check',title:`Relax ${L(u)} → ${L(v)}: improved, push (${nd}, ${L(v)})`,
+          desc:`${dist[u]} + ${w} = <b>${nd}</b> &lt; ${f(old)}. Update dist[${L(v)}] = ${nd}, prev[${L(v)}] = ${L(u)}, and <b>push</b> the new pair into the heap${old<INF?' (the older pair for '+L(v)+' becomes stale)':''}.`,
+          code:'dist[v] = dist[u] + w;  parent[v] = u;  pq.push({dist[v], v});'});
+      }else{
+        push({phase:'noimp',cur:u,targets:[v],edge:e,ecls:'noimp',title:`Relax ${L(u)} → ${L(v)}: no improvement`,
+          desc:`${dist[u]} + ${w} = ${nd} is not smaller than dist[${L(v)}] = ${old}. Nothing is pushed.`,code:'dist[u] + w >= dist[v]  →  skip'});
+      }
+    }
+  }
+  push({phase:'done',title:'Heap is empty — all shortest paths found',
+    desc:`Same answer as the simple version, but each "find the minimum" cost only O(log V). <b style="color:#34d399">Green edges</b> = shortest-path tree from ${L(src)}.`,code:'while (!pq.empty()) { ... }   // finished',
+    list:{title:`Shortest paths from ${L(src)}`,items:NODES.map((_,v)=>({t:`${L(v)} = ${f(dist[v])} : ${path(v)}`,c:'path'}))},
+    result:`✅ Total ${c} pushes into the heap → O((V + E) log V).`});
+  return S;
+}
+
+function genPrim(src){
+  const key=Array(N).fill(INF),par=Array(N).fill(-1),inT=Array(N).fill(false),pq=[],S=[];let c=0,total=0;
+  const push=o=>{
+    const ns=NODES.map((_,i)=>inT[i]?'done':key[i]<INF?'frontier':'idle');
+    (o.targets||[]).forEach(i=>{if(!inT[i])ns[i]='target'});
+    if(o.cur!=null)ns[o.cur]='current';
+    const es=EDGES.map(()=>'idle');
+    par.forEach((p,v)=>{if(p>=0)es[eid(p,v)]=inT[v]?'tree':'cand'});
+    if(o.edge!=null)es[o.edge]=o.ecls;
+    const sorted=[...pq].sort((a,b)=>a.d-b.d||a.id-b.id);
+    const items=sorted.map((q,k)=>({t:`(${q.d}, ${L(q.v)})`,c:(inT[q.v]||q.d>key[q.v])?'stale':(k===0?'top':'')}));
+    if(o.popped)items.unshift({t:`⬆ popped (${o.popped.d}, ${L(o.popped.v)})`,c:'popped'});
+    S.push({ns,es,badges:key.map(k=>'key:'+f(k)),phase:o.phase,title:o.title,desc:o.desc,code:o.code,
+      table:{title:'Key table',head:['Vertex','key[ ]','parent','In MST'],rows:NODES.map((n,i)=>[n.id,f(key[i]),par[i]>=0?L(par[i]):'–',inT[i]?'✔':'']),hl:o.cur},
+      list:o.list||{title:'Min-heap  (key, vertex)',items},result:o.result});
+  };
+  key[src]=0;pq.push({d:0,v:src,id:c++});
+  push({phase:'init',title:`Initialise: key[${L(src)}] = 0`,desc:`<b>key[v]</b> = weight of the cheapest edge joining v to the growing tree. Start vertex ${L(src)} gets key 0; every other key is ∞. Push <b>(0, ${L(src)})</b>.`,code:'key[src] = 0;  pq.push({0, src});'});
+  while(pq.length){
+    pq.sort((a,b)=>a.d-b.d||a.id-b.id);
+    const top=pq.shift();
+    if(inT[top.v]||top.d>key[top.v]){
+      push({phase:'stale',popped:top,title:`Pop (${top.d}, ${L(top.v)}) → already in tree, skip`,
+        desc:`${L(top.v)} is already part of the MST, so this older entry is stale. Adding it again would create a <b>cycle</b>.`,code:'if (inMST[u]) continue;'});
+      continue;
+    }
+    const u=top.v;inT[u]=true;
+    if(par[u]>=0)total+=key[u];
+    push({phase:par[u]<0?'pick':'add',cur:u,popped:top,
+      title:par[u]<0?`Start the tree at ${L(u)}`:`Add edge ${L(par[u])} – ${L(u)} (weight ${key[u]})`,
+      desc:par[u]<0?`${L(u)} is the first vertex of the tree. Now we look at the edges leaving it.`
+        :`Greedy choice: <b>${L(par[u])} – ${L(u)}</b> is the <b>cheapest edge</b> crossing from the tree to a new vertex (cut property). ${L(u)} joins the MST. Running total = <b>${total}</b>.`,
+      code:'int u = pq.top().second;  pq.pop();  inMST[u] = true;'});
+    for(const {v,w,e} of ADJ[u]){
+      if(inT[v])continue;
+      const old=key[v];
+      if(w<old){key[v]=w;par[v]=u;pq.push({d:w,v,id:c++});
+        push({phase:'relax',cur:u,targets:[v],edge:e,ecls:'check',title:`Edge ${L(u)} – ${L(v)} (${w}): better key for ${L(v)}`,
+          desc:`Edge weight <b>${w}</b> &lt; key[${L(v)}] = ${f(old)}. So ${L(v)} can now be connected more cheaply: key[${L(v)}] = ${w}, parent[${L(v)}] = ${L(u)}; push (${w}, ${L(v)}). <i>Note: Prim compares a single edge, not a total path like Dijkstra.</i>`,
+          code:'if (!inMST[v] && w < key[v]) { key[v] = w; parent[v] = u; pq.push({w, v}); }'});
+      }else{
+        push({phase:'noimp',cur:u,targets:[v],edge:e,ecls:'noimp',title:`Edge ${L(u)} – ${L(v)} (${w}): not cheaper`,
+          desc:`Weight ${w} is not smaller than key[${L(v)}] = ${old}. ${L(v)} already has a cheaper connection.`,code:'w >= key[v]  →  skip'});
+      }
+    }
+  }
+  const mst=NODES.map((_,v)=>v).filter(v=>par[v]>=0);
+  push({phase:'done',title:`MST complete — total weight ${total}`,
+    desc:`All ${N} vertices are connected using exactly <b>${N-1} edges</b> with the smallest possible total weight. The <b style="color:#34d399">green edges</b> are the Minimum Spanning Tree.`,code:'cout << "Total MST weight = " << total;',
+    list:{title:'MST edges',items:mst.map(v=>({t:`${L(par[v])} – ${L(v)}  (${key[v]})`,c:'path'}))},
+    result:`✅ MST weight = ${total}  ·  ${N-1} edges  ·  O(E log V)`});
+  return S;
+}
+
+function genKruskal(){
+  const order=EDGES.map((_,i)=>i).sort((a,b)=>EDGES[a][2]-EDGES[b][2]);
+  const par=NODES.map((_,i)=>i),rk=NODES.map(()=>0),st=EDGES.map(()=>'pending');let total=0,taken=0;const S=[];
+  const find=x=>par[x]===x?x:(par[x]=find(par[x]));
+  const root=x=>{while(par[x]!==x)x=par[x];return x;};
+  const LBL={pending:'·',check:'▶ checking',added:'✔ added',reject:'✖ cycle',skip:'— skipped'};
+  const push=o=>{
+    const r=NODES.map((_,i)=>root(i)),size={};r.forEach(x=>size[x]=(size[x]||0)+1);
+    const ns=NODES.map((_,i)=>(size[r[i]]>1?'comp':'idle')+((o.ring||[]).includes(i)?' ring':''));
+    const fill=NODES.map((_,i)=>size[r[i]]>1?PAL[r[i]]:'');
+    const es=EDGES.map((_,e)=>({pending:'idle',check:'check',added:'tree',reject:'reject',skip:'skip'})[st[e]]);
+    const groups={};r.forEach((x,i)=>(groups[x]=groups[x]||[]).push(L(i)));
+    const items=Object.keys(groups).map(k=>({t:'{ '+groups[k].join(', ')+' }',st:groups[k].length>1?`background:${PAL[k]}33;border-color:${PAL[k]};color:#fff`:''}));
+    S.push({ns,es,fill,badges:r.map(x=>'set '+L(x)),phase:o.phase,title:o.title,desc:o.desc,code:o.code,
+      table:{title:'Edges sorted by weight',head:['Edge','w','Status'],rows:order.map(e=>[`${L(EDGES[e][0])} – ${L(EDGES[e][1])}`,EDGES[e][2],LBL[st[e]]]),
+        hl:o.edge!=null?order.indexOf(o.edge):null,rc:order.map(e=>st[e]==='added'?'ok':st[e]==='reject'?'bad':st[e]==='skip'?'dim':'')},
+      list:{title:'Disjoint sets (Union-Find)',items},result:o.result});
+  };
+  push({phase:'init',title:'Sort all edges by weight',desc:`Kruskal looks at the <b>whole graph</b>: list all ${EDGES.length} edges from cheapest to costliest (sorting is a <b>divide-and-conquer</b> step, e.g. merge sort). Each vertex starts in its <b>own set</b>.`,code:'stable_sort(edges by w);   DSU dsu(V);'});
+  for(const e of order){
+    const [u,v,w]=EDGES[e];
+    if(taken===N-1)break;
+    st[e]='check';
+    const ru=find(u),rv=find(v);
+    push({phase:'check',edge:e,ring:[u,v],title:`Next cheapest edge: ${L(u)} – ${L(v)} (weight ${w})`,
+      desc:`Ask Union-Find for the set leaders: <b>find(${L(u)}) = ${L(ru)}</b>, <b>find(${L(v)}) = ${L(rv)}</b>. ${ru===rv?'Same leader…':'Different leaders…'}`,
+      code:`if (dsu.find(${L(u)}) != dsu.find(${L(v)}))  ?`});
+    if(ru!==rv){
+      let a=ru,b=rv;if(rk[a]<rk[b])[a,b]=[b,a];par[b]=a;if(rk[a]===rk[b])rk[a]++;
+      st[e]='added';total+=w;taken++;
+      push({phase:'add',edge:e,ring:[u,v],title:`ADD ${L(u)} – ${L(v)} → sets merged`,
+        desc:`They are in <b>different</b> sets, so this edge cannot create a cycle. Greedy choice: take it! Union the two sets. MST now has <b>${taken}/${N-1}</b> edges, total = <b>${total}</b>.`,
+        code:'dsu.unite(u, v);   total += w;   count++;'});
+    }else{
+      st[e]='reject';
+      push({phase:'reject',edge:e,ring:[u,v],title:`REJECT ${L(u)} – ${L(v)} → would form a cycle`,
+        desc:`${L(u)} and ${L(v)} are <b>already connected</b> (same set ${L(ru)}). Adding this edge would close a loop, so it is thrown away.`,
+        code:'find(u) == find(v)  →  cycle, skip edge'});
+    }
+  }
+  let skipped=0;order.forEach(e=>{if(st[e]==='pending'){st[e]='skip';skipped++;}});
+  push({phase:'done',title:`MST complete — total weight ${total}`,
+    desc:`We have <b>V − 1 = ${N-1}</b> edges, so the tree is complete${skipped?` and the remaining ${skipped} edges are never examined`:''}. Same total as Prim's (${total}) — an MST's weight is unique.`,
+    code:'if (count == V - 1) break;',
+    result:`✅ MST weight = ${total}  ·  O(E log E) (dominated by sorting)`});
+  return S;
+}
+
+/* =========================================================
+   ALGORITHM CONFIG + THEORY
+   ========================================================= */
+const LEG_D=[['i','var(--idle)','Unvisited'],['i','var(--frontier)','Tentative'],['i','var(--current)','Current u'],['i','var(--target)','Neighbour v'],['i','var(--done)','Final'],['b','var(--current)','Relaxing'],['b','var(--done)','Path tree']];
+const LEG_P=[['i','var(--idle)','Not reached'],['i','var(--frontier)','Has key'],['i','var(--current)','Current u'],['i','var(--done)','In MST'],['b','var(--frontier)','Best edge so far'],['b','var(--current)','Checking'],['b','var(--done)','MST edge']];
+const LEG_K=[['i','#f472b6','Set colours'],['b','var(--current)','Checking'],['b','var(--done)','MST edge'],['b','var(--reject)','Rejected (cycle)']];
+
+const ALGOS=[
+{id:'dsimple',name:"Dijkstra's Algorithm — Simple",tag:'Greedy · Single-source shortest path',cx:'O(V²)',c1:'#22d3ee',c2:'#3b82f6',gen:genDijkstraSimple,src:'Source',legend:LEG_D,file:'dijkstra_simple.cpp',
+ output:`Vertex  Distance  Path
+A       0         A
+B       3         A -> C -> B
+C       2         A -> C
+D       8         A -> C -> B -> D
+E       10        A -> C -> B -> D -> E
+F       12        A -> C -> B -> D -> E -> F`,
+ keys:['<b>minDistance()</b> – the O(V) linear scan (the greedy pick).','<b>visited[]</b> – vertices whose distance is final.','<b>Relaxation</b> – <span class="ic-code">dist[u]+w &lt; dist[v]</span>.','<b>parent[]</b> + recursion print the route.'],
+ theory:{
+  idea:'Find the <b>shortest distance from one source vertex to every other vertex</b> in a weighted graph whose edge weights are <b>non-negative</b>. Dijkstra grows a “cloud” of finished vertices outward from the source, always adding the <b>closest unfinished vertex</b> next.',
+  analogy:'🌊 Drop a stone into a pond. The ripple reaches nearby places first and far places later. Dijkstra “floods” the graph the same way: the first time the wave reaches a vertex, it has arrived by the shortest possible route.',
+  greedy:'At every step, pick the unvisited vertex with the <b>smallest tentative distance</b> and lock it in. Since every edge weight is ≥ 0, any other route to it would have to pass through a vertex that is already at least as far away — so it can never be shorter.',
+  steps:['Set <b>dist[source] = 0</b> and every other dist = ∞. Mark all vertices unvisited.','<b>Scan</b> all unvisited vertices and pick <b>u</b> with the smallest dist (a simple O(V) loop).','Mark <b>u</b> as visited — its distance is now final.','<b>Relax</b> each edge (u, v): if dist[u] + w(u,v) &lt; dist[v], set dist[v] = dist[u] + w and parent[v] = u.','Repeat steps 2–4 until all vertices are visited. Follow parent[ ] backwards to print any path.'],
+  cx:[['Find minimum','O(V) linear scan','done V times → O(V²)'],['Relax edges','O(V) per vertex (matrix row)','O(V²) total'],['Overall time','<b>O(V²)</b>','independent of E'],['Space','O(V) arrays','+ O(V²) adjacency matrix']],
+  note:'<b>When is the simple version better?</b> For <b>dense</b> graphs (E ≈ V²) the O(V²) array version is as fast as — or faster than — the heap version, and it is shorter to code.',
+  apps:[['🗺️','GPS & maps','Fastest route between two places on a road network.'],['🌐','Internet routing','OSPF / IS-IS protocols pick least-cost paths between routers.'],['✈️','Travel booking','Cheapest or shortest flight connections.'],['🤖','Robots & games','Path-finding for robots and game characters on a grid.'],['📞','Telecom','Routing calls through least-cost switching centres.'],['🚚','Logistics','Shortest delivery routes from a warehouse.']],
+  warn:'Dijkstra <b>fails with negative edge weights</b> — a later negative edge could make a “final” distance smaller. Use <b>Bellman–Ford</b> for such graphs.'}},
+{id:'dpq',name:"Dijkstra's Algorithm — Priority Queue",tag:'Greedy · Min-heap',cx:'O((V+E) log V)',c1:'#a78bfa',c2:'#ec4899',gen:genDijkstraPQ,src:'Source',legend:LEG_D,file:'dijkstra_pq.cpp',
+ output:`Vertex  Distance  Path
+A       0         A
+B       3         A -> C -> B
+C       2         A -> C
+D       8         A -> C -> B -> D
+E       10        A -> C -> B -> D -> E
+F       12        A -> C -> B -> D -> E -> F`,
+ keys:['<b>priority_queue&lt;pii, vector&lt;pii&gt;, greater&lt;pii&gt;&gt;</b> – a min-heap.','<b>pq.top()</b> – closest vertex in O(1), pop in O(log V).','<b>if (d &gt; dist[u]) continue;</b> – lazy deletion of stale pairs.','<b>Adjacency list</b> – only real edges are visited.'],
+ theory:{
+  idea:'The <b>same greedy algorithm</b> with a faster engine. Instead of scanning all vertices to find the closest one, keep candidates in a <b>min-heap (priority queue)</b> that always hands back the smallest distance in <b>O(log V)</b>.',
+  analogy:'🏥 Think of hospital triage: patients wait in a queue ordered by urgency. The doctor always calls the most urgent one next without re-checking everyone in the waiting room. Here “most urgent” = smallest distance.',
+  greedy:'Pop the pair (d, u) with the smallest d. If it is up-to-date, u is final. C++ <span class="ic-code">priority_queue</span> cannot “decrease a key”, so on every improvement we <b>push a new pair</b>; the older pair becomes <b>stale</b> and is simply skipped when it reaches the top (<b>lazy deletion</b>).',
+  steps:['Set dist[source] = 0, others ∞. Push <b>(0, source)</b> into the min-heap.','<b>Pop</b> the pair (d, u) with the smallest d.','If <b>d &gt; dist[u]</b> the pair is stale → skip it.','For each edge (u, v): if dist[u] + w &lt; dist[v], update dist[v], parent[v] and <b>push (dist[v], v)</b>.','Repeat until the heap is empty.'],
+  cx:[['Heap push / pop','O(log V)','at most E pushes'],['Edges examined','each edge twice (undirected)','O(E)'],['Overall time','<b>O((V + E) log V)</b>','≈ O(E log V)'],['Space','O(V + E)','adjacency list + heap']],
+  note:'<b>Simple vs PQ, real numbers:</b> a road map with V = 100,000 junctions and E = 300,000 roads → simple ≈ V² = 10,000,000,000 steps; heap ≈ (V+E)·log V ≈ 6,800,000 steps — about <b>1,500× faster</b>.',
+  apps:[['🗺️','Google / OSM routing','Huge sparse road networks need the heap version.'],['🕸️','Social networks','Degrees of separation in weighted friend graphs.'],['🎮','Game AI','A* search is Dijkstra + a heuristic, built on a priority queue.'],['🌐','SDN & networks','Fast recomputation of routing tables.'],['🚇','Metro planners','Fewest-minutes trip with transfers as weighted edges.'],['⚡','Power grids','Least-loss transmission paths.']],
+  warn:'Still requires <b>non-negative weights</b>. Stale entries mean the heap can hold up to E items, but the complexity stays O(E log V).'}},
+{id:'prim',name:"Prim's Minimum Spanning Tree",tag:'Greedy · MST (grow one tree)',cx:'O(E log V)',c1:'#34d399',c2:'#0ea5e9',gen:genPrim,src:'Start',legend:LEG_P,file:'prim_mst.cpp',
+ output:`Edge    Weight
+C - B   1
+A - C   2
+B - D   5
+D - E   2
+E - F   2
+Total MST weight = 12`,
+ keys:['<b>key[v]</b> – cheapest edge joining v to the tree.','<b>inMST[]</b> – vertices already in the tree.','<b>w &lt; key[v]</b> – compares a <i>single edge</i>, not a path.','<b>parent[v]–v</b> are the final MST edges.'],
+ theory:{
+  idea:'A <b>Minimum Spanning Tree (MST)</b> connects <b>all V vertices</b> using exactly <b>V − 1 edges</b>, with <b>no cycles</b> and the <b>smallest total weight</b>. Prim builds it by growing <b>one tree</b> from a start vertex, adding one new vertex at a time.',
+  analogy:'🔌 An electricity board starts at the power station and keeps laying the <b>cheapest cable</b> from the already-powered area to a town that has no power yet — until every town is lit.',
+  greedy:'<b>Cut property:</b> split the vertices into “in tree” and “not in tree”. The cheapest edge crossing this cut is always safe to add to some MST. Prim picks exactly that edge every step.',
+  steps:['Set key[start] = 0, all other keys = ∞. Push (0, start).','Pop the vertex <b>u</b> with the smallest key. If u is already in the MST, skip it.','Add <b>u</b> to the MST (the edge parent[u] – u becomes a tree edge).','For each neighbour v not in the MST: if w(u,v) &lt; key[v], set key[v] = w, parent[v] = u and push (w, v).','Repeat until all vertices are in the tree (V − 1 edges).'],
+  cx:[['With binary heap','<b>O(E log V)</b>','good for sparse graphs'],['With plain array','O(V²)','good for dense graphs'],['Space','O(V + E)',''],['Output','V − 1 edges','total weight is unique']],
+  note:'<b>Prim vs Dijkstra:</b> the code is almost identical! Dijkstra stores <span class="ic-code">dist[u] + w</span> (whole path length); Prim stores just <span class="ic-code">w</span> (one edge). Different question, same greedy skeleton.',
+  apps:[['🔌','Network cabling','Cheapest LAN, fibre or electricity wiring.'],['🛣️','Road & pipeline layout','Connect towns or wells with minimum material.'],['🔲','Circuit design','Minimum wire length to connect pins on a chip.'],['🧬','Clustering','Group similar data points (bioinformatics, ML).'],['🧭','TSP approximation','MST gives a 2-approximation for travelling salesman.'],['📡','Sensor networks','Low-energy communication backbone.']],
+  warn:'The graph must be <b>connected</b>; otherwise Prim only spans the start vertex\'s component (run it per component to get a spanning <b>forest</b>).'}},
+{id:'kruskal',name:"Kruskal's Minimum Spanning Tree",tag:'Greedy · MST (sort + Union-Find)',cx:'O(E log E)',c1:'#fb923c',c2:'#f43f5e',gen:genKruskal,src:null,legend:LEG_K,file:'kruskal_mst.cpp',
+ output:`Edge    Weight
+B - C   1
+A - C   2
+D - E   2
+E - F   2
+B - D   5
+Total MST weight = 12`,
+ keys:['<b>stable_sort</b> – edges from cheapest to costliest.','<b>DSU::find</b> – set leader with path compression.','<b>DSU::unite</b> – returns false when it would form a cycle.','Stop after <b>V − 1</b> edges.'],
+ theory:{
+  idea:'Kruskal builds the MST <b>edge by edge</b> from a global view: sort <b>all edges</b> by weight, then take each edge if it does <b>not create a cycle</b>. Many small trees (a forest) gradually merge into one spanning tree.',
+  analogy:'🛣️ A government builds roads cheapest-first. Before building, it asks: “Are these two towns already connected by roads we built?” If yes, the new road is wasted (a cycle) and is skipped.',
+  greedy:'Always take the <b>globally cheapest edge</b> that joins two <b>different</b> components. A <b>Disjoint Set Union (Union-Find)</b> structure answers “same component?” in almost O(1).',
+  steps:['<b>Sort</b> all edges by weight (ascending) — a divide-and-conquer step (merge sort).','Put every vertex in its <b>own set</b> (make-set).','Take the next edge (u, v). If <b>find(u) ≠ find(v)</b>, add it to the MST and <b>union</b> the two sets.','If <b>find(u) = find(v)</b>, they are already connected → reject (cycle).','Stop when the MST has <b>V − 1</b> edges.'],
+  cx:[['Sorting edges','<b>O(E log E)</b>','dominates the cost'],['Union-Find ops','O(E · α(V))','α ≈ constant (≤ 4)'],['Overall time','<b>O(E log E) = O(E log V)</b>',''],['Space','O(V + E)','']],
+  note:'<b>Greedy meets Divide &amp; Conquer:</b> Kruskal is greedy, but its first and most expensive step — sorting — is typically done with merge sort, a divide-and-conquer algorithm.',
+  apps:[['🛣️','Network design','Roads, cables, pipelines at minimum cost.'],['🖼️','Image segmentation','Felzenszwalb\'s algorithm merges pixel regions Kruskal-style.'],['🧪','Single-linkage clustering','Stop Kruskal early → k clusters.'],['🌀','Maze generation','Random-weight Kruskal creates perfect mazes.'],['📶','Wireless networks','Minimum-power connected topology.'],['🧬','Phylogenetics','Building trees of related species.']],
+  warn:'<b>Prim or Kruskal?</b> Kruskal shines on <b>sparse</b> graphs or when edges are already sorted; Prim (with a heap or array) is often better for <b>dense</b> graphs.'}}
+];
+
+/* =========================================================
+   VIEW BUILDING
+   ========================================================= */
+function theoryHTML(t){
+  return `<div class="tgrid">
+  <div class="card tcard hero-t s12"><h3><span class="ic">💡</span>The Big Idea</h3><p>${t.idea}</p></div>
+  <div class="card tcard s6"><h3><span class="ic">🎈</span>Real-life analogy</h3><p>${t.analogy}</p></div>
+  <div class="card tcard s6"><h3><span class="ic">🎯</span>Why it is Greedy</h3><p>${t.greedy}</p></div>
+  <div class="card tcard s7"><h3><span class="ic">🪜</span>Step-by-step recipe</h3><ol class="steps">${t.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>
+  <div class="card tcard s5"><h3><span class="ic">⏱️</span>Complexity</h3>
+    <table class="cxt"><thead><tr><th>Part</th><th>Cost</th><th>Note</th></tr></thead><tbody>${t.cx.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td style="color:var(--muted)">${r[2]}</td></tr>`).join('')}</tbody></table>
+    <p style="margin-top:12px">${t.note}</p></div>
+  <div class="card tcard s12"><h3><span class="ic">🌍</span>Applications</h3><div class="apps">${t.apps.map(a=>`<div class="app"><div class="e">${a[0]}</div><h4>${a[1]}</h4><p>${a[2]}</p></div>`).join('')}</div></div>
+  <div class="card tcard warn s12"><h3><span class="ic">⚠️</span>Watch out</h3><p>${t.warn}</p></div>
+  </div>`;
+}
+function hl(code){
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const re=/(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*")|('(?:[^'\\\n]|\\.)*')|(#\w+)|\b(int|bool|void|return|for|while|if|else|const|auto|struct|using|namespace|true|false|continue|break|char|typedef|vector|pair|priority_queue|greater|cout|endl|left|setw|swap|stable_sort|INT_MAX)\b|\b(\d+)\b/g;
+  let out='',last=0,m;
+  while((m=re.exec(code))){
+    out+=esc(code.slice(last,m.index));
+    const c=m[1]?'c':(m[2]||m[3])?'s':m[4]?'p':m[5]?'k':'n';
+    out+=`<span class="t-${c}">${esc(m[0])}</span>`;last=re.lastIndex;
+  }
+  out+=esc(code.slice(last));
+  return out.split('\n').map(l=>`<span class="ln">${l||' '}</span>`).join('');
+}
+function legendHTML(lg){return lg.map(([k,c,t])=>`<span class="lg">${k==='i'?`<i style="background:${c}"></i>`:`<b style="background:${c}"></b>`}${t}</span>`).join('');}
+
+function buildView(a){
+  const sec=document.getElementById(a.id);
+  sec.style.setProperty('--c1',a.c1);sec.style.setProperty('--c2',a.c2);
+  const code=document.getElementById('code-'+a.id).textContent.replace(/^\n+/,'').replace(/\s+$/,'')+'\n';
+  a.codeText=code;
+  sec.innerHTML=`
+  <div class="subbar">
+    <div class="algo-title"><h2>${a.name}</h2><span class="pill">${a.tag}</span><span class="pill cx">${a.cx}</span></div>
+    <div class="seg"><button data-mode="demo" class="on">▶ Demo</button><button data-mode="theory">📖 Theory</button><button data-mode="code">💻 C++ Code</button></div>
+  </div>
+  <div class="mode demo on">
+    <div class="stage">
+      <div class="card graph-card">
+        <div class="graph-top"><div class="legend">${legendHTML(a.legend)}</div>
+          ${a.src?`<label class="srcbox">${a.src} vertex <select class="srcsel">${NODES.map((n,i)=>`<option value="${i}">${n.id}</option>`).join('')}</select></label>`:''}</div>
+        <svg class="graph" viewBox="0 0 800 460" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <aside class="card state-card"></aside>
+    </div>
+    <div class="card explain">
+      <div>
+        <div class="ex-head"><span class="stepno"></span><span class="phase"></span></div>
+        <div class="ex-title"></div>
+        <div class="ex-desc"></div>
+        <code class="pseudo"></code>
+      </div>
+      <div class="controls">
+        <div class="btns">
+          <button class="btn b-first" title="First step">⏮</button>
+          <button class="btn b-prev" title="Previous (←)">◀</button>
+          <button class="btn play b-play" title="Play / Pause (Space)">▶</button>
+          <button class="btn b-next" title="Next (→)">▶|</button>
+          <button class="btn b-last" title="Last step">⏭</button>
+        </div>
+        <label class="speed">🐢 <input type="range" class="spd" min="300" max="2700" value="1500"> 🐇</label>
+        <span class="hint">Keys: ← → step · Space play</span>
+      </div>
+      <div class="progress"><i></i></div>
+    </div>
+  </div>
+  <div class="mode theory">${theoryHTML(a.theory)}</div>
+  <div class="mode code">
+    <div class="code-wrap">
+      <div class="card code-info">
+        <h4>▶ Compile &amp; run</h4>
+        <div class="term">g++ -std=c++17 ${a.file} -o prog
+./prog</div>
+        <h4>🖥️ Expected output</h4>
+        <div class="term">${a.output}</div>
+        <h4>🔑 Key parts of the code</h4>
+        <ul>${a.keys.map(k=>`<li>${k}</li>`).join('')}</ul>
+        <p style="color:var(--muted)">Vertices A–F are numbered 0–5. The program uses the same graph as the demo, so the output matches the animation.</p>
+      </div>
+      <div class="card code-main">
+        <div class="code-bar"><span class="dots"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></span><span class="fname">${a.file}</span>
+          <button class="cbtn b-copy">📋 Copy</button><button class="cbtn g b-dl">⬇ Download .cpp</button></div>
+        <pre class="code">${hl(code)}</pre>
+      </div>
+    </div>
+  </div>`;
+  $$('.seg button',sec).forEach(b=>b.onclick=()=>{
+    $$('.seg button',sec).forEach(x=>x.classList.toggle('on',x===b));
+    $$('.mode',sec).forEach(m=>m.classList.toggle('on',m.classList.contains(b.dataset.mode)));
+    if(b.dataset.mode!=='demo')a.viz.stop();
+  });
+  $('.b-copy',sec).onclick=e=>{
+    const done=()=>{e.target.textContent='✅ Copied';setTimeout(()=>e.target.textContent='📋 Copy',1500)};
+    if(navigator.clipboard)navigator.clipboard.writeText(code).then(done,()=>fallbackCopy(code,done));else fallbackCopy(code,done);
+  };
+  $('.b-dl',sec).onclick=()=>{
+    const blob=new Blob([code],{type:'text/plain'});const u=URL.createObjectURL(blob);
+    const l=document.createElement('a');l.href=u;l.download=a.file;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
+  };
+  a.viz=new Viz(sec,a);
+}
+function fallbackCopy(t,cb){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');cb();}catch(e){}ta.remove();}
+
+const PHASE={init:['Initialise','#60a5fa'],pick:['Greedy pick','#ec4899'],relax:['Update','#f59e0b'],noimp:['No change','#94a3b8'],stale:['Stale entry','#94a3b8'],add:['Add edge','#10b981'],check:['Check','#38bdf8'],reject:['Reject','#ef4444'],done:['Finished','#34d399']};
+
+class Viz{
+  constructor(sec,a){
+    this.sec=sec;this.a=a;this.i=0;this.t=null;this.src=0;
+    this.svg=$('svg.graph',sec);this.draw();
+    $('.b-first',sec).onclick=()=>{this.stop();this.go(0)};
+    $('.b-prev',sec).onclick=()=>{this.stop();this.go(this.i-1)};
+    $('.b-next',sec).onclick=()=>{this.stop();this.go(this.i+1)};
+    $('.b-last',sec).onclick=()=>{this.stop();this.go(this.steps.length-1)};
+    $('.b-play',sec).onclick=()=>this.toggle();
+    this.spd=$('.spd',sec);
+    const sel=$('.srcsel',sec);if(sel)sel.onchange=()=>{this.src=+sel.value;this.stop();this.regen()};
+    this.regen();
+  }
+  draw(){
+    let h=`<defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+    EDGES.forEach(([u,v,w],i)=>{const A=NODES[u],B=NODES[v],mx=(A.x+B.x)/2,my=(A.y+B.y)/2;
+      h+=`<g class="edge" data-e="${i}"><line x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}"/><g class="wl"><circle cx="${mx}" cy="${my}" r="15"/><text x="${mx}" y="${my}">${w}</text></g></g>`;});
+    NODES.forEach((n,i)=>{const off=n.y<200?-48:48;
+      h+=`<g class="node" data-n="${i}" transform="translate(${n.x},${n.y})"><circle class="halo" r="31"/><circle class="body" r="27"/><text class="lbl">${n.id}</text><g class="badge" transform="translate(0,${off})"><rect x="-33" y="-13" width="66" height="26" rx="13"/><text class="bt"></text></g></g>`;});
+    this.svg.innerHTML=h;
+    this.nodes=$$('.node',this.svg);this.edges=$$('.edge',this.svg);
+  }
+  regen(){this.steps=this.a.gen(this.src);this.i=0;this.render();}
+  go(i){this.i=Math.max(0,Math.min(this.steps.length-1,i));this.render();}
+  delay(){return 3000-(+this.spd.value);}
+  toggle(){this.t?this.stop():this.play();}
+  play(){
+    if(this.i>=this.steps.length-1)this.go(0);
+    this.setPlay(true);
+    const tick=()=>{this.go(this.i+1);if(this.i>=this.steps.length-1){this.stop();return;}this.t=setTimeout(tick,this.delay());};
+    this.t=setTimeout(tick,350);
+  }
+  stop(){clearTimeout(this.t);this.t=null;this.setPlay(false);}
+  setPlay(p){const b=$('.b-play',this.sec);b.textContent=p?'⏸':'▶';}
+  render(){
+    const s=this.steps[this.i],sec=this.sec,n=this.steps.length;
+    this.nodes.forEach((g,i)=>{g.setAttribute('class','node '+s.ns[i]);$('.body',g).style.fill=s.fill&&s.fill[i]?s.fill[i]:'';$('.bt',g).textContent=s.badges[i];});
+    this.edges.forEach((g,i)=>g.setAttribute('class','edge '+s.es[i]));
+    const T=s.table;
+    let h=`<div class="sec-h">${T.title}</div><table class="st"><thead><tr>${T.head.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${T.rows.map((r,i)=>`<tr class="${i===T.hl?'hl':''} ${T.rc?T.rc[i]:''}">${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    if(s.list)h+=`<div class="sec-h">${s.list.title}</div><div class="chips">${s.list.items.length?s.list.items.map(it=>`<span class="chip ${it.c||''}" ${it.st?`style="${it.st}"`:''}>${it.t}</span>`).join(''):'<span class="empty">— empty —</span>'}</div>`;
+    if(s.result)h+=`<div class="result">${s.result}</div>`;
+    $('.state-card',sec).innerHTML=h;
+    const [pn,pc]=PHASE[s.phase]||['Step','#94a3b8'];
+    $('.stepno',sec).textContent=`Step ${this.i+1} / ${n}`;
+    const ph=$('.phase',sec);ph.textContent=pn;ph.style.cssText=`background:${pc}26;color:${pc};border:1px solid ${pc}66`;
+    $('.ex-title',sec).textContent=s.title;
+    $('.ex-desc',sec).innerHTML=s.desc;
+    $('.pseudo',sec).textContent=s.code;
+    $('.progress i',sec).style.width=(n>1?this.i/(n-1)*100:100)+'%';
+    $('.b-first',sec).disabled=$('.b-prev',sec).disabled=this.i===0;
+    $('.b-next',sec).disabled=$('.b-last',sec).disabled=this.i===n-1;
+  }
+}
+
+ALGOS.forEach(buildView);
+
+/* =========================================================
+   TABS + KEYBOARD
+   ========================================================= */
+let active='concepts';
+function showTab(id){
+  active=id;
+  $$('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  $$('.view').forEach(v=>v.classList.toggle('active',v.id===id));
+  ALGOS.forEach(a=>{if(a.id!==id)a.viz.stop();});
+  msStop();
+  window.scrollTo(0,0);
+}
+$$('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$$('.acard').forEach(c=>c.onclick=()=>showTab(c.dataset.go));
+document.addEventListener('keydown',e=>{
+  if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
+  const a=ALGOS.find(x=>x.id===active);if(!a)return;
+  if(!$('.mode.demo',a.viz.sec).classList.contains('on'))return;
+  if(e.key==='ArrowRight'){a.viz.stop();a.viz.go(a.viz.i+1);e.preventDefault();}
+  else if(e.key==='ArrowLeft'){a.viz.stop();a.viz.go(a.viz.i-1);e.preventDefault();}
+  else if(e.key===' '){a.viz.toggle();e.preventDefault();}
+});
+
+/* =========================================================
+   CONCEPTS: COIN CHANGE (greedy) + MERGE SORT (D&C)
+   ========================================================= */
+function greedyCoins(coins,amt){const r=[];for(const c of coins){while(amt>=c){r.push(c);amt-=c;}}return amt===0?r:null;}
+function optimalCoins(coins,amt){
+  const dp=Array(amt+1).fill(INF),ch=Array(amt+1).fill(-1);dp[0]=0;
+  for(let x=1;x<=amt;x++)for(const c of coins)if(c<=x&&dp[x-c]+1<dp[x]){dp[x]=dp[x-c]+1;ch[x]=c;}
+  if(dp[amt]===INF)return null;const r=[];for(let x=amt;x>0;x-=ch[x])r.push(ch[x]);return r.sort((a,b)=>b-a);
+}
+function runCoins(){
+  const amt=Math.max(1,Math.min(200,parseInt($('#coinAmt').value)||1));
+  const coins=$('#coinSet').value.split(',').map(Number);
+  const g=greedyCoins(coins,amt),o=optimalCoins(coins,amt);
+  const out=$('#coinOut');
+  out.innerHTML=g.map((c,i)=>`<div class="coin" style="animation-delay:${i*90}ms">${c}</div>`).join('');
+  let msg=`Greedy: always take the <b>largest coin ≤ remaining</b> → <b>${g.length} coins</b> (${g.join(' + ')} = ${amt}).`;
+  if(o&&o.length<g.length){
+    msg+=`<br>⚠️ But the best answer uses only <b>${o.length} coins</b>: `+o.map(c=>`<span class="coin opt" style="display:inline-grid;width:30px;height:30px;font-size:11px;vertical-align:middle;margin:2px">${c}</span>`).join('')+` — greedy is <b>not always optimal</b>! That is why every greedy algorithm (like Dijkstra or Prim) needs a correctness proof.`;
+  }else msg+=` ✅ This is also the optimal answer for this coin system.`;
+  $('#coinMsg').innerHTML=msg;
+}
+$('#coinGo').onclick=runCoins;
+$('#coinSet').onchange=()=>{if($('#coinSet').value==='4,3,1')$('#coinAmt').value=6;runCoins();};
+runCoins();
+
+const MS=[
+ {k:'#a78bfa',g:[[38,27,43,3,9,82,10,15]],t:'<b>Problem:</b> sort 8 numbers. Instead of tackling all 8 at once, we will split the work.'},
+ {k:'#22d3ee',g:[[38,27,43,3],[9,82,10,15]],t:'<b>Divide:</b> split the array into two halves of size n/2.'},
+ {k:'#22d3ee',g:[[38,27],[43,3],[9,82],[10,15]],t:'<b>Divide again:</b> keep splitting each half recursively.'},
+ {k:'#fbbf24',g:[[38],[27],[43],[3],[9],[82],[10],[15]],t:'<b>Conquer (base case):</b> a single element is already sorted — recursion stops.'},
+ {k:'#34d399',g:[[27,38],[3,43],[9,82],[10,15]],t:'<b>Combine:</b> merge pairs of sorted lists by repeatedly taking the smaller front element.'},
+ {k:'#34d399',g:[[3,27,38,43],[9,10,15,82]],t:'<b>Combine:</b> merge sorted lists of 2 into sorted lists of 4.'},
+ {k:'#34d399',g:[[3,9,10,15,27,38,43,82]],t:'<b>Solved!</b> The final merge gives the sorted array. Recurrence <b>T(n) = 2T(n/2) + O(n)</b> ⇒ <b>O(n log n)</b>.'}
+];
+let msI=0,msT=null;
+$('#ms').innerHTML=MS.map((r,i)=>`<div class="ms-row" data-r="${i}" style="--rc:${r.k}">${r.g.map(g=>`<div class="ms-grp">${g.map(x=>`<div class="ms-cell">${x}</div>`).join('')}</div>`).join('')}</div>`).join('');
+function msRender(){
+  $$('#ms .ms-row').forEach((r,i)=>{r.classList.toggle('off',i>msI);r.classList.toggle('cur',i===msI);});
+  $('#msText').innerHTML=MS[msI].t;$('#msStep').textContent=`Step ${msI+1} / ${MS.length}`;
+}
+function msStop(){clearTimeout(msT);msT=null;$('#msPlay').textContent='▶ Play';}
+$('#msPrev').onclick=()=>{msStop();msI=Math.max(0,msI-1);msRender();};
+$('#msNext').onclick=()=>{msStop();msI=Math.min(MS.length-1,msI+1);msRender();};
+$('#msPlay').onclick=()=>{
+  if(msT){msStop();return;}
+  if(msI>=MS.length-1)msI=0;msRender();$('#msPlay').textContent='⏸ Pause';
+  const tick=()=>{if(msI>=MS.length-1){msStop();return;}msI++;msRender();msT=setTimeout(tick,1500);};
+  msT=setTimeout(tick,1200);
+};
+msRender();
+</script>
+</body>
+</html>
