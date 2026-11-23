@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Algorithm Design Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d1f;--panel:#141739;--panel2:#1c2050;--text:#eef0ff;--muted:#a3a8d6;
+  --line:rgba(255,255,255,.09);--accent:#f59e0b;--accent2:#ef4444;
+  --mono:'JetBrains Mono',Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Poppins',system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);
+  background:
+    radial-gradient(circle at 8% -10%,#2a2d7a 0%,transparent 38%),
+    radial-gradient(circle at 95% 110%,#4a1460 0%,transparent 40%),
+    radial-gradient(circle at 60% 50%,#0f2a4a 0%,transparent 50%),var(--bg);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer}
+code{font-family:var(--mono);background:rgba(255,255,255,.09);padding:1px 6px;border-radius:6px;font-size:.92em}
+b{color:#fff}
+
+/* ---------- header ---------- */
+header.top{display:flex;align-items:center;gap:14px;padding:10px 18px;background:rgba(8,10,30,.75);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);flex-wrap:wrap;z-index:5}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:.3px;cursor:pointer}
+.brand .logo{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:18px;
+  background:conic-gradient(from 0deg,#f59e0b,#ec4899,#8b5cf6,#06b6d4,#10b981,#f59e0b);box-shadow:0 0 18px rgba(236,72,153,.45)}
+.brand small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+nav.tabs button{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);
+  padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;transition:.25s}
+nav.tabs button:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+nav.tabs button.active{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--c1),var(--c2));
+  box-shadow:0 4px 18px -4px var(--c1)}
+
+/* ---------- pages ---------- */
+main{flex:1;min-height:0;position:relative}
+.page{position:absolute;inset:0;display:none;flex-direction:column;padding:12px 18px 14px;gap:10px}
+.page.active{display:flex;animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page[data-theme=knap]{--accent:#f59e0b;--accent2:#ef4444}
+.page[data-theme=lim]{--accent:#ec4899;--accent2:#8b5cf6}
+.page[data-theme=graham]{--accent:#06b6d4;--accent2:#3b82f6}
+.page[data-theme=str]{--accent:#a855f7;--accent2:#6366f1}
+.page[data-theme=cp]{--accent:#10b981;--accent2:#84cc16}
+
+.page-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.page-head .ph-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 20px -6px var(--accent)}
+.page-head h2{font-size:21px;font-weight:800;line-height:1.1;
+  background:linear-gradient(90deg,#fff,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.page-head .tag{font-size:12px;color:var(--muted)}
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;
+  background:rgba(255,255,255,.08);border:1px solid var(--line);color:#fff;margin-left:6px}
+.subnav{margin-left:auto;display:flex;background:var(--panel);border-radius:999px;padding:4px;border:1px solid var(--line)}
+.subnav button{border:0;background:transparent;color:var(--muted);padding:7px 15px;border-radius:999px;font-size:13px;font-weight:600;transition:.2s}
+.subnav button.active{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.pane{flex:1;min-height:0;display:none}
+.pane.active{display:flex;flex-direction:column}
+
+/* ---------- demo ---------- */
+.demo{gap:10px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.tbtn{border:1px solid var(--line);background:var(--panel);color:#fff;padding:7px 13px;border-radius:10px;font-size:13px;font-weight:600;transition:.2s}
+.tbtn:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+.tbtn.on{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+.toolbar input[type=number]{width:72px;background:var(--panel);border:1px solid var(--line);color:#fff;border-radius:10px;padding:7px 9px;font-family:inherit}
+.toolbar .hint{margin-left:auto;font-size:12px;opacity:.85}
+.viz{flex:1;min-height:230px;position:relative;border-radius:18px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border:1px solid var(--line)}
+.viz canvas{position:absolute;inset:0;cursor:crosshair}
+.viz-legend{position:absolute;right:12px;top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted);
+  background:rgba(8,10,30,.65);padding:6px 10px;border-radius:10px;pointer-events:none}
+.viz-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+
+.explain{background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid var(--line);
+  border-radius:18px;padding:10px 16px 12px;position:relative;overflow:hidden}
+.explain::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(var(--accent),var(--accent2))}
+.ex-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ctrls{display:flex;gap:6px}
+.ctrls button{border:1px solid var(--line);background:var(--panel2);color:#fff;padding:7px 13px;border-radius:10px;font-weight:600;font-size:13px;transition:.2s}
+.ctrls button:hover:not(:disabled){border-color:var(--accent)}
+.ctrls button:disabled{opacity:.35;cursor:not-allowed}
+.ctrls .play{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;min-width:96px}
+.speed{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.speed input{accent-color:var(--accent);width:110px}
+.count{margin-left:auto;font-size:13px;font-weight:700;color:var(--accent)}
+.progress{height:5px;border-radius:9px;background:rgba(255,255,255,.08);margin:9px 0 9px;overflow:hidden}
+.progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .35s}
+.ex-body{display:flex;gap:14px;align-items:flex-start;min-height:62px;max-height:21vh;overflow:auto}
+.step-badge{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:16px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.ex-title{font-size:16px;font-weight:700;margin-bottom:3px}
+.ex-text{font-size:14px;line-height:1.6;color:#d6d9f5}
+.flash{animation:flash .45s ease}
+@keyframes flash{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.kbd{font-size:11px;color:var(--muted)}
+
+/* ---------- knapsack viz ---------- */
+.knap-wrap{position:absolute;inset:0;display:grid;grid-template-columns:1fr 230px;gap:16px;padding:16px}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-content:center}
+.item-card{position:relative;border-radius:16px;padding:12px 14px;background:var(--panel);border:2px solid rgba(255,255,255,.08);
+  transition:.35s;overflow:hidden}
+.item-card::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--c)}
+.item-card .ic-top{display:flex;justify-content:space-between;align-items:center}
+.item-card .emoji{font-size:28px}
+.item-card .rank{font-size:12px;font-weight:800;color:var(--c);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:99px}
+.item-card .ic-name{font-weight:700;font-size:15px;margin:4px 0}
+.item-card .ic-row{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted)}
+.item-card .ic-ratio{margin-top:8px;font-family:var(--mono);font-size:13px;font-weight:600;padding:4px 8px;border-radius:8px;
+  background:rgba(255,255,255,.06);text-align:center;color:var(--c)}
+.item-card .ic-status{margin-top:8px;font-size:12px;font-weight:700;text-align:center;padding:4px;border-radius:8px}
+.item-card.cur{transform:translateY(-6px) scale(1.04);border-color:var(--c);box-shadow:0 12px 30px -10px var(--c)}
+.item-card.st-full .ic-status{background:rgba(16,185,129,.2);color:#6ee7b7}
+.item-card.st-part .ic-status{background:rgba(245,158,11,.2);color:#fcd34d}
+.item-card.st-skip{opacity:.42}
+.item-card.st-skip .ic-status{background:rgba(239,68,68,.18);color:#fca5a5}
+.bag-col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.bag-title{font-weight:700;text-align:center;font-size:14px}
+.bag{flex:1;min-height:100px;border:3px solid rgba(255,255,255,.25);border-top-style:dashed;border-radius:8px 8px 26px 26px;
+  display:flex;flex-direction:column-reverse;overflow:hidden;background:rgba(0,0,0,.25);position:relative}
+.seg{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#111;border-top:2px solid rgba(0,0,0,.25);
+  transition:height .5s;animation:drop .5s ease;text-align:center;line-height:1.1;overflow:hidden}
+@keyframes drop{from{transform:translateY(-40px);opacity:0}to{transform:none;opacity:1}}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel);border-radius:12px;padding:8px;text-align:center;border:1px solid var(--line)}
+.stat b{display:block;font-size:20px;color:var(--accent)}
+.stat span{font-size:11px;color:var(--muted)}
+
+/* ---------- limitations viz ---------- */
+.lim-wrap{position:absolute;inset:0;display:flex;flex-direction:column;gap:12px;padding:14px 16px}
+.lim-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.lim-top .pill{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 12px;color:#fff;font-weight:600}
+.lim-panels{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.lim-panel{border-radius:16px;background:var(--panel);border:2px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:10px;transition:.3s;min-height:0}
+.lim-panel.g{border-color:rgba(245,158,11,.45)}
+.lim-panel.o{border-color:rgba(139,92,246,.45)}
+.lim-panel.dim{opacity:.35}
+.lp-head{display:flex;align-items:center;gap:10px}
+.lp-head .ico{font-size:24px}
+.lp-head h4{font-size:15px}
+.lp-head p{font-size:11.5px;color:var(--muted)}
+.lp-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.capbar{height:38px;border-radius:10px;background:rgba(0,0,0,.35);display:flex;overflow:hidden;border:1px solid var(--line);position:relative}
+.capbar .cs{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#111;border-right:2px solid rgba(0,0,0,.3);animation:drop .45s}
+.capbar .lbl{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted)}
+.picks{display:flex;gap:8px;flex-wrap:wrap}
+.pk{padding:5px 10px;border-radius:9px;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.07);border:1px solid var(--line);animation:drop .4s}
+.pk.no{text-decoration:line-through;opacity:.6;border-color:rgba(239,68,68,.5)}
+.coins{display:flex;gap:10px;flex-wrap:wrap;align-items:center;min-height:64px}
+.coin{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:18px;color:#3b2500;
+  background:radial-gradient(circle at 30% 30%,#fff7c2,#fbbf24 45%,#b45309);box-shadow:inset 0 -4px 0 rgba(0,0,0,.2),0 6px 14px -6px #f59e0b;animation:drop .45s}
+.lp-res{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:8px}
+.lp-res b{font-size:24px}
+.lim-panel.g .lp-res b{color:#fbbf24}
+.lim-panel.o .lp-res b{color:#c4b5fd}
+.verdict{border-radius:14px;padding:10px 14px;font-weight:700;font-size:14px;text-align:center;animation:drop .4s}
+.verdict.bad{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(236,72,153,.25));border:1px solid rgba(239,68,68,.5)}
+.verdict.good{background:linear-gradient(90deg,rgba(16,185,129,.25),rgba(132,204,22,.2));border:1px solid rgba(16,185,129,.5)}
+
+/* ---------- strassen viz ---------- */
+.str-wrap{position:absolute;inset:0;display:grid;grid-template-columns:1fr 200px;gap:14px;padding:14px 16px}
+.str-main{display:flex;flex-direction:column;gap:14px;justify-content:center;min-height:0}
+.mat-row{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap}
+.matrix{text-align:center}
+.mname{font-weight:800;font-size:15px;margin-bottom:6px}
+.mgrid{display:grid;grid-template-columns:repeat(2,64px);gap:6px;padding:8px;border-left:3px solid #fff;border-right:3px solid #fff;border-radius:6px}
+.mcell{height:56px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;font-size:20px;font-weight:700;position:relative;transition:.3s;border:2px solid transparent}
+.mcell .sub{position:absolute;top:2px;left:5px;font-size:9.5px;color:var(--muted);font-weight:500}
+.mcell.ha{background:rgba(236,72,153,.3);border-color:#ec4899;transform:scale(1.07)}
+.mcell.hb{background:rgba(6,182,212,.3);border-color:#06b6d4;transform:scale(1.07)}
+.mcell.hc{background:rgba(16,185,129,.35);border-color:#10b981;transform:scale(1.07)}
+.mcell.cd{color:#6ee7b7}
+.op{font-size:26px;font-weight:800;color:var(--muted)}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px}
+.mcard{border-radius:12px;padding:8px 11px;background:var(--panel);border:1px solid var(--line);font-size:12.5px;transition:.3s;opacity:.4}
+.mcard .mk{font-weight:800;color:#c4b5fd;font-size:14px}
+.mcard .mf{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.mcard .mv{font-family:var(--mono);font-size:12px;margin-top:3px}
+.mcard.done{opacity:1}
+.mcard.active{opacity:1;border-color:var(--accent);box-shadow:0 8px 24px -10px var(--accent);transform:translateY(-3px);background:var(--panel2)}
+.mcard.used{opacity:1;border-color:#10b981;box-shadow:0 0 0 2px rgba(16,185,129,.35)}
+.counter{display:flex;flex-direction:column;gap:12px;justify-content:center}
+.cbox{background:var(--panel);border-radius:14px;padding:12px;text-align:center;border:1px solid var(--line)}
+.cbox .big{font-size:34px;font-weight:800}
+.cbox.s .big{color:#c4b5fd}.cbox.n .big{color:#fca5a5}
+.cbox span{font-size:12px;color:var(--muted)}
+.dots{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.dots i{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.12)}
+.dots i.f{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.cbox.n .dots i{background:rgba(239,68,68,.55)}
+
+/* ---------- theory ---------- */
+.theory{overflow:auto;padding-right:6px}
+.hero-card{border-radius:20px;padding:18px 22px;background:linear-gradient(135deg,var(--accent),var(--accent2));margin-bottom:14px;
+  display:flex;gap:18px;align-items:center;box-shadow:0 14px 40px -18px var(--accent)}
+.hero-card .big-ico{font-size:46px}
+.hero-card h3{font-size:20px;margin-bottom:4px}
+.hero-card p{font-size:14px;line-height:1.6;opacity:.95}
+.t-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px}
+.t-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 18px;border-top:4px solid var(--accent);font-size:14px;line-height:1.65;color:#d6d9f5}
+.t-card h4{font-size:15.5px;color:#fff;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.t-card ul,.t-card ol{padding-left:20px}
+.t-card li{margin:3px 0}
+.formula{font-family:var(--mono);background:rgba(0,0,0,.35);padding:9px 12px;border-radius:10px;margin:8px 0;font-size:13px;color:#fff;border-left:3px solid var(--accent);white-space:pre-wrap}
+.apps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.app{display:flex;gap:9px;align-items:flex-start;background:rgba(255,255,255,.04);padding:8px 10px;border-radius:10px;font-size:13px}
+.app span{font-size:20px}
+table.cx{width:100%;border-collapse:collapse;font-size:13px}
+table.cx td,table.cx th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.cx th{color:var(--accent)}
+
+/* ---------- code ---------- */
+.code-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.code-head .lang{font-weight:700;font-size:14px}
+.code-head .note{font-size:12px;color:var(--muted)}
+.code-head .sp{margin-left:auto;display:flex;gap:8px}
+pre.code{flex:1;min-height:0;overflow:auto;background:#0a0c22;border:1px solid var(--line);border-radius:16px;padding:14px 0;
+  font-family:var(--mono);font-size:13.2px;line-height:1.6;counter-reset:ln}
+pre.code .ln{display:block;padding:0 18px 0 0}
+pre.code .ln::before{counter-increment:ln;content:counter(ln);display:inline-block;width:44px;padding-right:14px;text-align:right;color:#4b507e;user-select:none}
+pre.code .ln:hover{background:rgba(255,255,255,.03)}
+.tk-c{color:#6b7299;font-style:italic}.tk-s{color:#a5e075}.tk-p{color:#f472b6}.tk-k{color:#7dd3fc;font-weight:600}.tk-n{color:#fbbf24}
+.out{margin-top:8px;background:#06120c;border:1px solid rgba(16,185,129,.35);border-radius:12px;padding:9px 14px;font-family:var(--mono);font-size:12.5px;color:#6ee7b7;white-space:pre-wrap}
+.out::before{content:"▶ Output\A";color:#a3a8d6;font-family:'Poppins';font-weight:600}
+
+/* ---------- home ---------- */
+#home{overflow:auto}
+.home-hero{text-align:center;padding:14px 10px 6px}
+.home-hero h1{font-size:clamp(26px,3.6vw,42px);font-weight:800;line-height:1.15;
+  background:linear-gradient(90deg,#fbbf24,#f472b6,#a78bfa,#22d3ee,#34d399);-webkit-background-clip:text;background-clip:text;color:transparent}
+.home-hero p{color:var(--muted);margin-top:6px;font-size:15px}
+.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;padding:16px 4px;max-width:1300px;margin:0 auto;width:100%}
+.hcard{position:relative;border-radius:20px;padding:18px;background:var(--panel);border:1px solid var(--line);cursor:pointer;transition:.3s;overflow:hidden}
+.hcard::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--c1),var(--c2));opacity:.14;transition:.3s}
+.hcard:hover{transform:translateY(-6px);box-shadow:0 20px 40px -20px var(--c1);border-color:var(--c1)}
+.hcard:hover::before{opacity:.26}
+.hcard>*{position:relative}
+.hcard .hi{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-size:26px;background:linear-gradient(135deg,var(--c1),var(--c2));margin-bottom:12px}
+.hcard h3{font-size:17px;margin-bottom:6px}
+.hcard p{font-size:13px;color:#cfd3f3;line-height:1.55;margin-bottom:12px}
+.hcard .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.hcard .meta .cx{font-family:var(--mono);background:rgba(0,0,0,.3);padding:3px 9px;border-radius:8px}
+.hcard .go{font-weight:700;color:var(--c1)}
+.home-foot{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;padding:6px 0 10px}
+.home-foot .tip{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  main{min-height:820px}
+  .knap-wrap,.str-wrap{grid-template-columns:1fr;overflow:auto}
+  .lim-panels{grid-template-columns:1fr}
+  .apps{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand" data-go="home"><div class="logo">⚡</div><div>Algorithm Design Studio<small>Greedy · Divide &amp; Conquer · Geometry</small></div></div>
+  <nav class="tabs" id="tabs">
+    <button data-go="home" style="--c1:#64748b;--c2:#334155" class="active">🏠 Home</button>
+    <button data-go="knap" style="--c1:#f59e0b;--c2:#ef4444">🎒 Greedy Knapsack</button>
+    <button data-go="lim" style="--c1:#ec4899;--c2:#8b5cf6">⚠️ Limitations</button>
+    <button data-go="graham" style="--c1:#06b6d4;--c2:#3b82f6">🔷 Graham Scan</button>
+    <button data-go="str" style="--c1:#a855f7;--c2:#6366f1">🧮 Strassen</button>
+    <button data-go="cp" style="--c1:#10b981;--c2:#84cc16">📍 Closest Pair</button>
+  </nav>
+</header>
+
+<main>
+<!-- ======================= HOME ======================= -->
+<section class="page active" id="home">
+  <div class="home-hero">
+    <h1>Learn Algorithms by Watching Them Think</h1>
+    <p>Five classic algorithms · interactive step-by-step demos · theory, applications &amp; C++ code</p>
+  </div>
+  <div class="home-grid">
+    <div class="hcard" data-go="knap" style="--c1:#f59e0b;--c2:#ef4444"><div class="hi">🎒</div><h3>Greedy (Fractional) Knapsack</h3><p>Fill a bag with the most valuable loot. Always grab the best value-per-kg first — and cut the last item if needed.</p><div class="meta"><span class="cx">O(n log n)</span><span class="go">Open →</span></div></div>
+    <div class="hcard" data-go="lim" style="--c1:#ec4899;--c2:#8b5cf6"><div class="hi">⚠️</div><h3>Limitations of Greedy</h3><p>When "best right now" is not "best overall". See greedy lose on 0/1 knapsack and coin change.</p><div class="meta"><span class="cx">Local ≠ Global</span><span class="go">Open →</span></div></div>
+    <div class="hcard" data-go="graham" style="--c1:#06b6d4;--c2:#3b82f6"><div class="hi">🔷</div><h3>Graham Scan — Convex Hull</h3><p>Wrap a rubber band around a set of points. Sort by angle, then keep only left turns using a stack.</p><div class="meta"><span class="cx">O(n log n)</span><span class="go">Open →</span></div></div>
+    <div class="hcard" data-go="str" style="--c1:#a855f7;--c2:#6366f1"><div class="hi">🧮</div><h3>Strassen's Matrix Multiplication</h3><p>Multiply 2×2 blocks with 7 multiplications instead of 8 — a tiny trick that beats O(n³).</p><div class="meta"><span class="cx">O(n<sup>2.807</sup>)</span><span class="go">Open →</span></div></div>
+    <div class="hcard" data-go="cp" style="--c1:#10b981;--c2:#84cc16"><div class="hi">📍</div><h3>Closest Pair of Points</h3><p>Find the two nearest points without checking every pair: split, solve halves, then check a thin strip.</p><div class="meta"><span class="cx">O(n log n)</span><span class="go">Open →</span></div></div>
+  </div>
+  <div class="home-foot">
+    <div class="tip">▶ Each topic has <b>Demo</b>, <b>Theory &amp; Applications</b> and <b>C++ Code</b> tabs</div>
+    <div class="tip">⌨️ Use <b>← / →</b> to step and <b>Space</b> to play/pause</div>
+    <div class="tip">🖱 Click on the canvas to add your own points (Graham &amp; Closest Pair)</div>
+  </div>
+</section>
+
+<!-- ======================= KNAPSACK ======================= -->
+<section class="page" id="knap" data-theme="knap">
+  <div class="page-head">
+    <div class="ph-icon">🎒</div>
+    <div><h2>Greedy Fractional Knapsack</h2><div class="tag">Greedy method <span class="chip">O(n log n)</span><span class="chip">Optimal for fractional items</span></div></div>
+    <div class="subnav"><button class="active" data-pane="demo">▶ Demo</button><button data-pane="theory">📘 Theory &amp; Applications</button><button data-pane="code">💻 C++ Code</button></div>
+  </div>
+  <div class="pane demo active">
+    <div class="toolbar">
+      Capacity (kg) <input type="number" id="knapCap" min="5" max="200" value="60">
+      <button class="tbtn" id="knapRand">🎲 Random items</button>
+      <button class="tbtn" id="knapDef">↺ Default example</button>
+      <span class="hint">Green = taken fully · Amber = taken partly · Faded = skipped</span>
+    </div>
+    <div class="viz" id="knapViz"></div>
+    <div class="explain" id="knapEx"></div>
+  </div>
+  <div class="pane theory">
+    <div class="hero-card"><div class="big-ico">🎒</div><div><h3>A thief, a bag and a choice</h3><p>A thief has a bag that can carry <b>W kg</b>. There are items like gold dust, silver dust and spices — each with a weight and a value — and they <b>can be divided</b>. Which pieces should go in the bag to carry home the maximum value? The greedy answer: <b>always take what gives the most value per kg</b>.</p></div></div>
+    <div class="t-grid">
+      <div class="t-card"><h4>💡 Key Idea</h4>
+        For each item compute its <b>profit density</b>:
+        <div class="formula">ratio(i) = value(i) / weight(i)</div>
+        Sort items by ratio (highest first). Keep taking whole items while they fit. When the next item does not fit, take just the <b>fraction</b> that fills the bag exactly. Stop.
+      </div>
+      <div class="t-card"><h4>🪜 Step by Step</h4>
+        <ol><li>Read n items (weight, value) and capacity W.</li><li>Compute value/weight for every item.</li><li>Sort items in decreasing order of ratio.</li><li>For each item: if weight ≤ remaining capacity → take it all.</li><li>Otherwise take fraction = remaining / weight, and stop.</li><li>Sum the values taken → maximum profit.</li></ol>
+      </div>
+      <div class="t-card"><h4>📝 Worked Example (W = 60)</h4>
+        <table class="cx"><tr><th>Item</th><th>w</th><th>v</th><th>v/w</th><th>Taken</th></tr>
+        <tr><td>📷 Camera</td><td>15</td><td>105</td><td>7.0</td><td>100% → 105</td></tr>
+        <tr><td>🥇 Gold</td><td>10</td><td>60</td><td>6.0</td><td>100% → 60</td></tr>
+        <tr><td>🥈 Silver</td><td>20</td><td>100</td><td>5.0</td><td>100% → 100</td></tr>
+        <tr><td>💻 Laptop</td><td>30</td><td>120</td><td>4.0</td><td>50% → 60</td></tr>
+        <tr><td>📚 Books</td><td>25</td><td>75</td><td>3.0</td><td>0%</td></tr></table>
+        <div class="formula">Total = 105 + 60 + 100 + 60 = 325</div>
+      </div>
+      <div class="t-card"><h4>⏱ Complexity &amp; Why it works</h4>
+        <ul><li><b>Sorting:</b> O(n log n); <b>filling:</b> O(n) → overall <b>O(n log n)</b>.</li><li><b>Space:</b> O(1) extra (besides input).</li><li><b>Greedy-choice property:</b> any optimal solution can be changed to include as much of the highest-ratio item as possible without losing value — swapping a kg of lower ratio for a kg of higher ratio never hurts.</li><li><b>Optimal substructure:</b> after taking the best item, the rest is a smaller knapsack problem.</li></ul>
+      </div>
+      <div class="t-card" style="grid-column:1/-1"><h4>🌍 Real-world Applications</h4>
+        <div class="apps">
+          <div class="app"><span>🚚</span><div><b>Cargo loading</b><br>Fill trucks/ships with bulk goods (grain, oil, sand) to maximise revenue.</div></div>
+          <div class="app"><span>💰</span><div><b>Investment / budget allocation</b><br>Split a budget among divisible investments by return per rupee.</div></div>
+          <div class="app"><span>☁️</span><div><b>Cloud resource allocation</b><br>Allocate bandwidth or CPU time to jobs with best benefit per unit.</div></div>
+          <div class="app"><span>📢</span><div><b>Advertising</b><br>Spend ad money on channels with the highest conversions per rupee.</div></div>
+          <div class="app"><span>🧪</span><div><b>Mixing &amp; blending</b><br>Blend raw materials (chemicals, alloys, fuels) with limited capacity.</div></div>
+          <div class="app"><span>⏳</span><div><b>Time management</b><br>Spend limited study hours on topics that give the most marks per hour.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pane code" data-code="knap"></div>
+</section>
+
+<!-- ======================= LIMITATIONS ======================= -->
+<section class="page" id="lim" data-theme="lim">
+  <div class="page-head">
+    <div class="ph-icon">⚠️</div>
+    <div><h2>Limitations of the Greedy Method</h2><div class="tag">Locally best ≠ globally best <span class="chip">Greedy vs Dynamic Programming</span></div></div>
+    <div class="subnav"><button class="active" data-pane="demo">▶ Demo</button><button data-pane="theory">📘 Theory &amp; Applications</button><button data-pane="code">💻 C++ Code</button></div>
+  </div>
+  <div class="pane demo active">
+    <div class="toolbar">
+      Scenario:
+      <button class="tbtn on" data-lim="knap">🎒 0/1 Knapsack</button>
+      <button class="tbtn" data-lim="coin1">🪙 Coins {1,3,4} → 6</button>
+      <button class="tbtn" data-lim="coin2">🪙 Coins {1,5,10,25} → 63</button>
+      <span class="hint">Orange = Greedy · Purple = Optimal (DP)</span>
+    </div>
+    <div class="viz" id="limViz"></div>
+    <div class="explain" id="limEx"></div>
+  </div>
+  <div class="pane theory">
+    <div class="hero-card"><div class="big-ico">🧗</div><div><h3>The mountain-climber trap</h3><p>A climber who always steps to the highest nearby rock may reach a small hill and get stuck, never seeing the taller mountain behind. Greedy algorithms make the <b>best local choice</b> and <b>never go back</b>. That is fast — but sometimes wrong.</p></div></div>
+    <div class="t-grid">
+      <div class="t-card"><h4>🚫 Main Limitations</h4>
+        <ul><li><b>No backtracking:</b> once a choice is made it is never undone.</li><li><b>Local optimum trap:</b> a sequence of best-looking moves can miss the global optimum.</li><li><b>Works only for special problems</b> — those with the <i>greedy-choice property</i> and <i>optimal substructure</i>.</li><li><b>Correctness is hard to prove:</b> each greedy algorithm needs its own proof (exchange argument).</li><li><b>Choice of greedy criterion matters:</b> by value? by weight? by ratio? A wrong criterion gives wrong answers.</li></ul>
+      </div>
+      <div class="t-card"><h4>🎒 0/1 Knapsack counter-example</h4>
+        Capacity 50: X(w10, v60, r6), Y(w20, v100, r5), Z(w30, v120, r4)
+        <div class="formula">Greedy by ratio → X + Y = 160
+Optimal (DP)    → Y + Z = 220  ✔</div>
+        Items cannot be broken, so the leftover 20 kg is wasted. Greedy works for <b>fractional</b> knapsack but <b>not</b> for 0/1 knapsack.
+      </div>
+      <div class="t-card"><h4>🪙 Coin change counter-example</h4>
+        Coins {1, 3, 4}, amount 6:
+        <div class="formula">Greedy  → 4 + 1 + 1 = 3 coins
+Optimal → 3 + 3     = 2 coins ✔</div>
+        Greedy works for "canonical" systems like {1, 5, 10, 25} or ₹{1, 2, 5, 10} but fails for arbitrary denominations.
+      </div>
+      <div class="t-card"><h4>🧭 More places where greedy fails</h4>
+        <ul><li><b>Travelling Salesman:</b> nearest-neighbour tour can be far from optimal.</li><li><b>Shortest paths with negative edges:</b> Dijkstra (greedy) breaks; use Bellman-Ford.</li><li><b>Longest path / graph colouring:</b> greedy gives only approximations.</li><li><b>Job scheduling with dependencies</b> and many NP-hard problems.</li></ul>
+      </div>
+      <div class="t-card"><h4>✅ When does greedy work?</h4>
+        <ul><li><b>Greedy-choice property:</b> a globally optimal solution can be reached by a locally optimal choice.</li><li><b>Optimal substructure:</b> optimal solution contains optimal solutions of subproblems.</li></ul>
+        Examples: Fractional knapsack, Huffman coding, Kruskal &amp; Prim MST, Dijkstra (non-negative weights), Activity selection.
+      </div>
+      <div class="t-card"><h4>🛠 What to use instead</h4>
+        <table class="cx"><tr><th>Approach</th><th>Guarantee</th><th>Cost</th></tr>
+        <tr><td>Greedy</td><td>Fast, maybe wrong</td><td>O(n log n)</td></tr>
+        <tr><td>Dynamic Programming</td><td>Optimal</td><td>O(nW) for knapsack</td></tr>
+        <tr><td>Backtracking / B&amp;B</td><td>Optimal</td><td>Exponential worst case</td></tr>
+        <tr><td>Approximation</td><td>Within a bound</td><td>Polynomial</td></tr></table>
+      </div>
+    </div>
+  </div>
+  <div class="pane code" data-code="lim"></div>
+</section>
+
+<!-- ======================= GRAHAM ======================= -->
+<section class="page" id="graham" data-theme="graham">
+  <div class="page-head">
+    <div class="ph-icon">🔷</div>
+    <div><h2>Graham Scan — Convex Hull</h2><div class="tag">Computational geometry <span class="chip">O(n log n)</span><span class="chip">Stack + cross product</span></div></div>
+    <div class="subnav"><button class="active" data-pane="demo">▶ Demo</button><button data-pane="theory">📘 Theory &amp; Applications</button><button data-pane="code">💻 C++ Code</button></div>
+  </div>
+  <div class="pane demo active">
+    <div class="toolbar">
+      <button class="tbtn" id="ghRand">🎲 Random points</button>
+      <button class="tbtn" id="ghClear">🧹 Clear</button>
+      Points <input type="number" id="ghN" min="3" max="40" value="16">
+      <span class="hint">🖱 Click on the canvas to add a point</span>
+    </div>
+    <div class="viz" id="ghViz"><canvas id="ghCanvas"></canvas>
+      <div class="viz-legend"><span><i style="background:#fbbf24"></i>Pivot P0</span><span><i style="background:#22d3ee"></i>Stack / hull</span><span><i style="background:#34d399"></i>Left turn</span><span><i style="background:#f87171"></i>Right turn (pop)</span></div></div>
+    <div class="explain" id="ghEx"></div>
+  </div>
+  <div class="pane theory">
+    <div class="hero-card"><div class="big-ico">🪢</div><div><h3>The rubber-band picture</h3><p>Hammer nails into a board at each point, stretch a rubber band around all of them and let go. The shape it snaps into is the <b>convex hull</b> — the smallest convex polygon containing every point. Graham Scan finds it by walking around the points in angle order and keeping only <b>left turns</b>.</p></div></div>
+    <div class="t-grid">
+      <div class="t-card"><h4>🪜 Algorithm Steps</h4>
+        <ol><li>Pick the <b>pivot P0</b>: lowest y (leftmost if tie). It is surely on the hull.</li><li><b>Sort</b> the other points by polar angle around P0 (closer first if equal angle).</li><li>Push P0 and P1 on a stack.</li><li>For each next point P: while the last two stack points and P make a <b>non-left turn</b>, <b>pop</b>.</li><li><b>Push</b> P.</li><li>When all points are processed, the stack holds the hull in counter-clockwise order.</li></ol>
+      </div>
+      <div class="t-card"><h4>🧭 Orientation test (cross product)</h4>
+        For points a → b → c:
+        <div class="formula">cross = (b.x − a.x)(c.y − a.y) − (b.y − a.y)(c.x − a.x)</div>
+        <ul><li><b>cross &gt; 0</b> → counter-clockwise → <span style="color:#34d399">left turn ✔ keep</span></li><li><b>cross &lt; 0</b> → clockwise → <span style="color:#f87171">right turn ✘ pop</span></li><li><b>cross = 0</b> → collinear → pop (keep only outer point)</li></ul>
+      </div>
+      <div class="t-card"><h4>⏱ Complexity</h4>
+        <ul><li>Finding pivot: O(n)</li><li>Sorting by angle: <b>O(n log n)</b></li><li>Scan: every point pushed once and popped at most once → O(n)</li><li><b>Total: O(n log n)</b>, Space: O(n)</li></ul>
+        Other hull algorithms: Jarvis March O(nh), Quickhull O(n log n) avg, Andrew's Monotone Chain O(n log n).
+      </div>
+      <div class="t-card"><h4>📝 Small Example</h4>
+        Points: (0,0) (1,1) (2,2) (4,4) (0,3) (1,2) (3,1) (3,3)
+        <div class="formula">Pivot  : (0,0)
+Hull   : (0,0) → (3,1) → (4,4) → (0,3)</div>
+        Interior points like (1,1), (2,2), (1,2), (3,3) get popped because they create right turns or lie on a line.
+      </div>
+      <div class="t-card" style="grid-column:1/-1"><h4>🌍 Applications</h4>
+        <div class="apps">
+          <div class="app"><span>🤖</span><div><b>Robotics &amp; path planning</b><br>Approximate obstacles by hulls to plan collision-free paths.</div></div>
+          <div class="app"><span>🎮</span><div><b>Games &amp; physics engines</b><br>Convex hitboxes for fast collision detection.</div></div>
+          <div class="app"><span>🗺️</span><div><b>GIS / mapping</b><br>Boundary of a region from GPS points (e.g. spread of a disease, animal range).</div></div>
+          <div class="app"><span>🖼️</span><div><b>Image processing</b><br>Shape analysis, hand-gesture recognition, defect detection.</div></div>
+          <div class="app"><span>📊</span><div><b>Statistics &amp; ML</b><br>Outlier detection ("onion peeling"), SVM geometry.</div></div>
+          <div class="app"><span>📏</span><div><b>Farthest pair / diameter</b><br>Rotating calipers on the hull find the diameter of a point set.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pane code" data-code="graham"></div>
+</section>
+
+<!-- ======================= STRASSEN ======================= -->
+<section class="page" id="str" data-theme="str">
+  <div class="page-head">
+    <div class="ph-icon">🧮</div>
+    <div><h2>Strassen's Matrix Multiplication</h2><div class="tag">Divide &amp; Conquer <span class="chip">7 multiplications instead of 8</span><span class="chip">O(n<sup>2.807</sup>)</span></div></div>
+    <div class="subnav"><button class="active" data-pane="demo">▶ Demo</button><button data-pane="theory">📘 Theory &amp; Applications</button><button data-pane="code">💻 C++ Code</button></div>
+  </div>
+  <div class="pane demo active">
+    <div class="toolbar">
+      <button class="tbtn" id="strRand">🎲 New matrices</button>
+      <span class="hint">Pink = cells of A used · Cyan = cells of B used · Green = result / M used</span>
+    </div>
+    <div class="viz" id="strViz"></div>
+    <div class="explain" id="strEx"></div>
+  </div>
+  <div class="pane theory">
+    <div class="hero-card"><div class="big-ico">✂️</div><div><h3>Trade one multiplication for a few additions</h3><p>Normal multiplication of two n×n matrices needs <b>n³</b> multiplications. Split each matrix into four (n/2)×(n/2) blocks: the usual method needs <b>8</b> block multiplications. Volker Strassen (1969) found a clever way using only <b>7</b> — and because multiplication is much costlier than addition, doing this recursively makes the whole thing asymptotically faster.</p></div></div>
+    <div class="t-grid">
+      <div class="t-card"><h4>🧩 Divide</h4>
+        <div class="formula">A = | A11 A12 |   B = | B11 B12 |
+    | A21 A22 |       | B21 B22 |</div>
+        Each block is an (n/2)×(n/2) matrix (for 2×2 matrices each block is a single number).
+      </div>
+      <div class="t-card"><h4>✖️ The 7 products</h4>
+        <div class="formula">M1 = (A11 + A22)(B11 + B22)
+M2 = (A21 + A22) B11
+M3 = A11 (B12 − B22)
+M4 = A22 (B21 − B11)
+M5 = (A11 + A12) B22
+M6 = (A21 − A11)(B11 + B12)
+M7 = (A12 − A22)(B21 + B22)</div>
+      </div>
+      <div class="t-card"><h4>➕ Combine</h4>
+        <div class="formula">C11 = M1 + M4 − M5 + M7
+C12 = M3 + M5
+C21 = M2 + M4
+C22 = M1 − M2 + M3 + M6</div>
+        Memory aid: C12 and C21 are the "easy" ones (2 terms); C11 and C22 use 4 terms.
+      </div>
+      <div class="t-card"><h4>⏱ Complexity</h4>
+        <div class="formula">Naive  : T(n) = 8T(n/2) + O(n²) → O(n³)
+Strassen: T(n) = 7T(n/2) + O(n²) → O(n^log₂7) ≈ O(n^2.807)</div>
+        <table class="cx"><tr><th>n</th><th>n³</th><th>n^2.807</th></tr><tr><td>64</td><td>262,144</td><td>≈ 117,649</td></tr><tr><td>512</td><td>134 M</td><td>≈ 40 M</td></tr><tr><td>4096</td><td>68.7 B</td><td>≈ 13.8 B</td></tr></table>
+      </div>
+      <div class="t-card"><h4>⚖️ Limitations</h4>
+        <ul><li>More additions and extra memory for temporary matrices.</li><li>Slower than naive for small n — real code switches to naive below a cutoff (e.g. n ≤ 64).</li><li>Less numerically stable for floating point.</li><li>Works on n = power of 2 (pad with zeros otherwise).</li></ul>
+      </div>
+      <div class="t-card"><h4>🌍 Applications</h4>
+        <div class="apps">
+          <div class="app"><span>🔬</span><div><b>Scientific computing</b><br>Large simulations, linear systems.</div></div>
+          <div class="app"><span>🧠</span><div><b>Machine learning</b><br>Neural network layers are matrix products.</div></div>
+          <div class="app"><span>🎨</span><div><b>Graphics</b><br>Transformations and image filters.</div></div>
+          <div class="app"><span>🕸️</span><div><b>Graph algorithms</b><br>Transitive closure, path counting via matrix powers.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pane code" data-code="str"></div>
+</section>
+
+<!-- ======================= CLOSEST PAIR ======================= -->
+<section class="page" id="cp" data-theme="cp">
+  <div class="page-head">
+    <div class="ph-icon">📍</div>
+    <div><h2>Closest Pair of Points</h2><div class="tag">Divide &amp; Conquer <span class="chip">O(n log n)</span><span class="chip">Strip of width 2d</span></div></div>
+    <div class="subnav"><button class="active" data-pane="demo">▶ Demo</button><button data-pane="theory">📘 Theory &amp; Applications</button><button data-pane="code">💻 C++ Code</button></div>
+  </div>
+  <div class="pane demo active">
+    <div class="toolbar">
+      <button class="tbtn" id="cpRand">🎲 Random points</button>
+      <button class="tbtn" id="cpClear">🧹 Clear</button>
+      Points <input type="number" id="cpN" min="2" max="40" value="14">
+      <span class="hint">🖱 Click on the canvas to add a point</span>
+    </div>
+    <div class="viz" id="cpViz"><canvas id="cpCanvas"></canvas>
+      <div class="viz-legend"><span><i style="background:#60a5fa"></i>Left best</span><span><i style="background:#fb923c"></i>Right best</span><span><i style="background:#fde047"></i>Strip</span><span><i style="background:#34d399"></i>Current best</span><span><i style="background:#f43f5e"></i>Answer</span></div></div>
+    <div class="explain" id="cpEx"></div>
+  </div>
+  <div class="pane theory">
+    <div class="hero-card"><div class="big-ico">✈️</div><div><h3>Which two planes are dangerously close?</h3><p>An air-traffic radar shows n aircraft. Checking every pair needs n(n−1)/2 distance computations — <b>O(n²)</b>. Divide &amp; conquer does it in <b>O(n log n)</b>: split the plane with a vertical line, solve both halves, then only check a thin <b>strip</b> around the line.</p></div></div>
+    <div class="t-grid">
+      <div class="t-card"><h4>🪜 Algorithm Steps</h4>
+        <ol><li><b>Sort</b> points by x-coordinate.</li><li><b>Divide</b> at the middle point into left half L and right half R.</li><li><b>Conquer:</b> recursively find d<sub>L</sub> and d<sub>R</sub>. (≤ 3 points → brute force.)</li><li>Let <b>d = min(d<sub>L</sub>, d<sub>R</sub>)</b>.</li><li><b>Combine:</b> collect points within distance d of the dividing line (the strip), sort them by y.</li><li>For each strip point compare with the next points whose y-difference &lt; d (at most 7).</li><li>Answer = min(d, best strip distance).</li></ol>
+      </div>
+      <div class="t-card"><h4>🤔 Why only ~7 comparisons?</h4>
+        Inside the strip, consider a d × 2d rectangle above a point. Points on the same side are at least d apart, so each d/2 × d/2 square holds at most one point → at most <b>8 points</b> in the rectangle. Hence each strip point is compared with only a <b>constant</b> number of neighbours.
+        <div class="formula">dist(p,q) = √((p.x − q.x)² + (p.y − q.y)²)</div>
+      </div>
+      <div class="t-card"><h4>⏱ Complexity</h4>
+        <div class="formula">T(n) = 2T(n/2) + O(n)  →  O(n log n)</div>
+        (With re-sorting the strip in every call it is O(n log² n); pre-sorting by y gives O(n log n).)
+        <table class="cx"><tr><th>n</th><th>Brute force n²/2</th><th>D&amp;C ≈ n log n</th></tr><tr><td>1,000</td><td>500,000</td><td>≈ 10,000</td></tr><tr><td>1,000,000</td><td>5 × 10¹¹</td><td>≈ 2 × 10⁷</td></tr></table>
+      </div>
+      <div class="t-card"><h4>🌍 Applications</h4>
+        <div class="apps">
+          <div class="app"><span>✈️</span><div><b>Air / sea traffic</b><br>Collision warnings between vehicles.</div></div>
+          <div class="app"><span>🧬</span><div><b>Molecular modelling</b><br>Nearest atoms, clash detection.</div></div>
+          <div class="app"><span>📦</span><div><b>Clustering</b><br>Merge the closest clusters first (hierarchical).</div></div>
+          <div class="app"><span>📡</span><div><b>Networks / GIS</b><br>Nearest towers, nearby facilities.</div></div>
+          <div class="app"><span>👁️</span><div><b>Computer vision</b><br>Matching feature points.</div></div>
+          <div class="app"><span>🎮</span><div><b>Games</b><br>Detect the nearest objects or players.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pane code" data-code="cp"></div>
+</section>
+</main>
+
+<script>
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(2);
+const COLORS = ['#fbbf24','#f87171','#f472b6','#a78bfa','#22d3ee','#34d399','#a3e635','#fb923c'];
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+const EXPLAIN_HTML = `
+  <div class="ex-head">
+    <div class="ctrls">
+      <button data-act="reset" title="Restart">⏮</button>
+      <button data-act="prev">◀ Prev</button>
+      <button data-act="play" class="play">▶ Play</button>
+      <button data-act="next">Next ▶</button>
+    </div>
+    <div class="speed">🐢 <input type="range" min="300" max="2600" value="1500"> 🐇</div>
+    <span class="kbd">← → Space</span>
+    <div class="count">Step 1 / 1</div>
+  </div>
+  <div class="progress"><div class="bar"></div></div>
+  <div class="ex-body"><div class="step-badge">1</div><div class="ex-content"><div class="ex-title"></div><div class="ex-text"></div></div></div>`;
+
+function Player(root, render){
+  root.innerHTML = EXPLAIN_HTML;
+  const q = s => root.querySelector(s);
+  const P = {steps:[], i:0, timer:null};
+  const delay = () => 2900 - (+q('.speed input').value);
+  function show(){
+    const s = P.steps[P.i]; if(!s) return;
+    render(s);
+    q('.ex-title').innerHTML = s.title;
+    q('.ex-text').innerHTML = s.text;
+    const c = q('.ex-content'); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    q('.step-badge').textContent = P.i+1;
+    q('.count').textContent = `Step ${P.i+1} / ${P.steps.length}`;
+    q('.bar').style.width = ((P.i+1)/P.steps.length*100)+'%';
+    q('[data-act=prev]').disabled = P.i===0;
+    q('[data-act=next]').disabled = P.i>=P.steps.length-1;
+  }
+  function stop(){ clearTimeout(P.timer); P.timer=null; q('[data-act=play]').innerHTML='▶ Play'; }
+  function tick(){ if(P.i < P.steps.length-1){ P.i++; show(); P.timer=setTimeout(tick, delay()); } else stop(); }
+  P.play = () => {
+    if(P.timer){ stop(); return; }
+    if(P.i >= P.steps.length-1){ P.i=0; show(); }
+    q('[data-act=play]').innerHTML='⏸ Pause';
+    P.timer = setTimeout(tick, delay());
+  };
+  P.next = () => { stop(); if(P.i < P.steps.length-1){ P.i++; show(); } };
+  P.prev = () => { stop(); if(P.i > 0){ P.i--; show(); } };
+  P.reset = () => { stop(); P.i=0; show(); };
+  P.load = steps => { stop(); P.steps=steps; P.i=0; show(); };
+  P.redraw = () => { const s=P.steps[P.i]; if(s) render(s); };
+  q('[data-act=play]').onclick = P.play;
+  q('[data-act=next]').onclick = P.next;
+  q('[data-act=prev]').onclick = P.prev;
+  q('[data-act=reset]').onclick = P.reset;
+  return P;
+}
+
+function setupCanvas(cv){
+  const r = cv.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.max(1, r.width*dpr); cv.height = Math.max(1, r.height*dpr);
+  cv.style.width = r.width+'px'; cv.style.height = r.height+'px';
+  const ctx = cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,r.width,r.height);
+  return {ctx, w:r.width, h:r.height};
+}
+/* World coordinates: 1000 x 560, y pointing UP (math style) */
+const WW = 1000, WH = 560;
+function fit(w,h){
+  const pad = 34;
+  const s = Math.min((w-2*pad)/WW, (h-2*pad)/WH);
+  const ox = (w-WW*s)/2, oy = (h-WH*s)/2;
+  return { s, X:x=>ox+x*s, Y:y=>oy+(WH-y)*s, inv:(cx,cy)=>({x:(cx-ox)/s, y:WH-(cy-oy)/s}) };
+}
+function drawBg(ctx,w,h,m){
+  ctx.fillStyle='rgba(255,255,255,.07)';
+  for(let x=0;x<=WW;x+=40) for(let y=0;y<=WH;y+=40){ ctx.beginPath(); ctx.arc(m.X(x),m.Y(y),1.1,0,7); ctx.fill(); }
+  ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.setLineDash([4,6]); ctx.lineWidth=1;
+  ctx.strokeRect(m.X(0),m.Y(WH),WW*m.s,WH*m.s); ctx.setLineDash([]);
+}
+function dot(ctx,x,y,r,fill,glow){
+  ctx.save(); if(glow){ ctx.shadowColor=glow; ctx.shadowBlur=16; }
+  ctx.fillStyle=fill; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.restore();
+}
+function line(ctx,x1,y1,x2,y2,color,wd,dash){
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=wd||2; if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+function label(ctx,txt,x,y,color,size,bg){
+  ctx.save(); ctx.font=`600 ${size||12}px Poppins, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  if(bg){ const tw=ctx.measureText(txt).width+12; ctx.fillStyle=bg; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x-tw/2,y-10,tw,20,6) : ctx.rect(x-tw/2,y-10,tw,20); ctx.fill(); }
+  ctx.fillStyle=color||'#fff'; ctx.fillText(txt,x,y); ctx.restore();
+}
+function randomPoints(n){
+  const pts=[]; let guard=0;
+  while(pts.length<n && guard++<5000){
+    const p={x:rnd(40,WW-40), y:rnd(40,WH-40)};
+    if(pts.every(q=>Math.hypot(q.x-p.x,q.y-p.y)>48)) pts.push(p);
+  }
+  return pts;
+}
+
+/* =========================================================
+   Navigation
+   ========================================================= */
+const players = {};
+function goTo(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id===id));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active', b.dataset.go===id));
+  requestAnimationFrame(()=>players[id] && players[id].redraw());
+}
+document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>goTo(el.dataset.go)));
+document.querySelectorAll('.page').forEach(page=>{
+  page.querySelectorAll('.subnav button').forEach(btn=>btn.addEventListener('click',()=>{
+    page.querySelectorAll('.subnav button').forEach(b=>b.classList.toggle('active', b===btn));
+    page.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active', p.classList.contains(btn.dataset.pane)));
+    if(btn.dataset.pane==='demo') requestAnimationFrame(()=>players[page.id] && players[page.id].redraw());
+  }));
+});
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  const page=document.querySelector('.page.active'); if(!page || !players[page.id]) return;
+  if(!page.querySelector('.pane.demo.active')) return;
+  const P=players[page.id];
+  if(e.key==='ArrowRight'){ P.next(); e.preventDefault(); }
+  else if(e.key==='ArrowLeft'){ P.prev(); e.preventDefault(); }
+  else if(e.key===' '){ P.play(); e.preventDefault(); }
+});
+window.addEventListener('resize',()=>{ const p=document.querySelector('.page.active'); if(p && players[p.id]) players[p.id].redraw(); });
+
+/* =========================================================
+   1. GREEDY FRACTIONAL KNAPSACK
+   ========================================================= */
+const KN_POOL=[['Gold','🥇'],['Silver','🥈'],['Laptop','💻'],['Camera','📷'],['Books','📚'],['Watch','⌚'],['Phone','📱'],['Gems','💎'],['Headset','🎧'],['Perfume','🧴'],['Spices','🌶️'],['Silk','🧣']];
+const KN_DEFAULT=[{name:'Gold',e:'🥇',w:10,v:60},{name:'Silver',e:'🥈',w:20,v:100},{name:'Laptop',e:'💻',w:30,v:120},{name:'Camera',e:'📷',w:15,v:105},{name:'Books',e:'📚',w:25,v:75}];
+const KN={cap:60, items:KN_DEFAULT.map(o=>({...o})), list:[]};
+
+function knapSteps(){
+  const cap=KN.cap;
+  const items=KN.items.map((it,i)=>({...it,id:i,r:it.v/it.w,color:COLORS[i%COLORS.length]}));
+  KN.list=items;
+  const steps=[];
+  const S=(o)=>steps.push(Object.assign({order:items.map(i=>i.id),showRatio:false,taken:[],status:{},rem:cap,total:0,cur:null,rank:null},o));
+  S({title:'🎯 The problem',text:`We have <b>${items.length} items</b> and a knapsack that holds <b>${cap} kg</b>. Items can be <b>cut into pieces</b> (fractional knapsack). Goal: carry the <b>maximum total value</b>.`});
+  S({showRatio:true,title:'➗ Compute value ÷ weight for every item',text:'The ratio tells us the <b>value per kg</b>: '+items.map(i=>`${i.e} ${i.name} = ${i.v}/${i.w} = <b>${fmt(i.r)}</b>`).join(', ')});
+  const sorted=[...items].sort((a,b)=>b.r-a.r);
+  const order=sorted.map(i=>i.id); const rank={}; order.forEach((id,k)=>rank[id]=k+1);
+  S({showRatio:true,order,rank,title:'📶 Sort by ratio (highest first)',text:`<b>Greedy choice:</b> always pick the item with the best value per kg first. Order → ${sorted.map(i=>`${i.e} ${i.name}`).join(' → ')}`});
+  let rem=cap,total=0; const taken=[],status={};
+  for(let k=0;k<sorted.length;k++){
+    const it=sorted[k];
+    if(rem<=0){
+      sorted.slice(k).forEach(x=>status[x.id]='skip');
+      S({showRatio:true,order,rank,taken:[...taken],status:{...status},rem,total,title:'🛑 Knapsack is full',text:`No capacity left, so the remaining item(s) ${sorted.slice(k).map(x=>x.e+' '+x.name).join(', ')} are <b>skipped</b>. The greedy loop stops.`});
+      break;
+    }
+    if(it.w<=rem){
+      const before=rem; rem-=it.w; total+=it.v; taken.push({id:it.id,f:1}); status[it.id]='full';
+      S({showRatio:true,order,rank,taken:[...taken],status:{...status},rem,total,cur:it.id,title:`✅ Take all of ${it.e} ${it.name}`,text:`${it.name} weighs <b>${it.w} kg</b> ≤ remaining <b>${before} kg</b> → put it in completely. Value += ${it.v} → total <b>${fmt(total)}</b>. Remaining capacity = <b>${rem} kg</b>.`});
+    } else {
+      const f=rem/it.w, gain=it.v*f;
+      total+=gain; taken.push({id:it.id,f}); status[it.id]='part';
+      S({showRatio:true,order,rank,taken:[...taken],status:{...status},rem:0,total,cur:it.id,title:`✂️ Take a fraction of ${it.e} ${it.name}`,text:`Only <b>${rem} kg</b> left but ${it.name} weighs ${it.w} kg. Take fraction <code>${rem}/${it.w} = ${(f*100).toFixed(1)}%</code> → value ${it.v} × ${fmt(f)} = <b>${fmt(gain)}</b>. Total = <b>${fmt(total)}</b>. Knapsack is now exactly full.`});
+      rem=0;
+    }
+  }
+  if(rem>0) S({showRatio:true,order,rank,taken:[...taken],status:{...status},rem,total,title:'ℹ️ All items fit',text:`Every item fit completely — ${rem} kg is still free.`});
+  S({showRatio:true,order,rank,taken:[...taken],status:{...status},rem,total,title:`🎉 Maximum value = ${fmt(total)}`,text:`The greedy strategy gives the <b>optimal</b> answer for the fractional knapsack: <b>${fmt(total)}</b> using ${cap-rem} of ${cap} kg. Time complexity: sorting <code>O(n log n)</code> + one pass <code>O(n)</code>.`});
+  return steps;
+}
+function renderKnap(s){
+  const items=KN.list, cap=KN.cap;
+  const card=id=>{
+    const it=items[id], st=s.status[id]||'', t=s.taken.find(x=>x.id===id);
+    let stTxt='';
+    if(st==='full') stTxt='✔ Taken 100%'; else if(st==='part') stTxt=`✂ Taken ${(t.f*100).toFixed(0)}%`; else if(st==='skip') stTxt='✘ Skipped';
+    return `<div class="item-card ${st?'st-'+st:''} ${s.cur===id?'cur':''}" style="--c:${it.color}">
+      <div class="ic-top"><span class="emoji">${it.e}</span>${s.rank?`<span class="rank">#${s.rank[id]}</span>`:''}</div>
+      <div class="ic-name">${it.name}</div>
+      <div class="ic-row"><span>⚖ ${it.w} kg</span><span>💰 ${it.v}</span></div>
+      ${s.showRatio?`<div class="ic-ratio">${fmt(it.r)} / kg</div>`:''}
+      ${stTxt?`<div class="ic-status">${stTxt}</div>`:''}
+    </div>`;
+  };
+  const segs=s.taken.map(t=>{const it=items[t.id]; const kg=it.w*t.f;
+    return `<div class="seg" style="height:${kg/cap*100}%;background:${it.color}">${it.e} ${fmt(kg)} kg</div>`}).join('');
+  $('#knapViz').innerHTML=`<div class="knap-wrap">
+    <div class="items-grid">${s.order.map(card).join('')}</div>
+    <div class="bag-col"><div class="bag-title">🎒 Knapsack · ${cap} kg</div>
+      <div class="bag">${segs}</div>
+      <div class="stats"><div class="stat"><b>${fmt(s.rem)}</b><span>kg free</span></div><div class="stat"><b>${fmt(s.total)}</b><span>total value</span></div></div>
+    </div></div>`;
+}
+players.knap=Player($('#knapEx'),renderKnap);
+function knapReload(){ KN.cap=Math.max(1,Math.min(500,+$('#knapCap').value||60)); players.knap.load(knapSteps()); }
+$('#knapCap').addEventListener('change',knapReload);
+$('#knapRand').onclick=()=>{
+  const pool=[...KN_POOL].sort(()=>Math.random()-.5).slice(0,5);
+  KN.items=pool.map(([name,e])=>({name,e,w:rnd(5,35),v:rnd(20,160)}));
+  knapReload();
+};
+$('#knapDef').onclick=()=>{ KN.items=KN_DEFAULT.map(o=>({...o})); $('#knapCap').value=60; knapReload(); };
+knapReload();
+
+/* =========================================================
+   2. LIMITATIONS OF GREEDY
+   ========================================================= */
+function limKnapSteps(){
+  const cap=50;
+  const items=[{n:'X',e:'💍',w:10,v:60},{n:'Y',e:'💻',w:20,v:100},{n:'Z',e:'📷',w:30,v:120}].map((it,i)=>({...it,id:i,r:it.v/it.w,c:COLORS[[0,3,4][i]]}));
+  const steps=[]; const S=o=>steps.push(Object.assign({mode:'knap',cap,items,g:[],gNo:[],gUsed:0,gVal:0,o:null,oUsed:0,oVal:0,verdict:null,gDone:false},o));
+  S({title:'🎒 0/1 Knapsack: items cannot be cut',text:`Capacity <b>${cap} kg</b>. Items: ${items.map(i=>`${i.e} ${i.n} (w ${i.w}, v ${i.v}, ratio ${i.r})`).join(', ')}. This time each item is taken <b>completely or not at all</b>.`});
+  const sorted=[...items].sort((a,b)=>b.r-a.r);
+  S({title:'🏃 Greedy: sort by value/weight',text:`Greedy uses the same rule as before: highest ratio first → ${sorted.map(i=>i.e+' '+i.n).join(' → ')}.`});
+  let used=0,val=0; const g=[],gNo=[];
+  for(const it of sorted){
+    if(used+it.w<=cap){ used+=it.w; val+=it.v; g.push(it.id);
+      S({g:[...g],gNo:[...gNo],gUsed:used,gVal:val,title:`🏃 Greedy takes ${it.e} ${it.n}`,text:`${it.n} (${it.w} kg) fits → take it. Used <b>${used}/${cap} kg</b>, value <b>${val}</b>.`});
+    } else { gNo.push(it.id);
+      S({g:[...g],gNo:[...gNo],gUsed:used,gVal:val,title:`🚫 ${it.e} ${it.n} does not fit!`,text:`${it.n} needs <b>${it.w} kg</b> but only <b>${cap-used} kg</b> is left. In 0/1 knapsack we <b>cannot break it</b>, so it is skipped and ${cap-used} kg is wasted.`});
+    }
+  }
+  S({g,gNo,gUsed:used,gVal:val,gDone:true,title:`🏁 Greedy finishes with value ${val}`,text:`Greedy never goes back to reconsider its early choices. Final greedy value = <b>${val}</b>.`});
+  // DP
+  const n=items.length, dp=Array.from({length:n+1},()=>Array(cap+1).fill(0));
+  for(let i=1;i<=n;i++) for(let w=0;w<=cap;w++){ dp[i][w]=dp[i-1][w]; const it=items[i-1]; if(it.w<=w) dp[i][w]=Math.max(dp[i][w],dp[i-1][w-it.w]+it.v); }
+  const o=[]; let w=cap; for(let i=n;i>0;i--) if(dp[i][w]!==dp[i-1][w]){ o.push(i-1); w-=items[i-1].w; }
+  o.reverse(); const oUsed=o.reduce((a,i)=>a+items[i].w,0), oVal=dp[n][cap];
+  S({g,gNo,gUsed:used,gVal:val,gDone:true,o,oUsed,oVal,title:`🧠 Dynamic Programming finds ${oVal}`,text:`DP tries all capacity/item combinations (<code>dp[i][w] = max(dp[i-1][w], v<sub>i</sub> + dp[i-1][w-w<sub>i</sub>])</code>) and picks ${o.map(i=>items[i].e+' '+items[i].n).join(' + ')} = <b>${oUsed} kg, value ${oVal}</b>.`});
+  S({g,gNo,gUsed:used,gVal:val,gDone:true,o,oUsed,oVal,verdict:{ok:val===oVal,text:val===oVal?'✔ Greedy matched the optimum here':`✘ Greedy lost ${oVal-val} (${((oVal-val)/oVal*100).toFixed(0)}% worse). The highest-ratio item was a trap!`},
+    title:'⚠️ Lesson: greedy is not optimal for 0/1 knapsack',text:'Taking the best ratio first <b>blocked</b> a better combination. 0/1 knapsack lacks the greedy-choice property — use <b>Dynamic Programming</b> (O(nW)) instead.'});
+  return steps;
+}
+function limCoinSteps(coins,amount){
+  const desc=[...coins].sort((a,b)=>b-a);
+  const steps=[]; const S=o=>steps.push(Object.assign({mode:'coin',coins:desc,amount,g:[],gRem:amount,o:null,verdict:null,gDone:false},o));
+  S({title:`🪙 Make ${amount} with the fewest coins`,text:`Coin values: <b>{${[...coins].sort((a,b)=>a-b).join(', ')}}</b>, unlimited supply. Target amount: <b>${amount}</b>. Goal: use the <b>minimum number of coins</b>.`});
+  let rem=amount; const g=[];
+  while(rem>0){ const c=desc.find(x=>x<=rem); if(c===undefined) break; g.push(c); rem-=c;
+    S({g:[...g],gRem:rem,title:`🏃 Greedy picks coin ${c}`,text:`Largest coin ≤ ${rem+c} is <b>${c}</b>. Remaining amount = <b>${rem}</b>. Coins so far: ${g.length}.`}); }
+  S({g,gRem:rem,gDone:true,title:`🏁 Greedy uses ${g.length} coins`,text:`Greedy: ${g.join(' + ')} = ${amount} → <b>${g.length} coins</b>.`});
+  const dp=Array(amount+1).fill(Infinity), from=Array(amount+1).fill(-1); dp[0]=0;
+  for(let a=1;a<=amount;a++) for(const c of coins) if(c<=a && dp[a-c]+1<dp[a]){ dp[a]=dp[a-c]+1; from[a]=c; }
+  const o=[]; let a=amount; while(a>0){ o.push(from[a]); a-=from[a]; } o.sort((x,y)=>y-x);
+  S({g,gRem:rem,gDone:true,o,title:`🧠 DP finds ${o.length} coins`,text:`DP computes <code>dp[a] = 1 + min(dp[a − c])</code> for every amount up to ${amount}. Best: ${o.join(' + ')} → <b>${o.length} coins</b>.`});
+  const ok=o.length===g.length;
+  S({g,gRem:rem,gDone:true,o,verdict:{ok,text:ok?`✔ Greedy is optimal here (${g.length} coins) — {${[...coins].sort((a,b)=>a-b).join(',')}} is a canonical coin system`:`✘ Greedy used ${g.length} coins but only ${o.length} are needed`},
+    title:ok?'✅ Greedy works for "nice" coin systems':'⚠️ Lesson: greedy fails for arbitrary coins',
+    text:ok?'For standard currency systems like {1, 5, 10, 25} greedy is proven optimal. But this depends on the coin values — it is <b>not</b> a general guarantee.':'Picking the biggest coin first (4) forced two small coins later. A smarter early choice (3) was better — greedy cannot see that because it <b>never backtracks</b>.'});
+  return steps;
+}
+function renderLim(s){
+  let top='', gBody='', oBody='', gRes='', oRes='';
+  if(s.mode==='knap'){
+    top=`<span>Capacity <span class="pill">🎒 ${s.cap} kg</span></span> Items: ${s.items.map(i=>`<span class="pill" style="border-color:${i.c}">${i.e} ${i.n} · ${i.w}kg · ₹${i.v} · r=${i.r}</span>`).join('')}`;
+    const bar=(ids,used)=>`<div class="capbar">${ids.map(id=>{const it=s.items[id];return `<div class="cs" style="width:${it.w/s.cap*100}%;background:${it.c}">${it.e} ${it.w}kg</div>`}).join('')}<span class="lbl">${used}/${s.cap} kg</span></div>`;
+    gBody=bar(s.g,s.gUsed)+`<div class="picks">${s.g.map(id=>`<span class="pk">✔ ${s.items[id].e} ${s.items[id].n} (₹${s.items[id].v})</span>`).join('')}${s.gNo.map(id=>`<span class="pk no">${s.items[id].e} ${s.items[id].n}</span>`).join('')}</div>`;
+    gRes=`<span>Total value</span><b>${s.gVal}</b>`;
+    if(s.o){ oBody=bar(s.o,s.oUsed)+`<div class="picks">${s.o.map(id=>`<span class="pk">✔ ${s.items[id].e} ${s.items[id].n} (₹${s.items[id].v})</span>`).join('')}</div>`; oRes=`<span>Total value</span><b>${s.oVal}</b>`; }
+  } else {
+    top=`<span>Coins</span> ${[...s.coins].reverse().map(c=>`<span class="pill">🪙 ${c}</span>`).join('')} <span style="margin-left:10px">Target</span> <span class="pill">🎯 ${s.amount}</span>`;
+    gBody=`<div class="coins">${s.g.map(c=>`<div class="coin">${c}</div>`).join('')||'<span style="color:var(--muted)">No coins chosen yet</span>'}</div><div style="font-size:13px;color:var(--muted)">Remaining amount: <b>${s.gRem}</b></div>`;
+    gRes=`<span>Coins used</span><b>${s.g.length}</b>`;
+    if(s.o){ oBody=`<div class="coins">${s.o.map(c=>`<div class="coin" style="background:radial-gradient(circle at 30% 30%,#ede9fe,#a78bfa 45%,#5b21b6);color:#1e0b47">${c}</div>`).join('')}</div>`; oRes=`<span>Coins used</span><b>${s.o.length}</b>`; }
+  }
+  if(!s.o){ oBody='<div style="text-align:center;color:var(--muted);font-size:13px">🔒 Revealed after greedy finishes…</div>'; oRes='<span>—</span><b>?</b>'; }
+  $('#limViz').innerHTML=`<div class="lim-wrap">
+    <div class="lim-top">${top}</div>
+    <div class="lim-panels">
+      <div class="lim-panel g"><div class="lp-head"><span class="ico">🏃</span><div><h4>Greedy choice</h4><p>Best-looking option first, never look back</p></div></div><div class="lp-body">${gBody}</div><div class="lp-res">${gRes}</div></div>
+      <div class="lim-panel o ${s.o?'':'dim'}"><div class="lp-head"><span class="ico">🧠</span><div><h4>Optimal (Dynamic Programming)</h4><p>Considers all combinations systematically</p></div></div><div class="lp-body">${oBody}</div><div class="lp-res">${oRes}</div></div>
+    </div>
+    ${s.verdict?`<div class="verdict ${s.verdict.ok?'good':'bad'}">${s.verdict.text}</div>`:''}
+  </div>`;
+}
+players.lim=Player($('#limEx'),renderLim);
+const LIM_SC={knap:()=>limKnapSteps(), coin1:()=>limCoinSteps([1,3,4],6), coin2:()=>limCoinSteps([1,5,10,25],63)};
+document.querySelectorAll('[data-lim]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-lim]').forEach(x=>x.classList.toggle('on',x===b));
+  players.lim.load(LIM_SC[b.dataset.lim]());
+});
+players.lim.load(LIM_SC.knap());
+
+/* =========================================================
+   3. GRAHAM SCAN
+   ========================================================= */
+const GH={pts:randomPoints(16)};
+const cross=(o,a,b)=>(a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
+function grahamSteps(){
+  const P=GH.pts, n=P.length, steps=[];
+  const S=o=>steps.push(Object.assign({t:'init',pv:null,order:null,stack:null,check:null,ok:null,cand:null},o));
+  if(n<3){ S({title:'➕ Add more points',text:`A convex hull needs at least <b>3 points</b>. Currently: ${n}. Click on the canvas or press <b>Random points</b>.`}); return steps; }
+  S({title:'📌 Start: a set of points',text:`We have <b>${n} points</b>. Goal: find the smallest convex polygon that encloses all of them — imagine a rubber band snapping around nails.`});
+  let pv=0; for(let i=1;i<n;i++) if(P[i].y<P[pv].y || (P[i].y===P[pv].y && P[i].x<P[pv].x)) pv=i;
+  S({t:'pivot',pv,title:'⭐ Choose the pivot P0',text:`Pick the point with the <b>lowest y</b> (leftmost if tied): (${Math.round(P[pv].x)}, ${Math.round(P[pv].y)}). It must be on the hull, so it is our anchor.`});
+  const d2=(a,b)=>(P[a].x-P[b].x)**2+(P[a].y-P[b].y)**2;
+  const others=[...Array(n).keys()].filter(i=>i!==pv).sort((a,b)=>{const c=cross(P[pv],P[a],P[b]); if(c!==0) return c>0?-1:1; return d2(pv,a)-d2(pv,b);});
+  const order=[pv,...others]; const R={}; order.forEach((id,k)=>R[id]=k);
+  S({t:'sort',pv,order,title:'🔄 Sort points by polar angle around P0',text:'Sweep counter-clockwise from P0 like a radar beam and number the points <b>P1, P2, …</b> in the order the beam hits them (closer first on a tie). Sorting costs <code>O(n log n)</code>.'});
+  const st=[order[0],order[1]];
+  S({t:'scan',pv,order,stack:[...st],cand:order[1],title:'📥 Push P0 and P1',text:'Initialise the <b>stack</b> with P0 and P1. Now walk through P2, P3, … and keep the boundary turning <b>left</b> (counter-clockwise).'});
+  for(let k=2;k<n;k++){
+    const c=order[k];
+    while(st.length>=2){
+      const a=st[st.length-2], b=st[st.length-1], cr=cross(P[a],P[b],P[c]);
+      if(cr<=0){
+        S({t:'scan',pv,order,stack:[...st],cand:c,check:[a,b,c],ok:false,
+          title:`↪️ P${R[a]} → P${R[b]} → P${R[k===k?c:c]}: ${cr===0?'collinear':'right turn'} → POP P${R[b]}`,
+          text:`Cross product = <code>${Math.round(cr)}</code> ${cr===0?'= 0 (collinear)':'&lt; 0 (clockwise)'}. P${R[b]} would make a dent inward, so it <b>cannot be on the hull</b> → pop it from the stack.`});
+        st.pop();
+      } else break;
+    }
+    const a=st[st.length-2], b=st[st.length-1], cr=cross(P[a],P[b],P[c]);
+    st.push(c);
+    S({t:'scan',pv,order,stack:[...st],cand:c,check:[a,b,c],ok:true,
+      title:`↩️ P${R[a]} → P${R[b]} → P${R[c]}: left turn → PUSH P${R[c]}`,
+      text:`Cross product = <code>${Math.round(cr)}</code> &gt; 0 (counter-clockwise). The boundary still bends outward, so <b>push P${R[c]}</b>. Stack: [${st.map(i=>'P'+R[i]).join(', ')}]`});
+  }
+  S({t:'done',pv,order,stack:[...st],title:`🎉 Convex hull found: ${st.length} vertices`,text:`Connect the stack back to P0. Hull (counter-clockwise): <b>${st.map(i=>'P'+R[i]).join(' → ')} → P0</b>. Every point was pushed once and popped at most once, so the scan is <code>O(n)</code>; total <code>O(n log n)</code>.`});
+  return steps;
+}
+function renderGraham(s){
+  const cv=$('#ghCanvas'); const {ctx,w,h}=setupCanvas(cv); const m=fit(w,h); GH.m=m;
+  drawBg(ctx,w,h,m);
+  const P=GH.pts; const R={}; if(s.order) s.order.forEach((id,k)=>R[id]=k);
+  const X=i=>m.X(P[i].x), Y=i=>m.Y(P[i].y);
+  if(s.t==='sort'){
+    s.order.forEach((id,k)=>{ if(k===0) return; const hue=200+k/s.order.length*140;
+      line(ctx,X(s.pv),Y(s.pv),X(id),Y(id),`hsla(${hue},90%,65%,.55)`,1.5,[5,5]); });
+  }
+  if(s.t==='done'){
+    ctx.save(); ctx.beginPath(); s.stack.forEach((id,k)=>k?ctx.lineTo(X(id),Y(id)):ctx.moveTo(X(id),Y(id))); ctx.closePath();
+    const g=ctx.createLinearGradient(0,0,w,h); g.addColorStop(0,'rgba(34,211,238,.22)'); g.addColorStop(1,'rgba(59,130,246,.22)');
+    ctx.fillStyle=g; ctx.fill(); ctx.shadowColor='#22d3ee'; ctx.shadowBlur=14; ctx.strokeStyle='#22d3ee'; ctx.lineWidth=3; ctx.stroke(); ctx.restore();
+  } else if(s.stack){
+    for(let k=1;k<s.stack.length;k++) line(ctx,X(s.stack[k-1]),Y(s.stack[k-1]),X(s.stack[k]),Y(s.stack[k]),'#22d3ee',3);
+  }
+  if(s.check){
+    const [a,b,c]=s.check, col=s.ok?'#34d399':'#f87171';
+    ctx.save(); ctx.beginPath(); ctx.moveTo(X(a),Y(a)); ctx.lineTo(X(b),Y(b)); ctx.lineTo(X(c),Y(c)); ctx.closePath();
+    ctx.fillStyle=s.ok?'rgba(52,211,153,.15)':'rgba(248,113,113,.18)'; ctx.fill(); ctx.restore();
+    line(ctx,X(a),Y(a),X(b),Y(b),col,3.5); line(ctx,X(b),Y(b),X(c),Y(c),col,3.5,[8,5]);
+    label(ctx,s.ok?'LEFT ✔':'RIGHT ✘',(X(b)+X(c))/2,(Y(b)+Y(c))/2-14,'#0b0d1f',11,col);
+  }
+  const inStack=new Set(s.stack||[]);
+  P.forEach((p,i)=>{
+    let col='#cbd5ff', r=6, glow=null;
+    if(inStack.has(i)){ col='#22d3ee'; r=7.5; glow='#22d3ee'; }
+    if(s.check && !s.ok && i===s.check[1]){ col='#f87171'; r=9; glow='#f87171'; }
+    if(i===s.cand && s.t==='scan'){ col='#f0abfc'; r=9; glow='#e879f9'; }
+    if(i===s.pv){ col='#fbbf24'; r=10; glow='#fbbf24'; }
+    dot(ctx,X(i),Y(i),r,col,glow);
+    if(s.order) label(ctx,'P'+R[i],X(i),Y(i)-17,i===s.pv?'#fbbf24':'#e2e8f0',11);
+  });
+  if(s.stack){
+    const txt='Stack: [ '+s.stack.map(i=>'P'+R[i]).join(', ')+' ]';
+    ctx.save(); ctx.font='600 13px JetBrains Mono, monospace'; const tw=ctx.measureText(txt).width+20;
+    ctx.fillStyle='rgba(8,10,30,.8)'; ctx.fillRect(12,10,tw,28); ctx.fillStyle='#22d3ee'; ctx.fillText(txt,22,29); ctx.restore();
+  }
+}
+players.graham=Player($('#ghEx'),renderGraham);
+const ghReload=()=>players.graham.load(grahamSteps());
+$('#ghRand').onclick=()=>{ GH.pts=randomPoints(Math.max(3,Math.min(40,+$('#ghN').value||16))); ghReload(); };
+$('#ghClear').onclick=()=>{ GH.pts=[]; ghReload(); };
+$('#ghCanvas').addEventListener('click',e=>{
+  if(!GH.m) return; const r=e.target.getBoundingClientRect(); const p=GH.m.inv(e.clientX-r.left,e.clientY-r.top);
+  if(p.x<0||p.x>WW||p.y<0||p.y>WH||GH.pts.length>=60) return;
+  GH.pts.push({x:Math.round(p.x),y:Math.round(p.y)}); ghReload();
+});
+ghReload();
+
+/* =========================================================
+   4. STRASSEN
+   ========================================================= */
+const ST={A:null,B:null};
+const MDEF=[
+  {f:'(A₁₁+A₂₂)(B₁₁+B₂₂)',A:['11','22'],B:['11','22'],e:(a,b)=>[`(${a[0][0]}+${a[1][1]})×(${b[0][0]}+${b[1][1]})`,(a[0][0]+a[1][1])*(b[0][0]+b[1][1])]},
+  {f:'(A₂₁+A₂₂)·B₁₁',A:['21','22'],B:['11'],e:(a,b)=>[`(${a[1][0]}+${a[1][1]})×${b[0][0]}`,(a[1][0]+a[1][1])*b[0][0]]},
+  {f:'A₁₁·(B₁₂−B₂₂)',A:['11'],B:['12','22'],e:(a,b)=>[`${a[0][0]}×(${b[0][1]}−${b[1][1]})`,a[0][0]*(b[0][1]-b[1][1])]},
+  {f:'A₂₂·(B₂₁−B₁₁)',A:['22'],B:['21','11'],e:(a,b)=>[`${a[1][1]}×(${b[1][0]}−${b[0][0]})`,a[1][1]*(b[1][0]-b[0][0])]},
+  {f:'(A₁₁+A₁₂)·B₂₂',A:['11','12'],B:['22'],e:(a,b)=>[`(${a[0][0]}+${a[0][1]})×${b[1][1]}`,(a[0][0]+a[0][1])*b[1][1]]},
+  {f:'(A₂₁−A₁₁)(B₁₁+B₁₂)',A:['21','11'],B:['11','12'],e:(a,b)=>[`(${a[1][0]}−${a[0][0]})×(${b[0][0]}+${b[0][1]})`,(a[1][0]-a[0][0])*(b[0][0]+b[0][1])]},
+  {f:'(A₁₂−A₂₂)(B₂₁+B₂₂)',A:['12','22'],B:['21','22'],e:(a,b)=>[`(${a[0][1]}−${a[1][1]})×(${b[1][0]}+${b[1][1]})`,(a[0][1]-a[1][1])*(b[1][0]+b[1][1])]},
+];
+const CDEF=[
+  {k:'11',f:'M₁ + M₄ − M₅ + M₇',use:[1,4,5,7],v:m=>m[0]+m[3]-m[4]+m[6],x:m=>`${m[0]} + ${m[3]} − ${m[4]} + ${m[6]}`},
+  {k:'12',f:'M₃ + M₅',use:[3,5],v:m=>m[2]+m[4],x:m=>`${m[2]} + ${m[4]}`},
+  {k:'21',f:'M₂ + M₄',use:[2,4],v:m=>m[1]+m[3],x:m=>`${m[1]} + ${m[3]}`},
+  {k:'22',f:'M₁ − M₂ + M₃ + M₆',use:[1,2,3,6],v:m=>m[0]-m[1]+m[2]+m[5],x:m=>`${m[0]} − ${m[1]} + ${m[2]} + ${m[5]}`},
+];
+const sub=k=>k.replace('1','₁').replace('1','₁').replace('2','₂').replace('2','₂');
+function strSteps(){
+  const A=ST.A,B=ST.B, M=MDEF.map(d=>d.e(A,B)[1]);
+  const steps=[]; const S=o=>steps.push(Object.assign({hiA:[],hiB:[],mActive:-1,mDone:0,hiM:[],cDone:[],cActive:null,verify:false},o));
+  S({title:'🧩 Multiply two 2×2 matrices',text:`The schoolbook method computes each of the 4 entries of C with 2 products → <b>8 multiplications</b>. Strassen computes 7 clever products <b>M₁…M₇</b> and then only adds/subtracts them. For big matrices, each entry is a <b>block</b> and the trick is applied recursively.`});
+  MDEF.forEach((d,k)=>{ const [ex,v]=d.e(A,B);
+    S({hiA:d.A,hiB:d.B,mActive:k,mDone:k,title:`✖️ M${'₁₂₃₄₅₆₇'[k]} = ${d.f}`,text:`Add/subtract the highlighted cells first, then do <b>one</b> multiplication: <code>${ex} = ${v}</code>. Multiplications used so far: <b>${k+1}</b>.`}); });
+  const cDone=[];
+  CDEF.forEach(c=>{ cDone.push(c.k);
+    S({mDone:7,hiM:c.use,cActive:c.k,cDone:[...cDone],title:`➕ C${sub(c.k)} = ${c.f}`,text:`Only additions/subtractions now: <code>C${sub(c.k)} = ${c.x(M)} = ${c.v(M)}</code>. No extra multiplication needed!`}); });
+  const naive=[[A[0][0]*B[0][0]+A[0][1]*B[1][0],A[0][0]*B[0][1]+A[0][1]*B[1][1]],[A[1][0]*B[0][0]+A[1][1]*B[1][0],A[1][0]*B[0][1]+A[1][1]*B[1][1]]];
+  S({mDone:7,cDone:['11','12','21','22'],verify:true,title:'✅ Verified with the normal method',text:`Normal method: C₁₁ = ${A[0][0]}·${B[0][0]} + ${A[0][1]}·${B[1][0]} = <b>${naive[0][0]}</b>, C₁₂ = <b>${naive[0][1]}</b>, C₂₁ = <b>${naive[1][0]}</b>, C₂₂ = <b>${naive[1][1]}</b> — identical! Saving 1 of 8 multiplications at every level of recursion gives <code>T(n)=7T(n/2)+O(n²) = O(n<sup>2.807</sup>)</code>.`});
+  ST.M=M; return steps;
+}
+function renderStr(s){
+  const A=ST.A,B=ST.B,M=ST.M;
+  const C={}; CDEF.forEach(c=>C[c.k]=c.v(M));
+  const grid=(name,Mx,hi,cls)=>`<div class="matrix"><div class="mname">${name}</div><div class="mgrid">${['11','12','21','22'].map(k=>`<div class="mcell ${hi.includes(k)?cls:''}"><span class="sub">${name}${sub(k)}</span>${Mx[+k[0]-1][+k[1]-1]}</div>`).join('')}</div></div>`;
+  const cgrid=`<div class="matrix"><div class="mname">C</div><div class="mgrid">${['11','12','21','22'].map(k=>`<div class="mcell ${s.cActive===k?'hc':''} ${s.cDone.includes(k)?'cd':''}"><span class="sub">C${sub(k)}</span>${s.cDone.includes(k)?C[k]:'?'}</div>`).join('')}</div></div>`;
+  const cards=MDEF.map((d,k)=>{ const st=k===s.mActive?'active':(k<s.mDone?'done':''); const used=s.hiM.includes(k+1)?'used':'';
+    const show=k<=s.mActive||k<s.mDone; const [ex,v]=d.e(A,B);
+    return `<div class="mcard ${st} ${used}"><div class="mk">M${'₁₂₃₄₅₆₇'[k]} ${show?`= <span style="color:#fff">${v}</span>`:''}</div><div class="mf">${d.f}</div>${show?`<div class="mv">${ex}</div>`:''}</div>`; }).join('');
+  const used=Math.max(s.mDone, s.mActive+1);
+  $('#strViz').innerHTML=`<div class="str-wrap"><div class="str-main">
+      <div class="mat-row">${grid('A',A,s.hiA,'ha')}<span class="op">×</span>${grid('B',B,s.hiB,'hb')}<span class="op">=</span>${cgrid}</div>
+      <div class="m-grid">${cards}</div></div>
+    <div class="counter">
+      <div class="cbox s"><span>Strassen multiplications</span><div class="big">${used}</div><div class="dots">${Array.from({length:7},(_,i)=>`<i class="${i<used?'f':''}"></i>`).join('')}</div></div>
+      <div class="cbox n"><span>Naive multiplications</span><div class="big">8</div><div class="dots">${'<i></i>'.repeat(8)}</div></div>
+      <div class="cbox"><span>${s.verify?'Result':'Recurrence'}</span><div style="font-family:var(--mono);font-size:12.5px;margin-top:6px">${s.verify?'✔ C matches<br>naive result':'T(n)=7T(n/2)+O(n²)'}</div></div>
+    </div></div>`;
+}
+players.str=Player($('#strEx'),renderStr);
+function strNew(def){ ST.A=def?[[1,3],[7,5]]:[[rnd(1,9),rnd(1,9)],[rnd(1,9),rnd(1,9)]]; ST.B=def?[[6,8],[4,2]]:[[rnd(1,9),rnd(1,9)],[rnd(1,9),rnd(1,9)]]; players.str.load(strSteps()); }
+$('#strRand').onclick=()=>strNew(false);
+strNew(true);
+
+/* =========================================================
+   5. CLOSEST PAIR OF POINTS
+   ========================================================= */
+const CP={pts:randomPoints(14)};
+const nameOf=k=>k<26?String.fromCharCode(65+k):String.fromCharCode(65+k%26)+Math.floor(k/26);
+function cpSteps(){
+  const pts=CP.pts, n=pts.length, steps=[];
+  const S=o=>steps.push(Object.assign({t:'init',lo:0,hi:n,midX:null,pairs:[],best:null,L:null,R:null,strip:null,d:null,checks:[],sorted:false},o));
+  if(n<2){ S({title:'➕ Add more points',text:'Need at least <b>2 points</b>. Click on the canvas or press <b>Random points</b>.'}); return steps; }
+  const P=[...Array(n).keys()].sort((a,b)=>pts[a].x-pts[b].x || pts[a].y-pts[b].y);
+  CP.name={}; P.forEach((id,k)=>CP.name[id]=nameOf(k));
+  const N=i=>CP.name[i]; const dist=(a,b)=>Math.hypot(pts[a].x-pts[b].x,pts[a].y-pts[b].y)/10;
+  let comps=0;
+  S({title:'📌 Find the two closest points',text:`There are <b>${n} points</b>. Brute force would check all <b>${n*(n-1)/2}</b> pairs (O(n²)). Divide &amp; conquer is smarter.`});
+  S({sorted:true,title:'↔️ Sort the points by x-coordinate',text:`Points are labelled <b>A, B, C…</b> from left to right. Sorting is done once: <code>O(n log n)</code>.`});
+  function rec(lo,hi){
+    const m=hi-lo;
+    if(m<=3){
+      let best={d:Infinity,a:-1,b:-1}; const pairs=[];
+      for(let i=lo;i<hi;i++) for(let j=i+1;j<hi;j++){ const d=dist(P[i],P[j]); comps++; pairs.push([P[i],P[j]]); if(d<best.d) best={d,a:P[i],b:P[j]}; }
+      S({t:'base',sorted:true,lo,hi,pairs,best,title:`🔍 Base case: ${m} point${m>1?'s':''} (${P.slice(lo,hi).map(N).join(', ')})`,text:m<2?'Only one point here — no pair, distance = ∞.':`Small enough → <b>brute force</b> all ${pairs.length} pair(s). Closest: <b>${N(best.a)}–${N(best.b)}</b>, d = <b>${best.d.toFixed(2)}</b>.`});
+      return best;
+    }
+    const mid=(lo+hi)>>1, midX=pts[P[mid]].x;
+    S({t:'divide',sorted:true,lo,hi,midX,title:`✂️ Divide ${P.slice(lo,hi).map(N).join('')} at x = ${Math.round(midX)}`,text:`Split the ${m} points with a vertical line into <b>left</b> (${P.slice(lo,mid).map(N).join(', ')}) and <b>right</b> (${P.slice(mid,hi).map(N).join(', ')}). Solve each half recursively.`});
+    const L=rec(lo,mid), R=rec(mid,hi);
+    const start=L.d<=R.d?L:R; let best=start; const d=start.d;
+    const strip=P.slice(lo,hi).filter(i=>Math.abs(pts[i].x-midX)<d*10).sort((a,b)=>pts[a].y-pts[b].y);
+    const checks=[];
+    for(let i=0;i<strip.length;i++) for(let j=i+1;j<strip.length && (pts[strip[j]].y-pts[strip[i]].y)<best.d*10;j++){
+      const dd=dist(strip[i],strip[j]); comps++; checks.push([strip[i],strip[j]]); if(dd<best.d) best={d:dd,a:strip[i],b:strip[j]};
+    }
+    const improved=best!==start;
+    S({t:'combine',sorted:true,lo,hi,midX,L,R,d,strip,checks,best,
+      title:`🧩 Combine: d = min(${isFinite(L.d)?L.d.toFixed(2):'∞'}, ${isFinite(R.d)?R.d.toFixed(2):'∞'}) = ${d.toFixed(2)}`,
+      text:`A closer pair could cross the line, so check only the <b>yellow strip</b> of width 2d. Strip points: ${strip.length?strip.map(N).join(', '):'none'}; ${checks.length} comparison(s). ${improved?`🎯 Strip pair <b>${N(best.a)}–${N(best.b)}</b> is closer: d = <b>${best.d.toFixed(2)}</b>!`:`No closer pair in the strip → best stays <b>${N(best.a)}–${N(best.b)}</b>.`}`});
+    return best;
+  }
+  const best=rec(0,n);
+  S({t:'done',sorted:true,best,title:`🎉 Closest pair: ${N(best.a)} and ${N(best.b)}`,text:`Minimum distance = <b>${best.d.toFixed(2)}</b> units. Divide &amp; conquer used <b>${comps}</b> distance computations vs <b>${n*(n-1)/2}</b> for brute force. Recurrence <code>T(n) = 2T(n/2) + O(n) → O(n log n)</code>.`});
+  return steps;
+}
+function renderCP(s){
+  const cv=$('#cpCanvas'); const {ctx,w,h}=setupCanvas(cv); const m=fit(w,h); CP.m=m;
+  drawBg(ctx,w,h,m);
+  const pts=CP.pts; const X=i=>m.X(pts[i].x), Y=i=>m.Y(pts[i].y);
+  const N=i=>CP.name?CP.name[i]:'';
+  let active=new Set(pts.map((_,i)=>i));
+  if(s.t==='divide'||s.t==='base'||s.t==='combine'){
+    const order=[...Array(pts.length).keys()].sort((a,b)=>pts[a].x-pts[b].x || pts[a].y-pts[b].y);
+    const ids=order.slice(s.lo,s.hi); active=new Set(ids);
+    const xs=ids.map(i=>pts[i].x); const x0=Math.min(...xs)-18, x1=Math.max(...xs)+18;
+    ctx.fillStyle='rgba(16,185,129,.07)'; ctx.fillRect(m.X(x0),m.Y(WH),(x1-x0)*m.s,WH*m.s);
+    ctx.strokeStyle='rgba(16,185,129,.4)'; ctx.setLineDash([3,5]); ctx.strokeRect(m.X(x0),m.Y(WH),(x1-x0)*m.s,WH*m.s); ctx.setLineDash([]);
+    if(s.midX!==null && s.t==='divide'){
+      ctx.fillStyle='rgba(96,165,250,.10)'; ctx.fillRect(m.X(x0),m.Y(WH),(s.midX-x0)*m.s,WH*m.s);
+      ctx.fillStyle='rgba(251,146,60,.10)'; ctx.fillRect(m.X(s.midX),m.Y(WH),(x1-s.midX)*m.s,WH*m.s);
+    }
+  }
+  if(s.t==='combine' && isFinite(s.d)){
+    const xa=Math.max(0,s.midX-s.d*10), xb=Math.min(WW,s.midX+s.d*10);
+    ctx.fillStyle='rgba(253,224,71,.14)'; ctx.fillRect(m.X(xa),m.Y(WH),(xb-xa)*m.s,WH*m.s);
+    ctx.strokeStyle='rgba(253,224,71,.6)'; ctx.lineWidth=1.5; ctx.strokeRect(m.X(xa),m.Y(WH),(xb-xa)*m.s,WH*m.s);
+    label(ctx,'strip = 2d',m.X(s.midX),m.Y(WH)+14,'#0b0d1f',11,'#fde047');
+  }
+  if(s.midX!==null && (s.t==='divide'||s.t==='combine')){
+    line(ctx,m.X(s.midX),m.Y(0),m.X(s.midX),m.Y(WH),'#e2e8f0',2,[8,6]);
+    label(ctx,'x = '+Math.round(s.midX),m.X(s.midX),m.Y(0)-12,'#e2e8f0',11,'rgba(8,10,30,.85)');
+  }
+  if(s.t==='base') s.pairs.forEach(([a,b])=>line(ctx,X(a),Y(a),X(b),Y(b),'rgba(203,213,255,.35)',1.5,[4,4]));
+  if(s.t==='combine'){
+    s.checks.forEach(([a,b])=>line(ctx,X(a),Y(a),X(b),Y(b),'rgba(253,224,71,.6)',1.5,[3,4]));
+    if(s.L && s.L.a>=0) line(ctx,X(s.L.a),Y(s.L.a),X(s.L.b),Y(s.L.b),'#60a5fa',3);
+    if(s.R && s.R.a>=0) line(ctx,X(s.R.a),Y(s.R.a),X(s.R.b),Y(s.R.b),'#fb923c',3);
+  }
+  const bp=s.best;
+  if(bp && bp.a>=0){
+    const col=s.t==='done'?'#f43f5e':'#34d399';
+    ctx.save(); ctx.shadowColor=col; ctx.shadowBlur=14; line(ctx,X(bp.a),Y(bp.a),X(bp.b),Y(bp.b),col,4); ctx.restore();
+    label(ctx,'d = '+bp.d.toFixed(2),(X(bp.a)+X(bp.b))/2,(Y(bp.a)+Y(bp.b))/2-16,'#0b0d1f',11,col);
+    if(s.t==='done'){ [bp.a,bp.b].forEach(i=>{ ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(X(i),Y(i),16,0,7); ctx.stroke(); ctx.restore(); }); }
+  }
+  const inStrip=new Set(s.strip||[]);
+  pts.forEach((p,i)=>{
+    const on=active.has(i);
+    let col=on?'#d1fae5':'rgba(203,213,255,.25)', r=on?6.5:5, glow=null;
+    if(inStrip.has(i)){ col='#fde047'; r=8; glow='#fde047'; }
+    if(bp && (i===bp.a||i===bp.b)){ col=s.t==='done'?'#f43f5e':'#34d399'; r=9; glow=col; }
+    dot(ctx,X(i),Y(i),r,col,glow);
+    if(s.sorted) label(ctx,N(i),X(i),Y(i)-16,on?'#e2e8f0':'rgba(226,232,240,.3)',11);
+  });
+}
+players.cp=Player($('#cpEx'),renderCP);
+const cpReload=()=>players.cp.load(cpSteps());
+$('#cpRand').onclick=()=>{ CP.pts=randomPoints(Math.max(2,Math.min(40,+$('#cpN').value||14))); cpReload(); };
+$('#cpClear').onclick=()=>{ CP.pts=[]; CP.name={}; cpReload(); };
+$('#cpCanvas').addEventListener('click',e=>{
+  if(!CP.m) return; const r=e.target.getBoundingClientRect(); const p=CP.m.inv(e.clientX-r.left,e.clientY-r.top);
+  if(p.x<0||p.x>WW||p.y<0||p.y>WH||CP.pts.length>=60) return;
+  CP.pts.push({x:Math.round(p.x),y:Math.round(p.y)}); cpReload();
+});
+cpReload();
+
+/* =========================================================
+   C++ CODE
+   ========================================================= */
+const CODE={
+knap:{file:'fractional_knapsack.cpp',note:'Greedy · sort by value/weight · O(n log n)',src:String.raw`// Fractional (Greedy) Knapsack
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Item {
+    string name;
+    double weight, value;
+};
+
+// Comparator: higher value/weight ratio comes first
+bool byRatio(const Item& a, const Item& b) {
+    return (a.value / a.weight) > (b.value / b.weight);
+}
+
+double fractionalKnapsack(vector<Item> items, double capacity) {
+    // Step 1 & 2: sort items by ratio (descending)
+    sort(items.begin(), items.end(), byRatio);
+
+    double totalValue = 0.0;
+
+    // Step 3: pick items greedily
+    for (const Item& it : items) {
+        if (capacity <= 0) break;                 // knapsack full
+
+        if (it.weight <= capacity) {              // take whole item
+            capacity   -= it.weight;
+            totalValue += it.value;
+            cout << "Take 100% of " << it.name << "\n";
+        } else {                                  // take a fraction
+            double fraction = capacity / it.weight;
+            totalValue += it.value * fraction;
+            cout << "Take " << fraction * 100 << "% of " << it.name << "\n";
+            capacity = 0;
+        }
+    }
+    return totalValue;
+}
+
+int main() {
+    vector<Item> items = {
+        {"Gold", 10, 60}, {"Silver", 20, 100}, {"Laptop", 30, 120},
+        {"Camera", 15, 105}, {"Books", 25, 75}
+    };
+    double W = 60;
+
+    double best = fractionalKnapsack(items, W);
+    cout << "Maximum value = " << best << endl;
+    return 0;
+}`,out:`Take 100% of Camera
+Take 100% of Gold
+Take 100% of Silver
+Take 50% of Laptop
+Maximum value = 325`},
+lim:{file:'greedy_limitations.cpp',note:'Greedy vs Dynamic Programming on 0/1 knapsack and coin change',src:String.raw`// Limitations of Greedy: compare with Dynamic Programming
+#include <bits/stdc++.h>
+using namespace std;
+
+// ---------- 0/1 Knapsack ----------
+int greedyKnapsack01(vector<pair<int,int>> items, int W) {   // {weight, value}
+    sort(items.begin(), items.end(), [](auto& a, auto& b) {
+        return (double)a.second / a.first > (double)b.second / b.first;
+    });
+    int value = 0;
+    for (auto& it : items)
+        if (it.first <= W) { W -= it.first; value += it.second; }  // whole item only
+    return value;
+}
+
+int dpKnapsack01(const vector<pair<int,int>>& items, int W) {
+    vector<int> dp(W + 1, 0);
+    for (auto& it : items)
+        for (int w = W; w >= it.first; --w)
+            dp[w] = max(dp[w], dp[w - it.first] + it.second);
+    return dp[W];
+}
+
+// ---------- Coin Change (minimum coins) ----------
+int greedyCoins(vector<int> coins, int amount) {
+    sort(coins.rbegin(), coins.rend());
+    int count = 0;
+    for (int c : coins)
+        while (amount >= c) { amount -= c; count++; }
+    return amount == 0 ? count : -1;
+}
+
+int dpCoins(const vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, INT_MAX);
+    dp[0] = 0;
+    for (int a = 1; a <= amount; ++a)
+        for (int c : coins)
+            if (c <= a && dp[a - c] != INT_MAX)
+                dp[a] = min(dp[a], dp[a - c] + 1);
+    return dp[amount];
+}
+
+int main() {
+    vector<pair<int,int>> items = {{10, 60}, {20, 100}, {30, 120}};
+    int W = 50;
+    cout << "0/1 Knapsack  Greedy = " << greedyKnapsack01(items, W)
+         << "   Optimal(DP) = " << dpKnapsack01(items, W) << "\n";
+
+    vector<int> coins = {1, 3, 4};
+    int amount = 6;
+    cout << "Coin change   Greedy = " << greedyCoins(coins, amount)
+         << " coins   Optimal(DP) = " << dpCoins(coins, amount) << " coins\n";
+    return 0;
+}`,out:`0/1 Knapsack  Greedy = 160   Optimal(DP) = 220
+Coin change   Greedy = 3 coins   Optimal(DP) = 2 coins`},
+graham:{file:'graham_scan.cpp',note:'Pivot · polar sort · stack with cross product · O(n log n)',src:String.raw`// Convex Hull using Graham Scan
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Point { long long x, y; };
+Point p0;   // pivot
+
+// > 0 : counter-clockwise (left turn), < 0 : clockwise, 0 : collinear
+long long cross(const Point& o, const Point& a, const Point& b) {
+    return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+long long dist2(const Point& a, const Point& b) {
+    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+}
+
+vector<Point> grahamScan(vector<Point> pts) {
+    int n = pts.size();
+    if (n < 3) return pts;
+
+    // 1. Pivot = lowest y (leftmost if tie)
+    int lo = 0;
+    for (int i = 1; i < n; i++)
+        if (pts[i].y < pts[lo].y || (pts[i].y == pts[lo].y && pts[i].x < pts[lo].x))
+            lo = i;
+    swap(pts[0], pts[lo]);
+    p0 = pts[0];
+
+    // 2. Sort by polar angle around the pivot (closer first on a tie)
+    sort(pts.begin() + 1, pts.end(), [](const Point& a, const Point& b) {
+        long long c = cross(p0, a, b);
+        if (c != 0) return c > 0;
+        return dist2(p0, a) < dist2(p0, b);
+    });
+
+    // 3. Scan using a stack; keep only left turns
+    vector<Point> hull;
+    for (const Point& p : pts) {
+        while (hull.size() >= 2 &&
+               cross(hull[hull.size() - 2], hull.back(), p) <= 0)
+            hull.pop_back();              // right turn or collinear -> pop
+        hull.push_back(p);                // left turn -> push
+    }
+    return hull;                          // counter-clockwise order
+}
+
+int main() {
+    vector<Point> pts = {{0,3},{1,1},{2,2},{4,4},{0,0},{1,2},{3,1},{3,3}};
+    vector<Point> hull = grahamScan(pts);
+
+    cout << "Convex Hull:\n";
+    for (auto& p : hull) cout << "(" << p.x << ", " << p.y << ")\n";
+    return 0;
+}`,out:`Convex Hull:
+(0, 0)
+(3, 1)
+(4, 4)
+(0, 3)`},
+str:{file:'strassen.cpp',note:'Recursive divide & conquer · n must be a power of 2',src:String.raw`// Strassen's Matrix Multiplication (n = power of 2)
+#include <bits/stdc++.h>
+using namespace std;
+typedef vector<vector<int>> Matrix;
+
+Matrix add(const Matrix& A, const Matrix& B, int sign = 1) {   // A + sign*B
+    int n = A.size();
+    Matrix C(n, vector<int>(n));
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            C[i][j] = A[i][j] + sign * B[i][j];
+    return C;
+}
+
+Matrix strassen(const Matrix& A, const Matrix& B) {
+    int n = A.size();
+    if (n == 1) return {{A[0][0] * B[0][0]}};       // base case
+
+    int k = n / 2;
+    Matrix A11(k, vector<int>(k)), A12 = A11, A21 = A11, A22 = A11;
+    Matrix B11 = A11, B12 = A11, B21 = A11, B22 = A11;
+
+    // Divide into four k x k blocks
+    for (int i = 0; i < k; i++)
+        for (int j = 0; j < k; j++) {
+            A11[i][j] = A[i][j];     A12[i][j] = A[i][j + k];
+            A21[i][j] = A[i + k][j]; A22[i][j] = A[i + k][j + k];
+            B11[i][j] = B[i][j];     B12[i][j] = B[i][j + k];
+            B21[i][j] = B[i + k][j]; B22[i][j] = B[i + k][j + k];
+        }
+
+    // 7 recursive multiplications
+    Matrix M1 = strassen(add(A11, A22), add(B11, B22));
+    Matrix M2 = strassen(add(A21, A22), B11);
+    Matrix M3 = strassen(A11, add(B12, B22, -1));
+    Matrix M4 = strassen(A22, add(B21, B11, -1));
+    Matrix M5 = strassen(add(A11, A12), B22);
+    Matrix M6 = strassen(add(A21, A11, -1), add(B11, B12));
+    Matrix M7 = strassen(add(A12, A22, -1), add(B21, B22));
+
+    // Combine
+    Matrix C11 = add(add(M1, M4), add(M7, M5, -1));   // M1 + M4 - M5 + M7
+    Matrix C12 = add(M3, M5);
+    Matrix C21 = add(M2, M4);
+    Matrix C22 = add(add(M1, M2, -1), add(M3, M6));   // M1 - M2 + M3 + M6
+
+    Matrix C(n, vector<int>(n));
+    for (int i = 0; i < k; i++)
+        for (int j = 0; j < k; j++) {
+            C[i][j] = C11[i][j];     C[i][j + k] = C12[i][j];
+            C[i + k][j] = C21[i][j]; C[i + k][j + k] = C22[i][j];
+        }
+    return C;
+}
+
+int main() {
+    Matrix A = {{1, 3}, {7, 5}};
+    Matrix B = {{6, 8}, {4, 2}};
+    Matrix C = strassen(A, B);
+
+    cout << "Result matrix C = A x B:\n";
+    for (auto& row : C) {
+        for (int v : row) cout << setw(5) << v;
+        cout << "\n";
+    }
+    return 0;
+}`,out:`Result matrix C = A x B:
+   18   14
+   62   66`},
+cp:{file:'closest_pair.cpp',note:'Divide & conquer with strip check',src:String.raw`// Closest Pair of Points - Divide and Conquer
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Point { double x, y; };
+
+double dist(const Point& a, const Point& b) {
+    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+}
+
+// Brute force for small sets: points P[l .. r-1]
+double bruteForce(const vector<Point>& P, int l, int r) {
+    double best = DBL_MAX;
+    for (int i = l; i < r; i++)
+        for (int j = i + 1; j < r; j++)
+            best = min(best, dist(P[i], P[j]));
+    return best;
+}
+
+// Check points inside the strip (sorted by y)
+double stripClosest(vector<Point>& strip, double d) {
+    sort(strip.begin(), strip.end(),
+         [](const Point& a, const Point& b) { return a.y < b.y; });
+    double best = d;
+    for (size_t i = 0; i < strip.size(); i++)
+        for (size_t j = i + 1; j < strip.size() &&
+                               (strip[j].y - strip[i].y) < best; j++)   // at most ~7 points
+            best = min(best, dist(strip[i], strip[j]));
+    return best;
+}
+
+double closestUtil(const vector<Point>& P, int l, int r) {
+    if (r - l <= 3) return bruteForce(P, l, r);        // base case
+
+    int mid = (l + r) / 2;
+    Point midPoint = P[mid];
+
+    double dl = closestUtil(P, l, mid);                // left half
+    double dr = closestUtil(P, mid, r);                // right half
+    double d  = min(dl, dr);
+
+    vector<Point> strip;                               // points near the line
+    for (int i = l; i < r; i++)
+        if (fabs(P[i].x - midPoint.x) < d) strip.push_back(P[i]);
+
+    return min(d, stripClosest(strip, d));
+}
+
+double closestPair(vector<Point> P) {
+    sort(P.begin(), P.end(),
+         [](const Point& a, const Point& b) { return a.x < b.x; });
+    return closestUtil(P, 0, P.size());
+}
+
+int main() {
+    vector<Point> P = {{2, 3}, {12, 30}, {40, 50}, {5, 1}, {12, 10}, {3, 4}};
+    cout << fixed << setprecision(4);
+    cout << "Smallest distance = " << closestPair(P) << endl;
+    return 0;
+}`,out:`Smallest distance = 1.4142`}
+};
+function highlight(code){
+  const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const re=/(\/\/.*$)|("(?:\\.|[^"\\])*")|(^\s*#.*$)|\b(int|double|long|char|bool|void|return|for|while|if|else|struct|const|auto|vector|string|pair|typedef|using|namespace|std|break|size_t|true|false|sort|swap|min|max|sqrt|fabs|cout|endl)\b|\b(\d+(?:\.\d+)?)\b/gm;
+  let out='',last=0;
+  code.replace(re,(m,c,s,p,k,n,off)=>{
+    out+=esc(code.slice(last,off));
+    const cls=c?'tk-c':s?'tk-s':p?'tk-p':k?'tk-k':'tk-n';
+    out+=`<span class="${cls}">${esc(m)}</span>`; last=off+m.length; return m;
+  });
+  out+=esc(code.slice(last));
+  return out.split('\n').map(l=>`<span class="ln">${l||' '}</span>`).join('');
+}
+document.querySelectorAll('.pane.code').forEach(pane=>{
+  const c=CODE[pane.dataset.code];
+  pane.innerHTML=`<div class="code-head"><span class="lang">💻 C++ · ${c.file}</span><span class="note">${c.note}</span>
+    <div class="sp"><button class="tbtn cp-btn">📋 Copy</button><button class="tbtn dl-btn">⬇ Download .cpp</button></div></div>
+    <pre class="code">${highlight(c.src)}</pre><div class="out">${c.out}</div>`;
+  pane.querySelector('.cp-btn').onclick=e=>{
+    const done=()=>{ e.target.textContent='✅ Copied'; setTimeout(()=>e.target.textContent='📋 Copy',1400); };
+    if(navigator.clipboard) navigator.clipboard.writeText(c.src).then(done).catch(()=>{});
+    else { const t=document.createElement('textarea'); t.value=c.src; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); done(); }
+  };
+  pane.querySelector('.dl-btn').onclick=()=>{
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([c.src],{type:'text/plain'})); a.download=c.file; a.click();
+  };
+});
+</script>
+</body>
+</html>
